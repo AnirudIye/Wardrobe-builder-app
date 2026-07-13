@@ -1,0 +1,48 @@
+from __future__ import annotations
+
+from functools import lru_cache
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """Application settings, loaded from environment / .env file."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+
+    # Core
+    database_url: str = "sqlite:///./wardrobe.db"
+    jwt_secret: str = "dev-insecure-secret-change-me"
+    jwt_expire_minutes: int = 10080  # 7 days
+    jwt_algorithm: str = "HS256"
+
+    # Media / storage
+    media_dir: str = "./media"
+    public_base_url: str = "http://localhost:8000"
+
+    # AI (Anthropic Claude)
+    anthropic_api_key: str = ""
+    # Cheapest capable model per call site (alias resolves to the current Haiku 4.5).
+    anthropic_model: str = "claude-haiku-4-5"
+
+    # Weather
+    openweather_api_key: str = ""
+
+    # Shopping
+    serpapi_key: str = ""
+
+    # Billing (Stripe)
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_id: str = ""
+    frontend_base_url: str = "http://localhost:5173"
+
+    # Quota
+    free_weekly_recommendation_limit: int = 5
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
