@@ -13,13 +13,19 @@ from app.models.user import User
 
 _WINDOW = timedelta(days=7)
 
+# Only buy-next suggestions are metered. "Today" outfit recommendations are
+# free and unlimited (they're the app's core loop); events of other kinds are
+# still recorded for usage logging but never count against the quota.
+_METERED_KIND = "buy-next"
+
 
 def used_this_week(db: Session, user: User) -> int:
-    """Number of recommendations the user has been served in the trailing 7 days."""
+    """Number of metered (buy-next) suggestions served in the trailing 7 days."""
     since = datetime.now(timezone.utc) - _WINDOW
     count = db.execute(
         select(func.count(RecommendationEvent.id)).where(
             RecommendationEvent.user_id == user.id,
+            RecommendationEvent.kind == _METERED_KIND,
             RecommendationEvent.created_at >= since,
         )
     ).scalar_one()
@@ -46,8 +52,8 @@ def enforce(db: Session, user: User) -> None:
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail=(
-                f"Free plan limit reached ({limit} recommendations/week). "
-                "Upgrade to BetterDresser Plus for unlimited recommendations."
+                f"Free plan limit reached ({limit} buy-next suggestions/week). "
+                "Upgrade to BetterDresser Plus for unlimited suggestions."
             ),
         )
 

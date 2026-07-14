@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
-import { api, ApiError, OutfitRecommendation } from "../api";
+import { api, OutfitRecommendation } from "../api";
 import { useFadeRise, useStaggerReveal } from "../animations";
 
 // Session cache: switching tabs shows the last result instantly instead of
-// burning another quota-counted request. "Refresh" forces a new one.
-// The in-flight promise also guards against double-fired effects (React
-// StrictMode mounts twice in dev) so auto-load never burns quota twice.
+// re-fetching. "Refresh" forces a new one. The in-flight promise also guards
+// against double-fired effects (React StrictMode mounts twice in dev).
 let cached: OutfitRecommendation | null = null;
 let inflight: Promise<OutfitRecommendation> | null = null;
 
-export default function Today({ onQuotaBlocked }: { onQuotaBlocked: () => void }) {
+export default function Today() {
   const [rec, setRec] = useState<OutfitRecommendation | null>(cached);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -30,12 +29,7 @@ export default function Today({ onQuotaBlocked }: { onQuotaBlocked: () => void }
       cached = result;
       setRec(result);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 402) {
-        onQuotaBlocked();
-        setError(err.message);
-      } else {
-        setError((err as Error).message);
-      }
+      setError((err as Error).message);
     } finally {
       setBusy(false);
     }

@@ -50,10 +50,11 @@ export default function Upgrade() {
             {isPaid ? "BetterDresser Plus" : "Free plan"}
           </p>
           {isPaid ? (
-            <p className="text-sm text-neutral-500">Unlimited recommendations.</p>
+            <p className="text-sm text-neutral-500">Unlimited buy-next suggestions.</p>
           ) : (
             <p className="text-sm text-neutral-500">
-              {status.remaining_this_week} of {status.weekly_limit} recommendations left this week.
+              {status.remaining_this_week} of {status.weekly_limit} buy-next suggestions left this
+              week. Outfit recommendations are always free.
             </p>
           )}
         </div>

@@ -30,13 +30,25 @@ def _setup_wardrobe(client: TestClient, headers: dict) -> None:
         )
 
 
-def test_free_user_blocked_at_sixth(client: TestClient):
+def test_free_user_blocked_at_sixth_buy_next(client: TestClient):
     headers = auth_headers(client)
     _setup_wardrobe(client, headers)
     for i in range(5):
+        assert client.get("/recommendations/buy-next", headers=headers).status_code == 200, i
+    # 6th buy-next request in the window is blocked with HTTP 402.
+    assert client.get("/recommendations/buy-next", headers=headers).status_code == 402
+
+
+def test_today_is_never_paywalled(client: TestClient):
+    """Today outfits are free and unlimited, even after buy-next quota is spent."""
+    headers = auth_headers(client)
+    _setup_wardrobe(client, headers)
+    for _ in range(5):
+        assert client.get("/recommendations/buy-next", headers=headers).status_code == 200
+    assert client.get("/recommendations/buy-next", headers=headers).status_code == 402
+    # Today keeps working well past the old 5/week limit.
+    for i in range(7):
         assert client.get("/recommendations/today", headers=headers).status_code == 200, i
-    # 6th request in the window is blocked with HTTP 402.
-    assert client.get("/recommendations/today", headers=headers).status_code == 402
 
 
 def test_paid_user_is_unlimited(client: TestClient, db_session: Session):
@@ -47,7 +59,7 @@ def test_paid_user_is_unlimited(client: TestClient, db_session: Session):
     db_session.commit()
 
     for i in range(8):
-        assert client.get("/recommendations/today", headers=headers).status_code == 200, i
+        assert client.get("/recommendations/buy-next", headers=headers).status_code == 200, i
 
 
 def test_old_events_do_not_count(client: TestClient, db_session: Session):
@@ -57,11 +69,23 @@ def test_old_events_do_not_count(client: TestClient, db_session: Session):
     # Five events from 8 days ago — outside the 7-day window.
     old = datetime.now(timezone.utc) - timedelta(days=8)
     for _ in range(5):
-        db_session.add(RecommendationEvent(user_id=user.id, kind="today", created_at=old))
+        db_session.add(RecommendationEvent(user_id=user.id, kind="buy-next", created_at=old))
     db_session.commit()
 
     # Still allowed, because the window only counts the last 7 days.
-    assert client.get("/recommendations/today", headers=headers).status_code == 200
+    assert client.get("/recommendations/buy-next", headers=headers).status_code == 200
+
+
+def test_today_events_do_not_count_against_quota(client: TestClient, db_session: Session):
+    headers = auth_headers(client)
+    _setup_wardrobe(client, headers)
+    user = _get_user(db_session)
+    # Plenty of recent "today" usage — must not affect the buy-next allowance.
+    for _ in range(10):
+        db_session.add(RecommendationEvent(user_id=user.id, kind="today"))
+    db_session.commit()
+
+    assert client.get("/recommendations/buy-next", headers=headers).status_code == 200
 
 
 def test_billing_status_reports_remaining(client: TestClient):

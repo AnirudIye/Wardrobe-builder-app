@@ -81,7 +81,7 @@ export default function App() {
 
       <main ref={mainRef} className="max-w-4xl mx-auto px-4 py-6">
         {tab === "wardrobe" && <Wardrobe />}
-        {tab === "today" && <Today onQuotaBlocked={() => setTab("upgrade")} />}
+        {tab === "today" && <Today />}
         {tab === "buy-next" && <BuyNext onQuotaBlocked={() => setTab("upgrade")} />}
         {tab === "calendar" && <Calendar />}
         {tab === "upgrade" && <Upgrade />}

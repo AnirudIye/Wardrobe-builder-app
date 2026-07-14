@@ -66,7 +66,7 @@ def today(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Your wardrobe is empty — add some items first.",
         )
-    quota.enforce(db, current_user)  # 402 before any paid API call
+    # Today's outfit is free and unlimited — only buy-next is quota-metered.
     snapshot = _best_effort_weather(current_user, lat, lon)
     todays_events = list(
         db.execute(

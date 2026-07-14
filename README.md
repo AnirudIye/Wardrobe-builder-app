@@ -4,8 +4,8 @@ A portfolio-grade web app: log in, build a digital wardrobe by uploading photos 
 your clothes (auto-tagged by Claude vision), then get **weather-aware outfit
 recommendations** and **buy-next suggestions with real shoppable links**. Add events
 to your **calendar** (interview, wedding, gym…) and that day's outfit matches the
-dress code. Free tier is capped at 5 recommendations/week; a $5/month plan unlocks
-unlimited (Stripe).
+dress code. Outfit recommendations are free and unlimited; buy-next suggestions are
+capped at 5/week on the free tier — a $5/month plan unlocks unlimited (Stripe).
 
 - **Backend:** Python / FastAPI + SQLAlchemy (SQLite dev, Postgres-ready). See [backend/README.md](backend/README.md).
 - **Frontend:** React + Vite + TypeScript + Tailwind. See [frontend/README.md](frontend/README.md).
@@ -59,11 +59,13 @@ All secrets live in `backend/.env` (git-ignored; see `backend/.env.example`):
 
 ## Plans & quota
 
-- Free: **5 recommendations / trailing 7 days**; the 6th returns **HTTP 402** and the
-  UI routes to the upgrade screen. The quota is checked **before** any paid API call.
-- Paid ($5/mo): unlimited. Plan state is driven by **Stripe webhooks**, which flip the
-  user between `free` and `paid` on subscribe / renew / cancel.
-- Usage is tracked per `RecommendationEvent` row — the source of truth for counting.
+- **Today outfits: free and unlimited** — never paywalled.
+- Free: **5 buy-next suggestions / trailing 7 days**; the 6th returns **HTTP 402** and
+  the UI routes to the upgrade screen. The quota is checked **before** any paid API call.
+- Paid ($5/mo): unlimited buy-next. Plan state is driven by **Stripe webhooks**, which
+  flip the user between `free` and `paid` on subscribe / renew / cancel.
+- Usage is tracked per `RecommendationEvent` row; only `kind="buy-next"` rows count
+  toward the quota.
 
 ## Testing
 
