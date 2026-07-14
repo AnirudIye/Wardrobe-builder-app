@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useAuth } from "../auth";
+import { useFadeRise } from "../animations";
 
 export default function Login() {
+  const cardRef = useFadeRise<HTMLFormElement>();
   const { login, register } = useAuth();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
@@ -25,9 +27,9 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
-      <form onSubmit={submit} className="w-full max-w-sm bg-white rounded-2xl shadow p-8 space-y-5">
+      <form ref={cardRef} onSubmit={submit} className="w-full max-w-sm bg-white rounded-2xl shadow p-8 space-y-5">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold">Wardrobe Builder</h1>
+          <h1 className="font-brand text-4xl tracking-wide">BetterDresser</h1>
           <p className="text-sm text-neutral-500 mt-1">
             {mode === "login" ? "Sign in to your wardrobe" : "Create your account"}
           </p>

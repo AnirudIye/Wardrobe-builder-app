@@ -27,6 +27,9 @@ class BuyNextItem(BaseModel):
     description: str
     rationale: str
     products: List[ProductSuggestion] = []
+    # Always-present shoppable link (Google Shopping search for the suggestion),
+    # so every suggestion links to real products even without SerpAPI results.
+    search_url: Optional[str] = None
 
 
 class BuyNextOut(BaseModel):

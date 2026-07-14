@@ -47,7 +47,7 @@ def enforce(db: Session, user: User) -> None:
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail=(
                 f"Free plan limit reached ({limit} recommendations/week). "
-                "Upgrade to Wardrobe Builder Plus for unlimited recommendations."
+                "Upgrade to BetterDresser Plus for unlimited recommendations."
             ),
         )
 

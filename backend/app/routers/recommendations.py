@@ -112,6 +112,7 @@ def buy_next(
             description=s.description,
             rationale=s.rationale,
             products=shopping.search_products(s.query),
+            search_url=shopping.google_shopping_url(s.query),
         )
         for s in suggestions
     ]

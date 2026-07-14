@@ -1,4 +1,4 @@
-# Wardrobe Builder
+# BetterDresser
 
 A portfolio-grade web app: log in, build a digital wardrobe by uploading photos of
 your clothes (auto-tagged by Claude vision), then get **weather-aware outfit

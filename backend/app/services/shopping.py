@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from typing import List
+from urllib.parse import quote_plus
 
 import httpx
 
@@ -11,6 +12,11 @@ from app.schemas.recommendation import ProductSuggestion
 logger = logging.getLogger(__name__)
 
 _SERPAPI_URL = "https://serpapi.com/search.json"
+
+
+def google_shopping_url(query: str) -> str:
+    """A real, always-available shopping link for a query (no API key needed)."""
+    return f"https://www.google.com/search?tbm=shop&q={quote_plus(query)}"
 
 
 def search_products(query: str, limit: int = 3) -> List[ProductSuggestion]:

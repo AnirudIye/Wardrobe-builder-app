@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { api, BillingStatus } from "../api";
+import { useFadeRise } from "../animations";
 
 export default function Upgrade() {
+  const pageRef = useFadeRise<HTMLDivElement>();
   const [status, setStatus] = useState<BillingStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -40,12 +42,12 @@ export default function Upgrade() {
   const isPaid = status.plan === "paid";
 
   return (
-    <div className="max-w-md">
+    <div ref={pageRef} className="max-w-md">
       <h2 className="text-xl font-semibold mb-4">Your plan</h2>
       <div className="bg-white rounded-xl shadow-sm p-6 space-y-4">
         <div>
           <p className="text-2xl font-semibold capitalize">
-            {isPaid ? "Wardrobe Builder Plus" : "Free plan"}
+            {isPaid ? "BetterDresser Plus" : "Free plan"}
           </p>
           {isPaid ? (
             <p className="text-sm text-neutral-500">Unlimited recommendations.</p>

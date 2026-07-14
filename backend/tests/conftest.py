@@ -7,6 +7,18 @@ import tempfile
 os.environ["DATABASE_URL"] = "sqlite://"  # module-level engine is unused (get_db is overridden)
 os.environ["MEDIA_DIR"] = tempfile.mkdtemp(prefix="wardrobe_test_media_")
 os.environ["PUBLIC_BASE_URL"] = "http://testserver"
+# Blank out all external API keys so tests NEVER hit (or spend) real services,
+# regardless of what a developer has in backend/.env. Env vars beat env_file
+# in pydantic-settings, so these win.
+for _key in (
+    "ANTHROPIC_API_KEY",
+    "OPENWEATHER_API_KEY",
+    "SERPAPI_KEY",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "STRIPE_PRICE_ID",
+):
+    os.environ[_key] = ""
 
 from collections.abc import Generator
 

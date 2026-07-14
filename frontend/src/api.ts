@@ -1,4 +1,4 @@
-// Thin typed client for the Wardrobe Builder API.
+// Thin typed client for the BetterDresser API.
 // All requests go through /api, which Vite proxies to the FastAPI backend.
 
 const TOKEN_KEY = "wb_token";
@@ -85,6 +85,7 @@ export interface BuyNextItem {
   description: string;
   rationale: string;
   products: Product[];
+  search_url?: string | null;
 }
 export interface BuyNext {
   suggestions: BuyNextItem[];
@@ -145,6 +146,14 @@ export const api = {
     }),
   deleteGarment: (id: number) =>
     request<void>(`/wardrobe/items/${id}`, { method: "DELETE" }),
+  searchClothing: (q: string) =>
+    request<Product[]>(`/wardrobe/search?q=${encodeURIComponent(q)}`),
+  addGarmentFromWeb: (image_url: string, title?: string) =>
+    request<Garment>("/wardrobe/items/from-web", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image_url, title }),
+    }),
 
   listEvents: () => request<CalendarEvent[]>("/calendar/events"),
   createEvent: (data: { title: string; date: string; event_type: string; notes?: string }) =>
