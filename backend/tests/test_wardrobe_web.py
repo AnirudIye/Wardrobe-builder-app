@@ -85,6 +85,42 @@ def test_add_from_web_rejects_bad_scheme(client: TestClient):
     assert resp.status_code == 400
 
 
+def test_retag_fills_only_missing_fields(client: TestClient, monkeypatch):
+    from app.routers import wardrobe as wardrobe_router
+    from app.schemas.garment import GarmentTags
+
+    headers = auth_headers(client)
+    item = client.post(
+        "/wardrobe/items",
+        headers=headers,
+        files={"file": ("top.png", sample_image_bytes("red"), "image/png")},
+    ).json()
+    # User already set category by hand; warmth is missing.
+    client.patch(f"/wardrobe/items/{item['id']}", headers=headers, json={"category": "bottom"})
+
+    fake = GarmentTags(category="top", warmth_rating=4, colors=["red"], formality="casual")
+    monkeypatch.setattr(wardrobe_router.vision, "auto_tag", lambda _b: fake)
+
+    resp = client.post(f"/wardrobe/items/{item['id']}/retag", headers=headers)
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["category"] == "bottom"  # user's value preserved
+    assert body["warmth_rating"] == 4  # AI filled the gap
+    assert body["colors"] == ["red"]
+    assert body["formality"] == "casual"
+
+
+def test_retag_checks_ownership(client: TestClient):
+    a = auth_headers(client, email="a@example.com")
+    b = auth_headers(client, email="b@example.com")
+    item = client.post(
+        "/wardrobe/items",
+        headers=a,
+        files={"file": ("x.png", sample_image_bytes(), "image/png")},
+    ).json()
+    assert client.post(f"/wardrobe/items/{item['id']}/retag", headers=b).status_code == 404
+
+
 def test_buy_next_includes_search_url(client: TestClient):
     headers = auth_headers(client)
     resp = client.get("/recommendations/buy-next", headers=headers)

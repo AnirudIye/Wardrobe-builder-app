@@ -1,49 +1,76 @@
 import { useEffect, useState } from "react";
 import { api, CalendarEvent } from "../api";
 import { useFadeRise, useStaggerReveal } from "../animations";
+import { ListSkeleton } from "../components/Skeleton";
 import { localISODate } from "../date";
+import { eventsCache } from "../store";
 
 const EVENT_TYPES = ["athletic", "casual", "smart-casual", "business", "formal"];
 
 export default function Calendar() {
   const pageRef = useFadeRise<HTMLDivElement>();
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState<CalendarEvent[]>(eventsCache.peek() ?? []);
+  const [loading, setLoading] = useState(eventsCache.peek() === null);
   const [error, setError] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(() => localISODate());
   const [eventType, setEventType] = useState("casual");
   const [notes, setNotes] = useState("");
-  const [busy, setBusy] = useState(false);
 
-  const load = async () => {
-    setEvents(await api.listEvents());
-    setLoading(false);
+  const syncEvents = (next: CalendarEvent[]) => {
+    eventsCache.set(next);
+    setEvents(next);
   };
+
   useEffect(() => {
-    load();
+    eventsCache.get().then((e) => {
+      setEvents(e);
+      setLoading(false);
+    });
   }, []);
 
-  const submit = async (e: React.FormEvent) => {
+  // Optimistic add: show the event instantly with a temp id, swap in the real
+  // one when the server responds, remove it again on failure.
+  const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    setBusy(true);
     setError(null);
-    try {
-      await api.createEvent({ title, date, event_type: eventType, notes: notes || undefined });
-      setTitle("");
-      setNotes("");
-      await load();
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setBusy(false);
-    }
+    const tempId = -Date.now();
+    const optimistic: CalendarEvent = {
+      id: tempId,
+      title,
+      date,
+      event_type: eventType,
+      notes: notes || null,
+    };
+    const before = events;
+    syncEvents(
+      [...events, optimistic].sort((a, b) => a.date.localeCompare(b.date))
+    );
+    setTitle("");
+    setNotes("");
+    api
+      .createEvent({ title: optimistic.title, date, event_type: eventType, notes: optimistic.notes ?? undefined })
+      .then((created) =>
+        syncEvents(
+          (eventsCache.peek() ?? []).map((ev) => (ev.id === tempId ? created : ev))
+        )
+      )
+      .catch((err) => {
+        syncEvents(before);
+        setError((err as Error).message);
+      });
   };
 
-  const remove = async (id: number) => {
-    await api.deleteEvent(id);
-    setEvents((prev) => prev.filter((ev) => ev.id !== id));
+  // Optimistic delete: remove instantly, restore on failure.
+  const remove = (id: number) => {
+    const before = events;
+    syncEvents(events.filter((ev) => ev.id !== id));
+    if (id < 0) return; // optimistic row that hasn't been created yet
+    api.deleteEvent(id).catch((err) => {
+      syncEvents(before);
+      setError((err as Error).message);
+    });
   };
 
   const today = localISODate();
@@ -89,13 +116,13 @@ export default function Calendar() {
           className="clay-input sm:col-span-2"
         />
         {error && <p className="text-sm text-red-500 sm:col-span-2">{error}</p>}
-        <button type="submit" disabled={busy} className="clay-btn py-2.5 sm:col-span-2">
-          {busy ? "Adding…" : "Add event"}
+        <button type="submit" className="clay-btn py-2.5 sm:col-span-2">
+          Add event
         </button>
       </form>
 
       {loading ? (
-        <p className="text-navy/50">Loading events…</p>
+        <ListSkeleton count={3} />
       ) : events.length === 0 ? (
         <p className="text-navy/50">No events yet.</p>
       ) : (
@@ -105,7 +132,7 @@ export default function Calendar() {
               key={ev.id}
               className={`clay-card clay-card-hover px-5 py-4 flex items-center justify-between ${
                 ev.date === today ? "ring-4 ring-blush/60" : ""
-              }`}
+              } ${ev.id < 0 ? "opacity-70" : ""}`}
             >
               <div>
                 <p className="font-medium">

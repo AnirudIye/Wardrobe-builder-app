@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
 import { api, BillingStatus } from "../api";
 import { useFadeRise } from "../animations";
+import { Skeleton } from "../components/Skeleton";
+import { billingCache } from "../store";
 
 export default function Upgrade() {
   const pageRef = useFadeRise<HTMLDivElement>();
-  const [status, setStatus] = useState<BillingStatus | null>(null);
+  const [status, setStatus] = useState<BillingStatus | null>(billingCache.peek());
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const load = async () => setStatus(await api.billingStatus());
   useEffect(() => {
-    load();
+    // Refresh in the background even when cached — quotas change as other
+    // tabs consume them — but render the cached value immediately.
+    billingCache.get(true).then(setStatus);
   }, []);
 
   const startCheckout = async () => {
@@ -37,7 +40,18 @@ export default function Upgrade() {
     }
   };
 
-  if (!status) return <p className="text-navy/50">Loading plan…</p>;
+  if (!status)
+    return (
+      <div className="max-w-md">
+        <h2 className="text-xl font-semibold mb-4">Your plan</h2>
+        <div className="clay-card p-7 space-y-4">
+          <Skeleton className="h-9 w-1/2" />
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-11 w-full" />
+        </div>
+      </div>
+    );
 
   const isPaid = status.plan === "paid";
 

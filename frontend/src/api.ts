@@ -162,6 +162,8 @@ export const api = {
     }),
   deleteGarment: (id: number) =>
     request<void>(`/wardrobe/items/${id}`, { method: "DELETE" }),
+  retagGarment: (id: number) =>
+    request<Garment>(`/wardrobe/items/${id}/retag`, { method: "POST" }),
   searchClothing: (q: string) =>
     request<Product[]>(`/wardrobe/search?q=${encodeURIComponent(q)}`),
   addGarmentFromWeb: (image_url: string, title?: string) =>

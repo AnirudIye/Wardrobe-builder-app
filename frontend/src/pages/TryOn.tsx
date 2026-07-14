@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError, Garment } from "../api";
 import { useFadeRise } from "../animations";
+import { garmentsCache } from "../store";
 import { getCachedBuyNext } from "./BuyNext";
 
 type Target =
@@ -18,7 +19,7 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
   const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
-  const [garments, setGarments] = useState<Garment[]>([]);
+  const [garments, setGarments] = useState<Garment[]>(garmentsCache.peek() ?? []);
   const buyNext = getCachedBuyNext();
   const [selected, setSelected] = useState<Target | null>(null);
 
@@ -27,7 +28,7 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
   const [resultUrl, setResultUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    api.listGarments().then(setGarments).catch(() => {});
+    garmentsCache.get().then(setGarments).catch(() => {});
     return () => stopCamera();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

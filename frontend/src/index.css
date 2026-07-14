@@ -45,4 +45,9 @@ body {
   .clay-chip {
     @apply rounded-full bg-blush-soft text-navy text-xs font-medium px-3 py-1 shadow-clay-sm;
   }
+
+  /* Skeleton loading placeholder: soft clay block with a gentle shimmer. */
+  .skeleton {
+    @apply rounded-2xl bg-cream-deep/70 animate-pulse;
+  }
 }

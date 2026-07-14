@@ -130,6 +130,45 @@ def add_item_from_web(
     )
 
 
+@router.post("/items/{garment_id}/retag", response_model=GarmentOut)
+def retag_item(
+    garment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> GarmentOut:
+    """Re-run AI tagging on a garment's stored photo, filling ONLY missing
+    fields (never clobbers values the user set). Used to backfill AI-estimated
+    warmth on items added before tagging was available."""
+    garment = _get_owned_garment(db, current_user, garment_id)
+    try:
+        image_bytes = get_storage().read(garment.image_path)
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Stored image is missing"
+        ) from exc
+
+    tags = vision.auto_tag(image_bytes)  # best-effort; empty tags on no key/failure
+    if garment.category is None:
+        garment.category = tags.category
+    if garment.subcategory is None:
+        garment.subcategory = tags.subcategory
+    if not garment.colors:
+        garment.colors = tags.colors
+    if garment.pattern is None:
+        garment.pattern = tags.pattern
+    if garment.material is None:
+        garment.material = tags.material
+    if garment.formality is None:
+        garment.formality = tags.formality
+    if garment.warmth_rating is None:
+        garment.warmth_rating = tags.warmth_rating
+    if not garment.seasons:
+        garment.seasons = tags.seasons
+    db.commit()
+    db.refresh(garment)
+    return _serialize(garment)
+
+
 @router.get("/items", response_model=list[GarmentOut])
 def list_items(
     db: Session = Depends(get_db),

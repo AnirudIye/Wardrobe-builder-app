@@ -19,5 +19,9 @@ class StorageBackend(ABC):
         """Return a publicly reachable URL for a stored key."""
 
     @abstractmethod
+    def read(self, key: str) -> bytes:
+        """Return the stored bytes for `key`. Raises FileNotFoundError if missing."""
+
+    @abstractmethod
     def delete(self, key: str) -> None:
         """Delete the blob at `key`. Missing keys are ignored."""

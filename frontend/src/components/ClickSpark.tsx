@@ -19,11 +19,11 @@ interface Props {
 }
 
 export default function ClickSpark({
-  sparkColor = "#FA9EBC",
-  sparkSize = 11,
-  sparkRadius = 22,
-  sparkCount = 8,
-  duration = 450,
+  sparkColor = "#0B1957", // brand navy
+  sparkSize = 18,
+  sparkRadius = 38,
+  sparkCount = 10,
+  duration = 500,
   children,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -66,7 +66,7 @@ export default function ClickSpark({
         const dist = progress * sparkRadius;
         const lineLength = sparkSize * (1 - progress);
         ctx.strokeStyle = sparkColor;
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = 3.5;
         ctx.lineCap = "round";
         ctx.globalAlpha = 1 - progress;
         ctx.beginPath();

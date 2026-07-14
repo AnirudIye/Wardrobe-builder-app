@@ -4,9 +4,9 @@
 import { useEffect, useRef } from "react";
 
 const BLOBS = [
-  { size: 64, lerp: 0.35, opacity: 0.5 },
-  { size: 46, lerp: 0.18, opacity: 0.42 },
-  { size: 30, lerp: 0.09, opacity: 0.38 },
+  { size: 44, lerp: 0.55, opacity: 0.5 },
+  { size: 32, lerp: 0.32, opacity: 0.42 },
+  { size: 20, lerp: 0.18, opacity: 0.38 },
 ];
 
 export default function BlobCursor({ color = "#FA9EBC" }: { color?: string }) {

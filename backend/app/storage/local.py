@@ -26,6 +26,10 @@ class LocalStorage(StorageBackend):
     def url(self, key: str) -> str:
         return f"{self.public_base_url}/media/{os.path.basename(key)}"
 
+    def read(self, key: str) -> bytes:
+        with open(self._path(key), "rb") as f:
+            return f.read()
+
     def delete(self, key: str) -> None:
         try:
             os.remove(self._path(key))

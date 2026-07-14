@@ -3,20 +3,23 @@
 import { useEffect, useState } from "react";
 import { api, User, Weather } from "../api";
 import { useFadeRise } from "../animations";
+import { Skeleton } from "../components/Skeleton";
+import { profileCache, weatherCache } from "../store";
 
 export default function WeatherWidget() {
   const cardRef = useFadeRise<HTMLDivElement>();
-  const [profile, setProfile] = useState<User | null>(null);
-  const [weather, setWeather] = useState<Weather | null>(null);
+  const [profile, setProfile] = useState<User | null>(profileCache.peek());
+  const [weather, setWeather] = useState<Weather | null>(weatherCache.peek());
+  const [loading, setLoading] = useState(profileCache.peek() === null);
   const [editing, setEditing] = useState(false);
   const [city, setCity] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadWeather = async (p: User) => {
+  const loadWeather = async (p: User, force = false) => {
     if (p.lat == null || p.lon == null) return;
     try {
-      setWeather(await api.weather());
+      setWeather(await weatherCache.get(force));
     } catch {
       setWeather(null); // weather is best-effort (e.g. no API key)
     }
@@ -25,13 +28,15 @@ export default function WeatherWidget() {
   useEffect(() => {
     (async () => {
       try {
-        const p = await api.profile();
+        const p = await profileCache.get();
         setProfile(p);
+        setLoading(false);
         await loadWeather(p);
       } catch {
-        /* profile load is non-critical for the wardrobe page */
+        setLoading(false); // profile load is non-critical for the wardrobe page
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const saveLocation = async (e: React.FormEvent) => {
@@ -41,11 +46,13 @@ export default function WeatherWidget() {
     setError(null);
     try {
       const updated = await api.setLocation(city.trim());
+      profileCache.set(updated);
       setProfile(updated);
       setEditing(false);
       setCity("");
+      weatherCache.clear();
       setWeather(null);
-      await loadWeather(updated);
+      await loadWeather(updated, true);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -58,6 +65,23 @@ export default function WeatherWidget() {
   const lon = profile?.lon ?? 0;
   // Small bounding box around the point for the embedded map.
   const bbox = `${lon - 0.06},${lat - 0.035},${lon + 0.06},${lat + 0.035}`;
+
+  if (loading) {
+    return (
+      <div ref={cardRef} className="clay-card p-5 mb-6 flex flex-col sm:flex-row gap-5">
+        <div className="flex-1 space-y-3">
+          <Skeleton className="h-5 w-28" />
+          <Skeleton className="h-8 w-48" />
+          <div className="flex gap-2">
+            <Skeleton className="h-6 w-14" />
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-6 w-20" />
+          </div>
+        </div>
+        <Skeleton className="sm:w-64 h-36 shrink-0" />
+      </div>
+    );
+  }
 
   return (
     <div ref={cardRef} className="clay-card p-5 mb-6">

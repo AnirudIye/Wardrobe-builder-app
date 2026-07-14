@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, ApiError, BuyNext as BuyNextData } from "../api";
 import { useFadeRise, useStaggerReveal } from "../animations";
+import { ListSkeleton } from "../components/Skeleton";
 
 // Session cache: switching tabs shows the last result instantly instead of
 // burning another quota-counted request. "Refresh" forces a new one.
@@ -62,7 +63,7 @@ export default function BuyNext({ onQuotaBlocked }: { onQuotaBlocked: () => void
         </button>
       </div>
 
-      {busy && !data && <p className="text-navy/50 mb-4">Analyzing your wardrobe gaps…</p>}
+      {busy && !data && <ListSkeleton count={3} height="h-32" />}
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
       <div ref={listRef} className="space-y-5">
