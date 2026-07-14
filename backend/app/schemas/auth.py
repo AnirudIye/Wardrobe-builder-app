@@ -16,6 +16,7 @@ class UserOut(BaseModel):
 
     id: int
     email: EmailStr
+    email_verified: bool
     city: Optional[str] = None
     lat: Optional[float] = None
     lon: Optional[float] = None

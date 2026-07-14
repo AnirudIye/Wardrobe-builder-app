@@ -12,6 +12,7 @@ from app.database import get_db
 from app.models.user import User
 from app.schemas.profile import ProfileOut, ProfileUpdate
 from app.services import trends, weather
+from app.storage import get_storage
 from app.services.weather import WeatherServiceError, WeatherSnapshot
 
 router = APIRouter(tags=["profile"])
@@ -27,6 +28,7 @@ def _parse_prefs(raw: Optional[str]) -> Optional[dict]:
 
 
 def _serialize(user: User) -> ProfileOut:
+    storage = get_storage()
     return ProfileOut(
         id=user.id,
         email=user.email,
@@ -35,6 +37,7 @@ def _serialize(user: User) -> ProfileOut:
         lon=user.lon,
         style_preferences=_parse_prefs(user.style_preferences),
         plan=user.plan,
+        avatar_url=storage.url(user.avatar_key) if user.avatar_key else None,
     )
 
 

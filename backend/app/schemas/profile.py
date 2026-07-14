@@ -21,3 +21,4 @@ class ProfileOut(BaseModel):
     lon: Optional[float] = None
     style_preferences: Optional[dict] = None
     plan: str
+    avatar_url: Optional[str] = None

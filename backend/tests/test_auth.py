@@ -67,3 +67,16 @@ def test_me_returns_current_user(client: TestClient):
 def test_me_rejects_garbage_token(client: TestClient):
     resp = client.get("/auth/me", headers={"Authorization": "Bearer not-a-real-token"})
     assert resp.status_code == 401
+
+
+def test_new_user_exposes_verification_and_avatar_fields(client: TestClient):
+    _register(client, email="fields@example.com")
+    token = _login(client, email="fields@example.com").json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    me = client.get("/auth/me", headers=headers).json()
+    assert "email_verified" in me
+
+    profile = client.get("/profile", headers=headers).json()
+    assert "avatar_url" in profile
+    assert profile["avatar_url"] is None
