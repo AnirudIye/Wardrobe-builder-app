@@ -39,8 +39,14 @@ class Settings(BaseSettings):
     stripe_price_id: str = ""
     frontend_base_url: str = "http://localhost:5173"
 
+    # AI (Google Gemini — image generation for TryOn)
+    google_api_key: str = ""
+    google_image_model: str = "gemini-2.5-flash-image"
+
     # Quota
     free_weekly_recommendation_limit: int = 5
+    free_weekly_chat_limit: int = 20
+    free_weekly_tryon_limit: int = 5
 
 
 @lru_cache

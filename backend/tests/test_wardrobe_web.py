@@ -47,7 +47,7 @@ def _mock_httpx_stream(payload: bytes):
 def test_add_from_web_creates_garment(client: TestClient):
     headers = auth_headers(client)
     png = sample_image_bytes(color="blue")
-    with patch("app.routers.wardrobe.httpx.stream", new=_mock_httpx_stream(png)):
+    with patch("app.services.images.httpx.stream", new=_mock_httpx_stream(png)):
         resp = client.post(
             "/wardrobe/items/from-web",
             headers=headers,
@@ -65,7 +65,7 @@ def test_add_from_web_creates_garment(client: TestClient):
 
 def test_add_from_web_rejects_non_image(client: TestClient):
     headers = auth_headers(client)
-    with patch("app.routers.wardrobe.httpx.stream", new=_mock_httpx_stream(b"<html>404</html>")):
+    with patch("app.services.images.httpx.stream", new=_mock_httpx_stream(b"<html>404</html>")):
         resp = client.post(
             "/wardrobe/items/from-web",
             headers=headers,

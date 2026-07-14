@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, CalendarEvent } from "../api";
 import { useFadeRise, useStaggerReveal } from "../animations";
+import { localISODate } from "../date";
 
 const EVENT_TYPES = ["athletic", "casual", "smart-casual", "business", "formal"];
 
@@ -11,7 +12,7 @@ export default function Calendar() {
   const [error, setError] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => localISODate());
   const [eventType, setEventType] = useState("casual");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
@@ -45,7 +46,7 @@ export default function Calendar() {
     setEvents((prev) => prev.filter((ev) => ev.id !== id));
   };
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localISODate();
   const listRef = useStaggerReveal<HTMLUListElement>(loading ? null : events.length);
 
   return (

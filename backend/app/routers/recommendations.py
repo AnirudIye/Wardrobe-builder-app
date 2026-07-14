@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.core.deps import get_current_user
 from app.database import get_db
 from app.models.calendar_event import CalendarEvent
@@ -57,6 +58,11 @@ def _best_effort_weather(
 def today(
     lat: Optional[float] = Query(default=None, ge=-90, le=90),
     lon: Optional[float] = Query(default=None, ge=-180, le=180),
+    date: Optional[date_type] = Query(
+        default=None,
+        description="The user's local date (YYYY-MM-DD). Defaults to the server's "
+        "date if omitted, which may be wrong for the caller's timezone.",
+    ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> OutfitRecommendationOut:
@@ -68,11 +74,12 @@ def today(
         )
     # Today's outfit is free and unlimited — only buy-next is quota-metered.
     snapshot = _best_effort_weather(current_user, lat, lon)
+    target_date = date if date is not None else date_type.today()
     todays_events = list(
         db.execute(
             select(CalendarEvent).where(
                 CalendarEvent.user_id == current_user.id,
-                CalendarEvent.date == date_type.today(),
+                CalendarEvent.date == target_date,
             )
         ).scalars().all()
     )
@@ -99,7 +106,9 @@ def buy_next(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> BuyNextOut:
-    quota.enforce(db, current_user)  # 402 before any paid API call
+    settings = get_settings()
+    # 402 before any paid API call
+    quota.enforce(db, current_user, "buy-next", settings.free_weekly_recommendation_limit)
     garments = _user_garments(db, current_user)
     trend_summary = trends.get_trends()
     suggestions, source = recommendation.suggest_purchases(

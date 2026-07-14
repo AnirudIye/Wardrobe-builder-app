@@ -18,8 +18,12 @@ router = APIRouter(prefix="/billing", tags=["billing"])
 class BillingStatus(BaseModel):
     plan: str
     subscription_status: Optional[str] = None
-    remaining_this_week: Optional[int] = None  # None = unlimited (paid)
+    remaining_this_week: Optional[int] = None  # None = unlimited (paid); buy-next
     weekly_limit: int
+    chat_remaining_this_week: Optional[int] = None  # None = unlimited (paid)
+    chat_weekly_limit: int
+    tryon_remaining_this_week: Optional[int] = None  # None = unlimited (paid)
+    tryon_weekly_limit: int
 
 
 class CheckoutOut(BaseModel):
@@ -33,11 +37,22 @@ def billing_status(
 ) -> BillingStatus:
     from app.config import get_settings
 
+    settings = get_settings()
     return BillingStatus(
         plan=current_user.plan,
         subscription_status=current_user.subscription_status,
-        remaining_this_week=quota.remaining(db, current_user),
-        weekly_limit=get_settings().free_weekly_recommendation_limit,
+        remaining_this_week=quota.remaining(
+            db, current_user, "buy-next", settings.free_weekly_recommendation_limit
+        ),
+        weekly_limit=settings.free_weekly_recommendation_limit,
+        chat_remaining_this_week=quota.remaining(
+            db, current_user, "dresser-ai", settings.free_weekly_chat_limit
+        ),
+        chat_weekly_limit=settings.free_weekly_chat_limit,
+        tryon_remaining_this_week=quota.remaining(
+            db, current_user, "tryon", settings.free_weekly_tryon_limit
+        ),
+        tryon_weekly_limit=settings.free_weekly_tryon_limit,
     )
 
 

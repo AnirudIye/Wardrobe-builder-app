@@ -3,7 +3,6 @@ from __future__ import annotations
 import uuid
 from typing import List, Optional
 
-import httpx
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
@@ -16,13 +15,15 @@ from app.models.user import User
 from app.schemas.garment import GarmentOut, GarmentUpdate
 from app.schemas.recommendation import ProductSuggestion
 from app.services import shopping, vision
-from app.services.images import InvalidImageError, process_upload
+from app.services.images import (
+    ImageDownloadError,
+    InvalidImageError,
+    download_image_bytes,
+    process_upload,
+)
 from app.storage import get_storage
 
 router = APIRouter(prefix="/wardrobe", tags=["wardrobe"])
-
-# Max bytes we'll download from a product image URL.
-_MAX_WEB_IMAGE_BYTES = 10 * 1024 * 1024
 
 
 def _serialize(garment: Garment) -> GarmentOut:
@@ -119,26 +120,10 @@ def add_item_from_web(
     current_user: User = Depends(get_current_user),
 ) -> GarmentOut:
     """Add a garment from a product image URL found via /wardrobe/search."""
-    if not payload.image_url.lower().startswith(("http://", "https://")):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid image URL")
     try:
-        with httpx.stream("GET", payload.image_url, timeout=20.0, follow_redirects=True) as resp:
-            resp.raise_for_status()
-            raw = b""
-            for chunk in resp.iter_bytes():
-                raw += chunk
-                if len(raw) > _MAX_WEB_IMAGE_BYTES:
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Image too large (max 10 MB)",
-                    )
-    except httpx.HTTPError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Could not download image: {exc}",
-        ) from exc
-    if not raw:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Empty image")
+        raw = download_image_bytes(payload.image_url)
+    except ImageDownloadError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     # process_upload validates the bytes are a real image; garbage 404 pages fail cleanly.
     return _serialize(
         _create_garment_from_bytes(db, current_user, raw, fallback_subcategory=payload.title)

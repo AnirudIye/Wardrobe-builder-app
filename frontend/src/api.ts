@@ -1,5 +1,6 @@
 // Thin typed client for the BetterDresser API.
 // All requests go through /api, which Vite proxies to the FastAPI backend.
+import { localISODate } from "./date";
 
 const TOKEN_KEY = "wb_token";
 
@@ -103,6 +104,14 @@ export interface BillingStatus {
   subscription_status?: string | null;
   remaining_this_week: number | null;
   weekly_limit: number;
+  chat_remaining_this_week: number | null;
+  chat_weekly_limit: number;
+  tryon_remaining_this_week: number | null;
+  tryon_weekly_limit: number;
+}
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
 }
 
 // --- Endpoints ---
@@ -172,8 +181,24 @@ export const api = {
   deleteEvent: (id: number) =>
     request<void>(`/calendar/events/${id}`, { method: "DELETE" }),
 
-  today: () => request<OutfitRecommendation>("/recommendations/today"),
+  today: () =>
+    request<OutfitRecommendation>(`/recommendations/today?date=${localISODate()}`),
   buyNext: () => request<BuyNext>("/recommendations/buy-next"),
+
+  tryOn: (photo: Blob, target: { garment_id: number } | { image_url: string }) => {
+    const fd = new FormData();
+    fd.append("photo", photo, "photo.jpg");
+    if ("garment_id" in target) fd.append("garment_id", String(target.garment_id));
+    else fd.append("image_url", target.image_url);
+    return request<{ image_base64: string }>("/tryon", { method: "POST", body: fd });
+  },
+
+  dresserAIChat: (messages: ChatMessage[]) =>
+    request<{ reply: string }>("/dresser-ai/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages }),
+    }),
 
   billingStatus: () => request<BillingStatus>("/billing/status"),
   checkout: () => request<{ url: string }>("/billing/checkout", { method: "POST" }),

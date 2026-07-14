@@ -50,14 +50,31 @@ export default function Upgrade() {
             {isPaid ? "BetterDresser Plus" : "Free plan"}
           </p>
           {isPaid ? (
-            <p className="text-sm text-navy/50 mt-1">Unlimited buy-next suggestions.</p>
-          ) : (
             <p className="text-sm text-navy/50 mt-1">
-              <span className="clay-chip mr-1">
-                {status.remaining_this_week} of {status.weekly_limit}
-              </span>
-              buy-next suggestions left this week. Outfit recommendations are always free.
+              Unlimited buy-next suggestions, DresserAI messages, and try-ons.
             </p>
+          ) : (
+            <div className="text-sm text-navy/50 mt-2 space-y-2">
+              <p>
+                <span className="clay-chip mr-1">
+                  {status.remaining_this_week} of {status.weekly_limit}
+                </span>
+                buy-next suggestions left this week.
+              </p>
+              <p>
+                <span className="clay-chip mr-1">
+                  {status.chat_remaining_this_week} of {status.chat_weekly_limit}
+                </span>
+                DresserAI messages left this week.
+              </p>
+              <p>
+                <span className="clay-chip mr-1">
+                  {status.tryon_remaining_this_week} of {status.tryon_weekly_limit}
+                </span>
+                try-ons left this week.
+              </p>
+              <p>Outfit recommendations are always free.</p>
+            </div>
           )}
         </div>
 

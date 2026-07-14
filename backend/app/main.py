@@ -8,7 +8,16 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.database import Base, engine
-from app.routers import auth, billing, calendar, profile, recommendations, wardrobe
+from app.routers import (
+    auth,
+    billing,
+    calendar,
+    dresser_ai,
+    profile,
+    recommendations,
+    tryon,
+    wardrobe,
+)
 
 settings = get_settings()
 
@@ -36,6 +45,8 @@ def create_app() -> FastAPI:
     app.include_router(wardrobe.router)
     app.include_router(recommendations.router)
     app.include_router(calendar.router)
+    app.include_router(dresser_ai.router)
+    app.include_router(tryon.router)
     app.include_router(billing.router)
 
     @app.get("/health", tags=["health"])

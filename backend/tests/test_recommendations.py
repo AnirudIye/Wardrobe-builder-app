@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date, timedelta
+
 from fastapi.testclient import TestClient
 
 from app.services.recommendation import _target_warmth, heuristic_outfit
@@ -75,3 +77,37 @@ def test_today_returns_outfit_from_wardrobe(client: TestClient):
     assert returned_ids.issubset(set(ids))
     assert len(body["items"]) >= 2
     assert body["source"] in ("ai", "heuristic")
+
+
+def test_today_uses_client_supplied_date_over_server_date(client: TestClient):
+    """A ?date= param overrides the server's own clock — this is the fix for
+    events silently shifting a day for users in a different timezone than the
+    server (the calendar-event date is always the caller's local date)."""
+    headers = auth_headers(client)
+    item = client.post(
+        "/wardrobe/items",
+        headers=headers,
+        files={"file": ("top.png", sample_image_bytes("white"), "image/png")},
+    ).json()
+    client.patch(
+        f"/wardrobe/items/{item['id']}",
+        headers=headers,
+        json={"category": "top", "warmth_rating": 3},
+    )
+
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
+    client.post(
+        "/calendar/events",
+        headers=headers,
+        json={"title": "Client-local today", "date": tomorrow, "event_type": "formal"},
+    )
+
+    # Without a date param, the server's own today() doesn't see tomorrow's event.
+    default_body = client.get("/recommendations/today", headers=headers).json()
+    assert "Client-local today" not in default_body["rationale"]
+
+    # With the client's local date explicitly supplied, it does.
+    dated_body = client.get(
+        f"/recommendations/today?date={tomorrow}", headers=headers
+    ).json()
+    assert "Client-local today" in dated_body["rationale"]

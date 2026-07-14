@@ -6,18 +6,22 @@ import Wardrobe from "./pages/Wardrobe";
 import Today from "./pages/Today";
 import BuyNext from "./pages/BuyNext";
 import Calendar from "./pages/Calendar";
+import DresserAI from "./pages/DresserAI";
+import TryOn from "./pages/TryOn";
 import Upgrade from "./pages/Upgrade";
 import ClickSpark from "./components/ClickSpark";
 import BlobCursor from "./components/BlobCursor";
 import LegalFooter from "./components/LegalFooter";
 
-type Tab = "wardrobe" | "today" | "buy-next" | "calendar" | "upgrade";
+type Tab = "wardrobe" | "today" | "buy-next" | "calendar" | "dresser-ai" | "tryon" | "upgrade";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "wardrobe", label: "Wardrobe" },
   { id: "today", label: "Today" },
   { id: "buy-next", label: "Buy Next" },
   { id: "calendar", label: "Calendar" },
+  { id: "dresser-ai", label: "DresserAI" },
+  { id: "tryon", label: "TryOn" },
   { id: "upgrade", label: "Plan" },
 ];
 
@@ -101,6 +105,8 @@ export default function App() {
             {tab === "today" && <Today />}
             {tab === "buy-next" && <BuyNext onQuotaBlocked={() => setTab("upgrade")} />}
             {tab === "calendar" && <Calendar />}
+            {tab === "dresser-ai" && <DresserAI onQuotaBlocked={() => setTab("upgrade")} />}
+            {tab === "tryon" && <TryOn onQuotaBlocked={() => setTab("upgrade")} />}
             {tab === "upgrade" && <Upgrade />}
           </main>
 

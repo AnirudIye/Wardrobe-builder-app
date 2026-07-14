@@ -9,6 +9,12 @@ import { useFadeRise, useStaggerReveal } from "../animations";
 let cached: BuyNextData | null = null;
 let inflight: Promise<BuyNextData> | null = null;
 
+// Read-only peek for other tabs (e.g. TryOn, which offers Buy Next products
+// as try-on candidates) — never triggers a fetch itself.
+export function getCachedBuyNext(): BuyNextData | null {
+  return cached;
+}
+
 export default function BuyNext({ onQuotaBlocked }: { onQuotaBlocked: () => void }) {
   const [data, setData] = useState<BuyNextData | null>(cached);
   const [error, setError] = useState<string | null>(null);
