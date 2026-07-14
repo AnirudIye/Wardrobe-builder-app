@@ -39,9 +39,14 @@ class Settings(BaseSettings):
     stripe_price_id: str = ""
     frontend_base_url: str = "http://localhost:5173"
 
-    # AI (Google Gemini — image generation for TryOn)
+    # AI (Google Gemini — TryOn image generation, and all text AI when no
+    # Anthropic key is configured)
     google_api_key: str = ""
     google_image_model: str = "gemini-2.5-flash-image"
+    # Auto-updating alias for the cheapest capable text model. Newer AI Studio
+    # keys can't use 2.x text models, and full flash models spend heavily on
+    # "thinking" tokens; lite is fast and fits the app's cheapest-model policy.
+    google_text_model: str = "gemini-flash-lite-latest"
 
     # Quota
     free_weekly_recommendation_limit: int = 5

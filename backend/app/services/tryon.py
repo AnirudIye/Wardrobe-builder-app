@@ -4,6 +4,7 @@ import logging
 from typing import Optional
 
 from app.config import get_settings
+from app.services import llm
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +22,13 @@ def generate_tryon(person_image_bytes: bytes, garment_image_bytes: bytes) -> Opt
     the call fails, so the router can respond with a friendly message.
     """
     settings = get_settings()
-    if not settings.google_api_key:
+    if not llm.google_key():
         return None
     try:
         from google import genai
         from google.genai import types
 
-        client = genai.Client(api_key=settings.google_api_key)
+        client = genai.Client(api_key=llm.google_key())
         response = client.models.generate_content(
             model=settings.google_image_model,
             contents=[

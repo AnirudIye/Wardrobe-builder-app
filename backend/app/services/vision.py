@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import base64
 import json
 import logging
 import re
@@ -8,8 +7,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ValidationError
 
-from app.config import get_settings
 from app.schemas.garment import GarmentTags
+from app.services import llm
 
 logger = logging.getLogger(__name__)
 
@@ -54,41 +53,16 @@ def _extract_json(text: str) -> Optional[dict]:
 def auto_tag(image_bytes: bytes) -> GarmentTags:
     """Best-effort AI tagging of a garment image.
 
-    Returns empty tags (never raises) when no API key is configured or the call
-    fails, so uploads keep working without an Anthropic key.
+    Returns empty tags (never raises) when no AI key is configured or the call
+    fails, so uploads keep working without any provider key.
     """
-    settings = get_settings()
-    if not settings.anthropic_api_key:
+    if not llm.available():
         return GarmentTags()
 
     try:
-        import anthropic
-
-        client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-        b64 = base64.standard_b64encode(image_bytes).decode("utf-8")
-        response = client.messages.create(
-            model=settings.anthropic_model,
-            max_tokens=512,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": "image/jpeg",
-                                "data": b64,
-                            },
-                        },
-                        {"type": "text", "text": _PROMPT},
-                    ],
-                }
-            ],
-        )
-        text = "".join(
-            block.text for block in response.content if getattr(block, "type", None) == "text"
-        )
+        text = llm.complete(prompt=_PROMPT, images=[image_bytes], max_tokens=512)
+        if text is None:
+            return GarmentTags()
         data = _extract_json(text)
         if data is None:
             logger.warning("Vision tagging returned unparseable output")

@@ -4,7 +4,7 @@ import logging
 import time
 from typing import Optional, Tuple
 
-from app.config import get_settings
+from app.services import llm
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +21,8 @@ _FALLBACK = (
 def get_trends() -> str:
     """Return a short current-fashion-trends summary (cached ~6h).
 
-    Uses Claude when a key is configured; otherwise returns a sensible static
-    summary so downstream recommendations still work.
+    Uses the configured AI provider when a key is present; otherwise returns a
+    sensible static summary so downstream recommendations still work.
     """
     global _cache
     now = time.monotonic()
@@ -35,31 +35,17 @@ def get_trends() -> str:
 
 
 def _ai_trends() -> Optional[str]:
-    settings = get_settings()
-    if not settings.anthropic_api_key:
+    if not llm.available():
         return None
     try:
-        import anthropic
-
-        client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-        response = client.messages.create(
-            model=settings.anthropic_model,
+        return llm.complete(
+            prompt=(
+                "In 2-3 sentences, summarize current everyday fashion trends "
+                "(colours, silhouettes, key pieces) a general audience could apply. "
+                "Be concrete and practical. Plain text only."
+            ),
             max_tokens=256,
-            messages=[
-                {
-                    "role": "user",
-                    "content": (
-                        "In 2-3 sentences, summarize current everyday fashion trends "
-                        "(colours, silhouettes, key pieces) a general audience could apply. "
-                        "Be concrete and practical. Plain text only."
-                    ),
-                }
-            ],
         )
-        text = "".join(
-            b.text for b in response.content if getattr(b, "type", None) == "text"
-        ).strip()
-        return text or None
     except Exception as exc:  # best-effort
         logger.warning("Trend fetch failed: %s", exc)
         return None

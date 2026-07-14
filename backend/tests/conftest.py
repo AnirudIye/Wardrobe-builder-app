@@ -12,6 +12,7 @@ os.environ["PUBLIC_BASE_URL"] = "http://testserver"
 # in pydantic-settings, so these win.
 for _key in (
     "ANTHROPIC_API_KEY",
+    "GOOGLE_API_KEY",
     "OPENWEATHER_API_KEY",
     "SERPAPI_KEY",
     "STRIPE_SECRET_KEY",

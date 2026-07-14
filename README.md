@@ -57,10 +57,10 @@ All secrets live in `backend/.env` (git-ignored; see `backend/.env.example`):
 
 | Key | Enables |
 |---|---|
-| `ANTHROPIC_API_KEY` | AI photo tagging, outfit + buy-next reasoning, trends, DresserAI chat (model: `claude-haiku-4-5`) |
+| `ANTHROPIC_API_KEY` **or** `GOOGLE_API_KEY` | All text AI: photo tagging, outfit + buy-next reasoning, trends, DresserAI chat. Either provider works (Anthropic preferred when both are set); models: `claude-haiku-4-5` / `gemini-flash-lite-latest` |
 | `OPENWEATHER_API_KEY` | Weather-aware outfit recommendations, city geocoding |
 | `SERPAPI_KEY` | Real shoppable product links in buy-next |
-| `GOOGLE_API_KEY` | TryOn image generation (model: `gemini-2.5-flash-image`, get a key at [aistudio.google.com](https://aistudio.google.com/apikey)) |
+| `GOOGLE_API_KEY` | Also powers TryOn image generation (`gemini-2.5-flash-image`; needs image-gen quota/billing on the Google account). Get a key at [aistudio.google.com](https://aistudio.google.com/apikey) |
 | `STRIPE_SECRET_KEY` / `STRIPE_PRICE_ID` / `STRIPE_WEBHOOK_SECRET` | $5/mo subscription |
 | `JWT_SECRET` | Auth token signing (set a long random value) |
 

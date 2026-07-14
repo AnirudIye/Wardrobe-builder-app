@@ -5,9 +5,9 @@ import logging
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
 
-from app.config import get_settings
 from app.models.calendar_event import CalendarEvent
 from app.models.garment import Garment
+from app.services import llm
 from app.services.weather import WeatherSnapshot
 
 logger = logging.getLogger(__name__)
@@ -146,13 +146,10 @@ def _ai_outfit(
     prefs: Optional[dict],
     events: Optional[List[CalendarEvent]] = None,
 ) -> Optional[OutfitResult]:
-    """Ask Claude to assemble an outfit from owned garment IDs. None on any failure."""
-    settings = get_settings()
-    if not settings.anthropic_api_key:
+    """Ask the AI to assemble an outfit from owned garment IDs. None on any failure."""
+    if not llm.available():
         return None
     try:
-        import anthropic
-
         owned_ids = {g.id for g in garments}
         catalog = [_garment_summary(g) for g in garments]
         weather_text = (
@@ -174,15 +171,9 @@ def _ai_outfit(
             "Match the dress code of today's events (dress for the most formal one). "
             "Only use ids from the wardrobe list."
         )
-        client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-        response = client.messages.create(
-            model=settings.anthropic_model,
-            max_tokens=512,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = "".join(
-            b.text for b in response.content if getattr(b, "type", None) == "text"
-        )
+        text = llm.complete(prompt=prompt, max_tokens=512)
+        if text is None:
+            return None
         brace = text.find("{")
         if brace == -1:
             return None
@@ -256,12 +247,9 @@ def heuristic_purchases(garments: List[Garment]) -> List[PurchaseSuggestion]:
 def _ai_purchases(
     garments: List[Garment], trend_summary: Optional[str], prefs: Optional[dict]
 ) -> Optional[List[PurchaseSuggestion]]:
-    settings = get_settings()
-    if not settings.anthropic_api_key:
+    if not llm.available():
         return None
     try:
-        import anthropic
-
         catalog = [_garment_summary(g) for g in garments]
         prompt = (
             "You are a personal shopper. Given the user's wardrobe, current trends, and "
@@ -272,15 +260,9 @@ def _ai_purchases(
             'Reply with ONLY JSON: {"suggestions": [{"description": "...", '
             '"rationale": "...", "query": "<short shopping search query>"}]}.'
         )
-        client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-        response = client.messages.create(
-            model=settings.anthropic_model,
-            max_tokens=700,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = "".join(
-            b.text for b in response.content if getattr(b, "type", None) == "text"
-        )
+        text = llm.complete(prompt=prompt, max_tokens=700)
+        if text is None:
+            return None
         brace = text.find("{")
         if brace == -1:
             return None

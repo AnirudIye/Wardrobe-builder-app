@@ -4,9 +4,9 @@ import json
 import logging
 from typing import List, Optional
 
-from app.config import get_settings
 from app.models.calendar_event import CalendarEvent
 from app.models.garment import Garment
+from app.services import llm
 from app.services.recommendation import _events_text, _garment_summary
 from app.services.weather import WeatherSnapshot
 
@@ -51,28 +51,19 @@ def chat_reply(
     events: List[CalendarEvent],
     prefs: Optional[dict],
 ) -> Optional[str]:
-    """Ask Claude for the next assistant reply in a chat transcript.
+    """Ask the AI for the next assistant reply in a chat transcript.
 
-    Best-effort: returns None (never raises) when no API key is configured or
+    Best-effort: returns None (never raises) when no AI key is configured or
     the call fails, so the router can fall back to a friendly message.
     """
-    settings = get_settings()
-    if not settings.anthropic_api_key:
+    if not llm.available():
         return None
     try:
-        import anthropic
-
-        client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-        response = client.messages.create(
-            model=settings.anthropic_model,
-            max_tokens=600,
-            system=_system_prompt(garments, weather, events, prefs),
+        return llm.complete(
             messages=messages,
+            system=_system_prompt(garments, weather, events, prefs),
+            max_tokens=600,
         )
-        text = "".join(
-            b.text for b in response.content if getattr(b, "type", None) == "text"
-        ).strip()
-        return text or None
     except Exception as exc:  # network/SDK errors — caller falls back
         logger.warning("DresserAI chat failed: %s", exc)
         return None

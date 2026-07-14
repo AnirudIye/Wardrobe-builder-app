@@ -22,7 +22,8 @@ def test_extract_json_garbage_returns_none():
 
 
 def test_auto_tag_without_api_key_returns_empty():
-    # In tests ANTHROPIC_API_KEY is unset, so this must not call the network.
+    # In tests all AI keys (Anthropic + Google) are blanked, so this must not
+    # call the network.
     tags = vision.auto_tag(sample_image_bytes())
     assert tags == GarmentTags()
 
