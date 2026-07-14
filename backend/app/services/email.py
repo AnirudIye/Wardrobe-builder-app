@@ -33,14 +33,14 @@ def send(to: str, subject: str, html: str, text: str) -> bool:
         logger.info("Email not configured; skipping send to %s (subject=%r)", to, subject)
         return False
 
-    msg = EmailMessage()
-    msg["From"] = s.smtp_from
-    msg["To"] = to
-    msg["Subject"] = subject
-    msg.set_content(text)
-    msg.add_alternative(html, subtype="html")
-
     try:
+        msg = EmailMessage()
+        msg["From"] = s.smtp_from
+        msg["To"] = to
+        msg["Subject"] = subject
+        msg.set_content(text)
+        msg.add_alternative(html, subtype="html")
+
         if s.smtp_port == 465:
             server: smtplib.SMTP = smtplib.SMTP_SSL(s.smtp_host, s.smtp_port, timeout=15)
         else:
