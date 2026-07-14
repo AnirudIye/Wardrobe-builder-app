@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-BetterDresser (formerly Wardrobe Builder) — a web app to catalogue clothes (photos auto-tagged by Claude vision, or added via web product search), then get weather- and calendar-aware outfit recommendations, "buy-next" shopping suggestions, free-form styling chat (DresserAI), and AI-generated try-on photos (TryOn). FastAPI backend + React/Vite/TS/Tailwind SPA. The git repo root is this `Wardrobe builder app/` directory (note the parent `Wardrobe builder/` folder is not the repo).
+BetterDresser (formerly Wardrobe Builder) — a web app to catalogue clothes (photos auto-tagged by AI vision, or added via web product search), then get weather- and calendar-aware outfit recommendations, "buy-next" shopping suggestions, free-form styling chat (DresserAI), and AI-generated try-on photos (TryOn). FastAPI backend + React/Vite/TS/Tailwind SPA. The git repo root is this `Wardrobe builder app/` directory (note the parent `Wardrobe builder/` folder is not the repo).
 
 ## Commands
 
@@ -13,7 +13,7 @@ BetterDresser (formerly Wardrobe Builder) — a web app to catalogue clothes (ph
 python -m venv .venv && .venv\Scripts\activate      # or: source .venv/bin/activate
 pip install --only-binary :all: -r requirements.txt  # prebuilt wheels only, no compiler
 uvicorn app.main:app --reload                        # http://localhost:8000/docs
-pytest -q                                            # full suite (~74 tests)
+pytest -q                                            # full suite (~80 tests)
 pytest tests/test_calendar.py::test_event_crud       # single test
 ```
 
@@ -21,8 +21,10 @@ pytest tests/test_calendar.py::test_event_crud       # single test
 ```bash
 npm install
 npm run dev            # http://localhost:5173, proxies /api -> :8000
-npm run build          # tsc + vite build
+npm run build          # tsc + vite build (also the typecheck — keep it clean)
 ```
+
+End-to-end verification needs **both** servers running at once (SPA calls the API through the Vite proxy). Note the dev servers are children of the shell that launched them — they die when that shell exits, so keep them backgrounded/detached if you'll act on the app across steps.
 
 **Windows + Anaconda gotcha (important):** if `pip`/`python`/`uvicorn` in the venv fails with an SSL/`_ssl` DLL error, prepend Anaconda's DLL dir to PATH before running, e.g. in PowerShell:
 `$env:Path = "C:\Users\<you>\anaconda3;C:\Users\<you>\anaconda3\Library\bin;C:\Users\<you>\anaconda3\Scripts;" + $env:Path`. The venv doesn't copy the OpenSSL DLLs that `ssl` needs.
@@ -61,7 +63,7 @@ Users set their location by city name: `POST /profile/location` geocodes via Ope
 Garment images go through the `StorageBackend` ABC (`save`/`url`/`delete` keyed by opaque relative keys). Dev uses `local.py` (filesystem, served at `/media`). Swap in S3/R2 by implementing the interface — callers store only the key.
 
 ### Database
-Dev is SQLite; tables auto-create on startup via `Base.metadata.create_all` (no migration step). **Alembic is not yet wired** — models are Postgres-compatible, so any schema change currently requires deleting `wardrobe.db` in dev (or adding Alembic before prod). Tests use in-memory SQLite per test.
+Dev is SQLite; tables auto-create on startup via `Base.metadata.create_all` (no migration step). **Alembic is not yet wired** — models are Postgres-compatible, so any schema change currently requires deleting `wardrobe.db` in dev (or adding Alembic before prod). Tests use in-memory SQLite per test, and `tests/conftest.py` blanks **every** external API key (Anthropic, Google, OpenWeather, SerpAPI, Stripe) before app import, so the suite never hits the network or spends quota — a test exercising an AI path must `monkeypatch` the service (see `test_llm.py`, `test_vision.py`).
 
 ### Frontend
 Single-page app with tab state in `App.tsx` (no router). `src/api.ts` is a thin typed client: all calls hit `/api*`, the JWT lives in `localStorage` (`wb_token`) and is auto-attached, and non-2xx responses throw `ApiError` (a `402` is how the UI knows to show the upgrade flow). Keep request/response TypeScript types in `api.ts` in sync with the backend Pydantic schemas.
