@@ -2,6 +2,12 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
+from app.core.security import (
+    create_access_token,
+    create_email_token,
+    decode_email_token,
+)
+
 
 def _register(client: TestClient, email: str = "a@example.com", password: str = "supersecret1"):
     return client.post("/auth/register", json={"email": email, "password": password})
@@ -80,3 +86,16 @@ def test_new_user_exposes_verification_and_avatar_fields(client: TestClient):
     profile = client.get("/profile", headers=headers).json()
     assert "avatar_url" in profile
     assert profile["avatar_url"] is None
+
+
+def test_email_token_roundtrips():
+    assert decode_email_token(create_email_token(42)) == 42
+
+
+def test_email_token_rejects_a_plain_access_token():
+    # An access token has no verify purpose, so it must not verify emails.
+    assert decode_email_token(create_access_token(subject=42)) is None
+
+
+def test_email_token_rejects_garbage():
+    assert decode_email_token("not-a-token") is None
