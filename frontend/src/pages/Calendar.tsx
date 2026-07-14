@@ -51,29 +51,29 @@ export default function Calendar() {
   return (
     <div ref={pageRef}>
       <h2 className="text-xl font-semibold mb-4">Your calendar</h2>
-      <p className="text-sm text-neutral-500 mb-4">
+      <p className="text-sm text-navy/50 mb-4">
         Add the events you're attending — outfit suggestions for that day will match the dress code.
       </p>
 
-      <form onSubmit={submit} className="bg-white rounded-xl shadow-sm p-5 mb-6 grid gap-3 sm:grid-cols-2">
+      <form onSubmit={submit} className="clay-card p-6 mb-6 grid gap-4 sm:grid-cols-2">
         <input
           required
           placeholder="Event title (e.g. Job interview)"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="rounded-lg border border-neutral-300 px-3 py-2 sm:col-span-2"
+          className="clay-input sm:col-span-2"
         />
         <input
           type="date"
           required
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="rounded-lg border border-neutral-300 px-3 py-2"
+          className="clay-input"
         />
         <select
           value={eventType}
           onChange={(e) => setEventType(e.target.value)}
-          className="rounded-lg border border-neutral-300 px-3 py-2"
+          className="clay-input"
         >
           {EVENT_TYPES.map((t) => (
             <option key={t} value={t}>
@@ -85,44 +85,41 @@ export default function Calendar() {
           placeholder="Notes (optional)"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="rounded-lg border border-neutral-300 px-3 py-2 sm:col-span-2"
+          className="clay-input sm:col-span-2"
         />
-        {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-lg bg-neutral-900 text-white py-2 font-medium disabled:opacity-50 sm:col-span-2"
-        >
+        {error && <p className="text-sm text-red-500 sm:col-span-2">{error}</p>}
+        <button type="submit" disabled={busy} className="clay-btn py-2.5 sm:col-span-2">
           {busy ? "Adding…" : "Add event"}
         </button>
       </form>
 
       {loading ? (
-        <p className="text-neutral-500">Loading events…</p>
+        <p className="text-navy/50">Loading events…</p>
       ) : events.length === 0 ? (
-        <p className="text-neutral-500">No events yet.</p>
+        <p className="text-navy/50">No events yet.</p>
       ) : (
-        <ul ref={listRef} className="space-y-2">
+        <ul ref={listRef} className="space-y-3">
           {events.map((ev) => (
             <li
               key={ev.id}
-              className={`bg-white rounded-lg shadow-sm px-4 py-3 flex items-center justify-between ${
-                ev.date === today ? "ring-2 ring-neutral-900" : ""
+              className={`clay-card clay-card-hover px-5 py-4 flex items-center justify-between ${
+                ev.date === today ? "ring-4 ring-blush/60" : ""
               }`}
             >
               <div>
                 <p className="font-medium">
                   {ev.title}
-                  {ev.date === today && (
-                    <span className="ml-2 text-xs bg-neutral-900 text-white rounded px-1.5 py-0.5">today</span>
-                  )}
+                  {ev.date === today && <span className="clay-chip ml-2">today</span>}
                 </p>
-                <p className="text-sm text-neutral-500">
+                <p className="text-sm text-navy/50">
                   {ev.date} · {ev.event_type}
                   {ev.notes ? ` · ${ev.notes}` : ""}
                 </p>
               </div>
-              <button onClick={() => remove(ev.id)} className="text-red-600 text-xs">
+              <button
+                onClick={() => remove(ev.id)}
+                className="text-blush-deep text-xs font-medium hover:underline"
+              >
                 Delete
               </button>
             </li>

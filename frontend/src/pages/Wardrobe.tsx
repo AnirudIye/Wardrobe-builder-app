@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, Garment, Product } from "../api";
 import { useFadeRise, useStaggerReveal, pulse } from "../animations";
+import CircularGallery from "../components/CircularGallery";
 
 const CATEGORIES = ["top", "bottom", "outerwear", "dress", "footwear", "accessory", "other"];
 
@@ -76,54 +77,71 @@ export default function Wardrobe() {
     }
   };
 
-  if (loading) return <p className="text-neutral-500">Loading wardrobe…</p>;
+  if (loading) return <p className="text-navy/50">Loading wardrobe…</p>;
 
   return (
     <div ref={pageRef}>
+      {/* Circular gallery of the closet (needs 3+ items to form a ring) */}
+      {items.length >= 3 && (
+        <div className="clay-card mb-6 py-2">
+          <CircularGallery
+            images={items.map((g) => ({ src: g.thumbnail_url, alt: g.subcategory ?? "" }))}
+          />
+          <p className="text-center text-xs text-navy/40 pb-2 -mt-1">drag to spin your closet</p>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Your wardrobe ({items.length})</h2>
-        <label className="rounded-lg bg-neutral-900 text-white px-4 py-2 text-sm font-medium cursor-pointer hover:bg-neutral-700 transition-colors">
+        <label className="clay-btn px-5 py-2 text-sm cursor-pointer">
           {uploading ? "Uploading…" : "+ Add photo"}
           <input ref={fileRef} type="file" accept="image/*" hidden onChange={onUpload} />
         </label>
       </div>
 
       {/* Add from the web */}
-      <div className="bg-white rounded-xl shadow-sm p-5 mb-6">
-        <h3 className="font-medium mb-1">Add from the web</h3>
-        <p className="text-sm text-neutral-500 mb-3">
+      <div className="clay-card p-6 mb-6">
+        <h3 className="font-semibold mb-1">Add from the web</h3>
+        <p className="text-sm text-navy/50 mb-3">
           Search the internet for clothing and add pieces straight to your wardrobe.
         </p>
-        <form onSubmit={search} className="flex gap-2">
+        <form onSubmit={search} className="flex gap-3">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="e.g. tan trench coat, white sneakers…"
-            className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            className="flex-1 clay-input text-sm"
           />
           <button
             type="submit"
             disabled={searching || query.trim().length < 2}
-            className="rounded-lg bg-neutral-900 text-white px-4 py-2 text-sm font-medium disabled:opacity-50 hover:bg-neutral-700 transition-colors"
+            className="clay-btn px-5 py-2 text-sm"
           >
             {searching ? "Searching…" : "Search"}
           </button>
         </form>
-        {searchError && <p className="text-sm text-red-600 mt-2">{searchError}</p>}
+        {searchError && <p className="text-sm text-red-500 mt-2">{searchError}</p>}
         {results && results.length > 0 && (
-          <div ref={resultsRef} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+          <div ref={resultsRef} className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5">
             {results.map((p, i) => (
-              <div key={i} className="border border-neutral-200 rounded-lg p-2 flex flex-col">
+              <div
+                key={i}
+                className="clay-card clay-card-hover p-3 flex flex-col"
+              >
                 {p.thumbnail && (
-                  <img src={p.thumbnail} alt="" className="w-full aspect-square object-contain" />
+                  <img
+                    src={p.thumbnail}
+                    alt=""
+                    className="w-full aspect-square object-contain rounded-xl"
+                  />
                 )}
-                <p className="text-xs mt-1 line-clamp-2 flex-1">{p.title}</p>
-                {p.price && <p className="text-xs font-medium">{p.price}</p>}
+                <p className="text-xs mt-2 line-clamp-2 flex-1">{p.title}</p>
+                {p.price && <p className="text-xs font-semibold mt-1">{p.price}</p>}
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => addFromWeb(p)}
                     disabled={addingUrl !== null || !p.thumbnail}
-                    className="flex-1 rounded bg-neutral-900 text-white text-xs py-1 disabled:opacity-50 hover:bg-neutral-700 transition-colors"
+                    className="flex-1 clay-btn text-xs py-1.5"
                   >
                     {addingUrl === p.thumbnail ? "Adding…" : "+ Add"}
                   </button>
@@ -132,7 +150,7 @@ export default function Wardrobe() {
                       href={p.link}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded border border-neutral-300 text-xs py-1 px-2 hover:bg-neutral-100 transition-colors"
+                      className="clay-btn-blush text-xs py-1.5 px-3"
                     >
                       View
                     </a>
@@ -145,20 +163,22 @@ export default function Wardrobe() {
       </div>
 
       {items.length === 0 ? (
-        <p className="text-neutral-500">
+        <p className="text-navy/50">
           No items yet. Upload a photo or search the web to start your wardrobe.
         </p>
       ) : (
-        <div ref={gridRef} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div ref={gridRef} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
           {items.map((g) => (
-            <div key={g.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div key={g.id} className="clay-card clay-card-hover overflow-hidden">
               <img src={g.thumbnail_url} alt="" className="w-full aspect-square object-cover" />
               <div className="p-3 space-y-2 text-sm">
-                {g.subcategory && <p className="text-xs text-neutral-500 line-clamp-1">{g.subcategory}</p>}
+                {g.subcategory && (
+                  <span className="clay-chip inline-block line-clamp-1">{g.subcategory}</span>
+                )}
                 <select
                   value={g.category ?? ""}
                   onChange={(e) => patchItem(g.id, { category: e.target.value })}
-                  className="w-full rounded border border-neutral-300 px-2 py-1"
+                  className="w-full clay-input px-3 py-1.5 text-sm"
                 >
                   <option value="">— category —</option>
                   {CATEGORIES.map((c) => (
@@ -168,7 +188,7 @@ export default function Wardrobe() {
                   ))}
                 </select>
                 <div className="flex items-center gap-2">
-                  <label className="text-neutral-500">Warmth</label>
+                  <label className="text-navy/50">Warmth</label>
                   <input
                     type="number"
                     min={1}
@@ -177,13 +197,14 @@ export default function Wardrobe() {
                     onChange={(e) =>
                       patchItem(g.id, { warmth_rating: e.target.value ? Number(e.target.value) : null })
                     }
-                    className="w-16 rounded border border-neutral-300 px-2 py-1"
+                    className="w-16 clay-input px-3 py-1.5 text-sm"
                   />
                 </div>
-                {g.colors.length > 0 && (
-                  <p className="text-neutral-500">{g.colors.join(", ")}</p>
-                )}
-                <button onClick={() => removeItem(g.id)} className="text-red-600 text-xs">
+                {g.colors.length > 0 && <p className="text-navy/50">{g.colors.join(", ")}</p>}
+                <button
+                  onClick={() => removeItem(g.id)}
+                  className="text-blush-deep text-xs font-medium hover:underline"
+                >
                   Delete
                 </button>
               </div>

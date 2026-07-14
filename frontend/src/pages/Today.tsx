@@ -45,35 +45,33 @@ export default function Today() {
     <div ref={pageRef}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">What to wear today</h2>
-        <button
-          onClick={generate}
-          disabled={busy}
-          className="rounded-lg bg-neutral-900 text-white px-4 py-2 text-sm font-medium disabled:opacity-50 hover:bg-neutral-700 transition-colors"
-        >
+        <button onClick={generate} disabled={busy} className="clay-btn px-5 py-2 text-sm">
           {busy ? "Thinking…" : rec ? "Refresh" : "Get recommendation"}
         </button>
       </div>
 
-      {busy && !rec && <p className="text-neutral-500 mb-4">Styling your outfit…</p>}
-      {error && <p className="text-red-600 mb-4">{error}</p>}
+      {busy && !rec && <p className="text-navy/50 mb-4">Styling your outfit…</p>}
+      {error && <p className="text-red-500 mb-4">{error}</p>}
 
       {rec && (
-        <div className="bg-white rounded-xl shadow-sm p-5">
+        <div className="clay-card p-6">
           {rec.weather && (
-            <p className="text-sm text-neutral-500 mb-2">
+            <span className="clay-chip inline-block mb-3">
               {Math.round(rec.weather.temp_c)}°C · {rec.weather.description}
-            </p>
+            </span>
           )}
-          <p className="mb-4">{rec.rationale}</p>
-          <div ref={itemsRef} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <p className="mb-5">{rec.rationale}</p>
+          <div ref={itemsRef} className="grid grid-cols-2 sm:grid-cols-4 gap-5">
             {rec.items.map((g) => (
-              <div key={g.id} className="rounded-lg overflow-hidden border border-neutral-200">
+              <div key={g.id} className="clay-card clay-card-hover overflow-hidden">
                 <img src={g.thumbnail_url} alt="" className="w-full aspect-square object-cover" />
-                <p className="text-xs p-2 text-neutral-600">{g.subcategory ?? g.category ?? "item"}</p>
+                <p className="text-xs p-2.5 text-navy/70 font-medium">
+                  {g.subcategory ?? g.category ?? "item"}
+                </p>
               </div>
             ))}
           </div>
-          <p className="text-xs text-neutral-400 mt-3">Source: {rec.source}</p>
+          <p className="text-xs text-navy/40 mt-4">Source: {rec.source}</p>
         </div>
       )}
     </div>

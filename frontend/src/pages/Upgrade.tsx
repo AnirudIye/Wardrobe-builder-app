@@ -37,44 +37,38 @@ export default function Upgrade() {
     }
   };
 
-  if (!status) return <p className="text-neutral-500">Loading plan…</p>;
+  if (!status) return <p className="text-navy/50">Loading plan…</p>;
 
   const isPaid = status.plan === "paid";
 
   return (
     <div ref={pageRef} className="max-w-md">
       <h2 className="text-xl font-semibold mb-4">Your plan</h2>
-      <div className="bg-white rounded-xl shadow-sm p-6 space-y-4">
+      <div className="clay-card clay-card-hover p-7 space-y-5">
         <div>
-          <p className="text-2xl font-semibold capitalize">
+          <p className="font-brand text-3xl">
             {isPaid ? "BetterDresser Plus" : "Free plan"}
           </p>
           {isPaid ? (
-            <p className="text-sm text-neutral-500">Unlimited buy-next suggestions.</p>
+            <p className="text-sm text-navy/50 mt-1">Unlimited buy-next suggestions.</p>
           ) : (
-            <p className="text-sm text-neutral-500">
-              {status.remaining_this_week} of {status.weekly_limit} buy-next suggestions left this
-              week. Outfit recommendations are always free.
+            <p className="text-sm text-navy/50 mt-1">
+              <span className="clay-chip mr-1">
+                {status.remaining_this_week} of {status.weekly_limit}
+              </span>
+              buy-next suggestions left this week. Outfit recommendations are always free.
             </p>
           )}
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-500">{error}</p>}
 
         {isPaid ? (
-          <button
-            onClick={openPortal}
-            disabled={busy}
-            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium"
-          >
+          <button onClick={openPortal} disabled={busy} className="clay-btn-blush px-5 py-2 text-sm">
             Manage subscription
           </button>
         ) : (
-          <button
-            onClick={startCheckout}
-            disabled={busy}
-            className="w-full rounded-lg bg-neutral-900 text-white py-2.5 font-medium disabled:opacity-50"
-          >
+          <button onClick={startCheckout} disabled={busy} className="w-full clay-btn py-3">
             {busy ? "Redirecting…" : "Upgrade to Plus — $5/month"}
           </button>
         )}
