@@ -18,6 +18,10 @@ for _key in (
     "STRIPE_SECRET_KEY",
     "STRIPE_WEBHOOK_SECRET",
     "STRIPE_PRICE_ID",
+    "SMTP_HOST",
+    "SMTP_USER",
+    "SMTP_PASSWORD",
+    "SMTP_FROM",
 ):
     os.environ[_key] = ""
 
