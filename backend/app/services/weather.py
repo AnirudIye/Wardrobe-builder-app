@@ -10,6 +10,7 @@ from app.config import get_settings
 
 _CACHE_TTL_SECONDS = 1800  # 30 minutes
 _OWM_URL = "https://api.openweathermap.org/data/2.5/weather"
+_OWM_GEO_URL = "https://api.openweathermap.org/geo/1.0/direct"
 
 # (rounded_lat, rounded_lon) -> (fetched_at, snapshot)
 _cache: Dict[Tuple[float, float], Tuple[float, "WeatherSnapshot"]] = {}
@@ -77,3 +78,38 @@ def get_weather(lat: float, lon: float) -> WeatherSnapshot:
 
 def clear_cache() -> None:
     _cache.clear()
+
+
+class GeocodeResult(BaseModel):
+    name: str  # resolved display name, e.g. "London, GB"
+    lat: float
+    lon: float
+
+
+def geocode(query: str) -> GeocodeResult:
+    """Resolve a city name to coordinates via OpenWeather's geocoding API.
+
+    Raises WeatherServiceError if no key is configured, the lookup fails, or
+    the place is unknown.
+    """
+    settings = get_settings()
+    if not settings.openweather_api_key:
+        raise WeatherServiceError("OpenWeather API key is not configured")
+
+    params = {"q": query, "limit": 1, "appid": settings.openweather_api_key}
+    try:
+        resp = httpx.get(_OWM_GEO_URL, params=params, timeout=10.0)
+        resp.raise_for_status()
+        results = resp.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise WeatherServiceError(f"Failed to look up location: {exc}") from exc
+
+    if not results:
+        raise WeatherServiceError(f"Could not find a place called {query!r}")
+
+    top = results[0]
+    name = str(top.get("name", query))
+    state = top.get("state")
+    country = top.get("country")
+    display = ", ".join(p for p in [name, state, country] if p)
+    return GeocodeResult(name=display, lat=float(top["lat"]), lon=float(top["lon"]))

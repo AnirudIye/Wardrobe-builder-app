@@ -125,6 +125,13 @@ export const api = {
 
   me: () => request<User>("/auth/me"),
   profile: () => request<User>("/profile"),
+  weather: () => request<Weather>("/weather"),
+  setLocation: (city: string) =>
+    request<User>("/profile/location", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ city }),
+    }),
   updateProfile: (data: Partial<{ city: string; lat: number; lon: number }>) =>
     request<User>("/profile", {
       method: "PATCH",

@@ -4,9 +4,9 @@
 import { useEffect, useRef } from "react";
 
 const BLOBS = [
-  { size: 34, lerp: 0.35, opacity: 0.55 },
-  { size: 24, lerp: 0.18, opacity: 0.45 },
-  { size: 16, lerp: 0.09, opacity: 0.4 },
+  { size: 64, lerp: 0.35, opacity: 0.5 },
+  { size: 46, lerp: 0.18, opacity: 0.42 },
+  { size: 30, lerp: 0.09, opacity: 0.38 },
 ];
 
 export default function BlobCursor({ color = "#FA9EBC" }: { color?: string }) {
@@ -54,7 +54,7 @@ export default function BlobCursor({ color = "#FA9EBC" }: { color?: string }) {
     <>
       <svg className="absolute w-0 h-0" aria-hidden="true">
         <filter id="blob-goo">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
+          <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur" />
           <feColorMatrix
             in="blur"
             values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10"

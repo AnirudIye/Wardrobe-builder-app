@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api, Garment, Product } from "../api";
 import { useFadeRise, useStaggerReveal, pulse } from "../animations";
 import CircularGallery from "../components/CircularGallery";
+import WeatherWidget from "../components/WeatherWidget";
 
 const CATEGORIES = ["top", "bottom", "outerwear", "dress", "footwear", "accessory", "other"];
 
@@ -81,6 +82,8 @@ export default function Wardrobe() {
 
   return (
     <div ref={pageRef}>
+      <WeatherWidget />
+
       {/* Circular gallery of the closet (needs 3+ items to form a ring) */}
       {items.length >= 3 && (
         <div className="clay-card mb-6 py-2">

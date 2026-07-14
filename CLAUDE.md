@@ -44,6 +44,9 @@ Request path: **React SPA → `/api` (Vite proxy) → FastAPI routers → `app/s
 ### Recommendation engine (`services/recommendation.py`)
 Garments and calendar events share a `_FORMALITY_RANK` scale (athletic→casual→smart-casual→business→formal). `/recommendations/today` loads **today's** calendar events and biases picks toward the dressiest one's `event_type`; both the AI prompt and the heuristic honor this. Outfits are always assembled from the user's **owned garment IDs** only.
 
+### Location & weather
+Users set their location by city name: `POST /profile/location` geocodes via OpenWeather's geo API (`weather.geocode`) and stores the resolved `city`/`lat`/`lon` on the User. `GET /weather` returns current conditions for the saved (or query-string) coordinates, cached ~30 min per location. The Wardrobe page's `WeatherWidget` shows city + conditions + an OpenStreetMap iframe and drives the change-location flow.
+
 ### Storage abstraction (`storage/`)
 Garment images go through the `StorageBackend` ABC (`save`/`url`/`delete` keyed by opaque relative keys). Dev uses `local.py` (filesystem, served at `/media`). Swap in S3/R2 by implementing the interface — callers store only the key.
 

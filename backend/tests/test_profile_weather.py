@@ -47,3 +47,37 @@ def test_weather_uses_mocked_service(client: TestClient, monkeypatch: pytest.Mon
     assert resp.status_code == 200, resp.text
     assert resp.json()["condition"] == "Clouds"
     assert resp.json()["temp_c"] == 8.0
+
+
+def test_set_location_geocodes_city(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(
+        weather,
+        "geocode",
+        lambda q: weather.GeocodeResult(name="Waterloo, ON, CA", lat=43.46, lon=-80.52),
+    )
+    headers = auth_headers(client)
+    resp = client.post("/profile/location", headers=headers, json={"city": "waterloo"})
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["city"] == "Waterloo, ON, CA"
+    assert body["lat"] == 43.46
+    assert body["lon"] == -80.52
+
+    # Persisted on the profile.
+    assert client.get("/profile", headers=headers).json()["city"] == "Waterloo, ON, CA"
+
+
+def test_set_location_unknown_city_400(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    def _boom(q):
+        raise weather.WeatherServiceError(f"Could not find a place called {q!r}")
+
+    monkeypatch.setattr(weather, "geocode", _boom)
+    headers = auth_headers(client)
+    resp = client.post("/profile/location", headers=headers, json={"city": "Atlantis"})
+    assert resp.status_code == 400
+    assert "Atlantis" in resp.json()["detail"]
+
+
+def test_geocode_without_key_raises():
+    with pytest.raises(weather.WeatherServiceError):
+        weather.geocode("London")

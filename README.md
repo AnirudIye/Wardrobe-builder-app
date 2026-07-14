@@ -15,7 +15,7 @@ capped at 5/week on the free tier — a $5/month plan unlocks unlimited (Stripe)
 ```
 React SPA  ──/api (Vite proxy)──▶  FastAPI
                                      ├─ auth        JWT (register/login/me)
-                                     ├─ profile     location + style prefs, /weather, /trends
+                                     ├─ profile     location (+ /profile/location geocode), /weather, /trends
                                      ├─ wardrobe    photo upload → AI tags → CRUD
                                      ├─ calendar    events with dress codes → outfit matching
                                      ├─ recommendations  /today, /buy-next  (quota-guarded)

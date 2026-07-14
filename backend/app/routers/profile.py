@@ -4,6 +4,7 @@ import json
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user
@@ -54,6 +55,31 @@ def update_profile(
         current_user.style_preferences = json.dumps(prefs) if prefs is not None else None
     for field, value in changes.items():
         setattr(current_user, field, value)
+    db.commit()
+    db.refresh(current_user)
+    return _serialize(current_user)
+
+
+class LocationIn(BaseModel):
+    city: str = Field(min_length=2, max_length=120)
+
+
+@router.post("/profile/location", response_model=ProfileOut)
+def set_location(
+    payload: LocationIn,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProfileOut:
+    """Set the user's location by city name (geocoded via OpenWeather)."""
+    try:
+        place = weather.geocode(payload.city)
+    except WeatherServiceError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+        ) from exc
+    current_user.city = place.name
+    current_user.lat = place.lat
+    current_user.lon = place.lon
     db.commit()
     db.refresh(current_user)
     return _serialize(current_user)
