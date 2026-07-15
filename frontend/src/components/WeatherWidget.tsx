@@ -125,7 +125,14 @@ export default function WeatherWidget() {
                   <span className="clay-chip">{Math.round(weather.temp_c)}°C</span>
                   <span className="clay-chip capitalize">{weather.description}</span>
                   <span className="clay-chip">feels {Math.round(weather.feels_like_c)}°C</span>
-                  <span className="clay-chip">💨 {Math.round(weather.wind_kph)} km/h</span>
+                  <span className="clay-chip inline-flex items-center gap-1.5">
+                    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M3 8h9a2.5 2.5 0 1 0-2.5-2.5" />
+                      <path d="M3 16h13a2.5 2.5 0 1 1-2.5 2.5" />
+                      <path d="M3 12h6" />
+                    </svg>
+                    {Math.round(weather.wind_kph)} km/h
+                  </span>
                 </div>
               ) : (
                 <p className="text-sm text-navy/50 mt-2">Weather unavailable right now.</p>

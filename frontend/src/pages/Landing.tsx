@@ -38,12 +38,6 @@ const STATS = [
   { v: "$0", l: "card to start" },
 ];
 
-const TESTIMONIALS = [
-  { q: "I stopped standing in front of my closet at 8am. It just tells me what to wear.", n: "Maya R.", r: "Product designer", av: 0 },
-  { q: "Buy Next talked me out of my third navy jacket and into the shoes I actually needed.", n: "Devin K.", r: "Consultant", av: 2 },
-  { q: "The weather-aware picks are scarily good. I haven't been caught underdressed since.", n: "Priya S.", r: "Grad student", av: 1 },
-];
-
 const MARQUEE = ["MINIMAL", "STREETWEAR", "SMART CASUAL", "WEATHER-AWARE", "CALENDAR-SYNCED", "AI TRY-ON", "SHOP THE GAPS", "OWN YOUR STYLE"];
 
 /* ----------------------------------------------------------- decorations */
@@ -344,26 +338,6 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
               </ul>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ==================================================== TESTIMONIALS */}
-      <section className="max-w-6xl mx-auto px-4 pb-8">
-        <div className="text-center max-w-2xl mx-auto">
-          <span className="clay-chip blob-pill">Loved by sharp dressers</span>
-          <h2 className="font-brand text-4xl sm:text-5xl mt-4">Mornings, minus the guesswork</h2>
-        </div>
-        <div className="grid md:grid-cols-3 gap-6 mt-12">
-          {TESTIMONIALS.map((t, i) => (
-            <figure key={t.n} className={`clay-card clay-card-hover ${CARD_BLOBS[i % 4]} p-7 flex flex-col`}>
-              <div className="text-blush-deep text-4xl font-brand leading-none">“</div>
-              <blockquote className="text-navy/75 mt-1 flex-1">{t.q}</blockquote>
-              <figcaption className="flex items-center gap-3 mt-5">
-                <span className="w-11 h-11 rounded-full overflow-hidden shadow-clay-sm"><Avatar i={t.av} /></span>
-                <span className="text-sm"><span className="font-medium block">{t.n}</span><span className="text-navy/50">{t.r}</span></span>
-              </figcaption>
-            </figure>
-          ))}
         </div>
       </section>
 
