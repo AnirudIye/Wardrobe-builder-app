@@ -1,7 +1,12 @@
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
+from app.models.calendar_event import CalendarEvent
+from app.models.garment import Garment
+from app.models.recommendation_event import RecommendationEvent
 from tests.helpers import auth_headers, sample_image_bytes
 
 
@@ -56,21 +61,46 @@ def test_change_password(client: TestClient):
     ).status_code == 200
 
 
-def test_delete_account_removes_user_and_data(client: TestClient):
+def test_delete_account_removes_user_and_data(client: TestClient, db_session: Session):
     headers = auth_headers(client, email="del@example.com")
-    client.post(
+    uid = client.get("/auth/me", headers=headers).json()["id"]
+
+    item = client.post(
         "/wardrobe/items",
         headers=headers,
         files={"file": ("a.png", sample_image_bytes(), "image/png")},
     )
+    assert item.status_code in (200, 201), item.text
+    # Capture the on-disk media path so we can prove the file is really gone.
+    thumb_url = item.json()["thumbnail_url"]
+    thumb_path = "/media/" + thumb_url.split("/media/", 1)[1]
+    assert client.get(thumb_path).status_code == 200
+
     client.post(
         "/calendar/events",
         headers=headers,
         json={"title": "Thing", "date": "2026-07-14", "event_type": "casual"},
     )
+    # Insert a recommendation event directly so its cleanup is verified too.
+    db_session.add(RecommendationEvent(user_id=uid, kind="buy-next"))
+    db_session.commit()
 
     resp = client.delete("/profile", headers=headers)
     assert resp.status_code == 204
 
     # Token now resolves to a deleted user → 401.
     assert client.get("/auth/me", headers=headers).status_code == 401
+
+    # All of the user's data is actually gone — not just the account row.
+    assert db_session.execute(
+        select(Garment).where(Garment.user_id == uid)
+    ).scalars().all() == []
+    assert db_session.execute(
+        select(CalendarEvent).where(CalendarEvent.user_id == uid)
+    ).scalars().all() == []
+    assert db_session.execute(
+        select(RecommendationEvent).where(RecommendationEvent.user_id == uid)
+    ).scalars().all() == []
+
+    # The stored garment image file is deleted from disk as well.
+    assert client.get(thumb_path).status_code == 404
