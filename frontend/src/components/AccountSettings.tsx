@@ -80,7 +80,7 @@ export default function AccountSettings({ profile, email, onProfileChange }: Pro
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={onAvatar} />
           </label>
           {profile?.avatar_url && (
-            <button onClick={removeAvatar} className="clay-btn-blush px-4 py-2">
+            <button onClick={removeAvatar} disabled={busy} className="clay-btn-blush px-4 py-2">
               Remove
             </button>
           )}
@@ -96,7 +96,7 @@ export default function AccountSettings({ profile, email, onProfileChange }: Pro
             placeholder="City"
             className="flex-1 clay-input"
           />
-          <button onClick={saveLocation} className="clay-btn px-4 py-2">
+          <button onClick={saveLocation} disabled={busy} className="clay-btn px-4 py-2">
             Save
           </button>
         </div>

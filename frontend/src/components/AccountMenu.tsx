@@ -14,6 +14,7 @@ export default function AccountMenu({ onUpgrade }: { onUpgrade: () => void }) {
   const [profile, setProfile] = useState<User | null>(profileCache.peek());
   const [open, setOpen] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
+  const [deleteErr, setDeleteErr] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,6 +29,15 @@ export default function AccountMenu({ onUpgrade }: { onUpgrade: () => void }) {
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
   const plan = profile?.plan ?? user?.plan ?? "free";
   const isPaid = plan === "paid";
   const email = user?.email ?? "";
@@ -40,12 +50,26 @@ export default function AccountMenu({ onUpgrade }: { onUpgrade: () => void }) {
   };
 
   const del = async () => {
-    await api.deleteAccount();
-    logout();
+    setDeleteErr(null);
+    try {
+      await api.deleteAccount();
+      logout();
+    } catch (e) {
+      setDeleteErr((e as Error).message || "Couldn't delete your account. Please try again.");
+      setPanel(null); // close the confirm dialog so the error banner is visible
+    }
   };
 
   return (
     <div className="relative" ref={ref}>
+      {deleteErr && (
+        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[9995] clay-card px-5 py-2 text-sm text-red-500">
+          {deleteErr}
+          <button onClick={() => setDeleteErr(null)} className="ml-3 text-navy/40 hover:text-navy">
+            ×
+          </button>
+        </div>
+      )}
       <div className="flex items-center gap-3">
         <button
           onClick={onUpgrade}
