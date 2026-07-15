@@ -3,6 +3,7 @@ import { api, Garment, Product } from "../api";
 import { useFadeRise, useStaggerReveal, pulse } from "../animations";
 import CircularGallery from "../components/CircularGallery";
 import WeatherWidget from "../components/WeatherWidget";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { CardGridSkeleton, Skeleton } from "../components/Skeleton";
 import { garmentsCache } from "../store";
 
@@ -17,6 +18,7 @@ export default function Wardrobe() {
   const [loading, setLoading] = useState(garmentsCache.peek() === null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Web search state
@@ -267,7 +269,7 @@ export default function Wardrobe() {
                 )}
                 {g.colors.length > 0 && <p className="text-navy/50">{g.colors.join(", ")}</p>}
                 <button
-                  onClick={() => removeItem(g.id)}
+                  onClick={() => setConfirmId(g.id)}
                   className="text-blush-deep text-xs font-medium hover:underline"
                 >
                   Delete
@@ -277,6 +279,17 @@ export default function Wardrobe() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmId !== null}
+        title="Delete item?"
+        message="This removes the item from your wardrobe. This can't be undone."
+        onConfirm={() => {
+          if (confirmId !== null) removeItem(confirmId);
+          setConfirmId(null);
+        }}
+        onCancel={() => setConfirmId(null)}
+      />
     </div>
   );
 }
