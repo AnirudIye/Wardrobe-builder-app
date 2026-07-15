@@ -51,3 +51,13 @@ body {
     @apply rounded-2xl bg-cream-deep/70 animate-pulse;
   }
 }
+
+/* The blob cursor is the only pointer on mouse (fine-pointer) devices — hide
+   the OS cursor everywhere. Touch devices (coarse pointer) are unaffected. */
+@media (pointer: fine) {
+  *,
+  *::before,
+  *::after {
+    cursor: none !important;
+  }
+}

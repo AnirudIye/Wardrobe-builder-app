@@ -16,6 +16,7 @@ class UserOut(BaseModel):
 
     id: int
     email: EmailStr
+    email_verified: bool
     city: Optional[str] = None
     lat: Optional[float] = None
     lon: Optional[float] = None
@@ -28,3 +29,11 @@ class UserOut(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class VerifyRequest(BaseModel):
+    token: str
+
+
+class ResendRequest(BaseModel):
+    email: EmailStr

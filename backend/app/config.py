@@ -53,6 +53,17 @@ class Settings(BaseSettings):
     free_weekly_chat_limit: int = 20
     free_weekly_tryon_limit: int = 5
 
+    # Email (SMTP — signup confirmation). All optional; when unset, email
+    # verification is skipped and new users are auto-verified (best-effort,
+    # like every other integration).
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    smtp_starttls: bool = True
+    email_verify_expire_minutes: int = 1440  # 24h
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -1,17 +1,25 @@
 from __future__ import annotations
 
 import json
+import uuid
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
 from pydantic import BaseModel, Field
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user
+from app.core.security import hash_password, verify_password
 from app.database import get_db
+from app.models.calendar_event import CalendarEvent
+from app.models.garment import Garment
+from app.models.recommendation_event import RecommendationEvent
 from app.models.user import User
 from app.schemas.profile import ProfileOut, ProfileUpdate
 from app.services import trends, weather
+from app.services.images import InvalidImageError, process_upload
+from app.storage import get_storage
 from app.services.weather import WeatherServiceError, WeatherSnapshot
 
 router = APIRouter(tags=["profile"])
@@ -27,6 +35,7 @@ def _parse_prefs(raw: Optional[str]) -> Optional[dict]:
 
 
 def _serialize(user: User) -> ProfileOut:
+    storage = get_storage()
     return ProfileOut(
         id=user.id,
         email=user.email,
@@ -35,6 +44,7 @@ def _serialize(user: User) -> ProfileOut:
         lon=user.lon,
         style_preferences=_parse_prefs(user.style_preferences),
         plan=user.plan,
+        avatar_url=storage.url(user.avatar_key) if user.avatar_key else None,
     )
 
 
@@ -83,6 +93,88 @@ def set_location(
     db.commit()
     db.refresh(current_user)
     return _serialize(current_user)
+
+
+@router.post("/profile/avatar", response_model=ProfileOut)
+async def upload_avatar(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProfileOut:
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Empty upload")
+    try:
+        processed = process_upload(raw)
+    except InvalidImageError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+    storage = get_storage()
+    old_key = current_user.avatar_key
+    key = storage.save(processed.thumbnail_bytes, f"avatar_{uuid.uuid4().hex}.jpg")
+    current_user.avatar_key = key
+    db.commit()
+    db.refresh(current_user)
+    if old_key:
+        storage.delete(old_key)
+    return _serialize(current_user)
+
+
+@router.delete("/profile/avatar", response_model=ProfileOut)
+def remove_avatar(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProfileOut:
+    if current_user.avatar_key:
+        get_storage().delete(current_user.avatar_key)
+        current_user.avatar_key = None
+        db.commit()
+        db.refresh(current_user)
+    return _serialize(current_user)
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+@router.post("/profile/password")
+def change_password(
+    payload: PasswordChange,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect"
+        )
+    current_user.hashed_password = hash_password(payload.new_password)
+    db.commit()
+    return {"detail": "Password updated"}
+
+
+@router.delete("/profile", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+def delete_account(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    """Permanently delete the account and all of its data."""
+    storage = get_storage()
+    garments = db.execute(
+        select(Garment).where(Garment.user_id == current_user.id)
+    ).scalars().all()
+    for g in garments:
+        storage.delete(g.image_path)
+        storage.delete(g.thumbnail_path)
+    if current_user.avatar_key:
+        storage.delete(current_user.avatar_key)
+
+    db.execute(delete(Garment).where(Garment.user_id == current_user.id))
+    db.execute(delete(CalendarEvent).where(CalendarEvent.user_id == current_user.id))
+    db.execute(delete(RecommendationEvent).where(RecommendationEvent.user_id == current_user.id))
+    db.delete(current_user)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/trends")

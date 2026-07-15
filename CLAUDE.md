@@ -65,6 +65,8 @@ Garment images go through the `StorageBackend` ABC (`save`/`url`/`delete` keyed 
 ### Database
 Dev is SQLite; tables auto-create on startup via `Base.metadata.create_all` (no migration step). **Alembic is not yet wired** — models are Postgres-compatible, so any schema change currently requires deleting `wardrobe.db` in dev (or adding Alembic before prod). Tests use in-memory SQLite per test, and `tests/conftest.py` blanks **every** external API key (Anthropic, Google, OpenWeather, SerpAPI, Stripe) before app import, so the suite never hits the network or spends quota — a test exercising an AI path must `monkeypatch` the service (see `test_llm.py`, `test_vision.py`).
 
+> **Migration caveat — `User.email_verified` must be backfilled to `true` for pre-existing users.** `email_verified` defaults to `False` and login hard-blocks (403) any unverified user. The eventual production migration that adds this column MUST set existing rows to `true` (grandfather accounts created before email confirmation existed) — a plain `DEFAULT false` add would lock out the entire existing user base on deploy. Same applies to any dev DB not recreated from scratch.
+
 ### Frontend
 Single-page app with tab state in `App.tsx` (no router). `src/api.ts` is a thin typed client: all calls hit `/api*`, the JWT lives in `localStorage` (`wb_token`) and is auto-attached, and non-2xx responses throw `ApiError` (a `402` is how the UI knows to show the upgrade flow). Keep request/response TypeScript types in `api.ts` in sync with the backend Pydantic schemas.
 

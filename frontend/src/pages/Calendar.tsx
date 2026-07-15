@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, CalendarEvent } from "../api";
 import { useFadeRise, useStaggerReveal } from "../animations";
 import { ListSkeleton } from "../components/Skeleton";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { localISODate } from "../date";
 import { eventsCache } from "../store";
 
@@ -12,6 +13,8 @@ export default function Calendar() {
   const [events, setEvents] = useState<CalendarEvent[]>(eventsCache.peek() ?? []);
   const [loading, setLoading] = useState(eventsCache.peek() === null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<number | null>(null);
+  const pendingEvent = events.find((e) => e.id === confirmId) ?? null;
 
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(() => localISODate());
@@ -145,7 +148,7 @@ export default function Calendar() {
                 </p>
               </div>
               <button
-                onClick={() => remove(ev.id)}
+                onClick={() => setConfirmId(ev.id)}
                 className="text-blush-deep text-xs font-medium hover:underline"
               >
                 Delete
@@ -154,6 +157,21 @@ export default function Calendar() {
           ))}
         </ul>
       )}
+
+      <ConfirmDialog
+        open={confirmId !== null}
+        title="Delete event?"
+        message={
+          pendingEvent
+            ? `Delete "${pendingEvent.title}"? This can't be undone.`
+            : ""
+        }
+        onConfirm={() => {
+          if (confirmId !== null) remove(confirmId);
+          setConfirmId(null);
+        }}
+        onCancel={() => setConfirmId(null)}
+      />
     </div>
   );
 }

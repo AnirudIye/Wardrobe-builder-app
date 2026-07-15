@@ -36,3 +36,24 @@ def decode_access_token(token: str) -> Optional[str]:
     except JWTError:
         return None
     return payload.get("sub")
+
+
+def create_email_token(user_id: int) -> str:
+    """Signed, short-lived token proving ownership of an email address."""
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.email_verify_expire_minutes
+    )
+    payload = {"sub": str(user_id), "purpose": "verify_email", "exp": expire}
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def decode_email_token(token: str) -> Optional[int]:
+    """Return the user id from a valid verify-email token, else None."""
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+    except JWTError:
+        return None
+    if payload.get("purpose") != "verify_email":
+        return None
+    sub = payload.get("sub")
+    return int(sub) if sub is not None else None

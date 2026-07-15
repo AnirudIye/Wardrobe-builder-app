@@ -2,6 +2,12 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
+from app.core.security import (
+    create_access_token,
+    create_email_token,
+    decode_email_token,
+)
+
 
 def _register(client: TestClient, email: str = "a@example.com", password: str = "supersecret1"):
     return client.post("/auth/register", json={"email": email, "password": password})
@@ -67,3 +73,76 @@ def test_me_returns_current_user(client: TestClient):
 def test_me_rejects_garbage_token(client: TestClient):
     resp = client.get("/auth/me", headers={"Authorization": "Bearer not-a-real-token"})
     assert resp.status_code == 401
+
+
+def test_new_user_exposes_verification_and_avatar_fields(client: TestClient):
+    _register(client, email="fields@example.com")
+    token = _login(client, email="fields@example.com").json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    me = client.get("/auth/me", headers=headers).json()
+    assert "email_verified" in me
+
+    profile = client.get("/profile", headers=headers).json()
+    assert "avatar_url" in profile
+    assert profile["avatar_url"] is None
+
+
+def test_email_token_roundtrips():
+    assert decode_email_token(create_email_token(42)) == 42
+
+
+def test_email_token_rejects_a_plain_access_token():
+    # An access token has no verify purpose, so it must not verify emails.
+    assert decode_email_token(create_access_token(subject=42)) is None
+
+
+def test_email_token_rejects_garbage():
+    assert decode_email_token("not-a-token") is None
+
+
+def test_register_auto_verifies_without_email_service(client: TestClient):
+    r = _register(client, email="auto@example.com")
+    assert r.json()["email_verified"] is True
+    assert _login(client, email="auto@example.com").status_code == 200
+
+
+def test_email_gate_full_flow(client: TestClient, monkeypatch):
+    from app.services import email
+
+    sent = []
+    monkeypatch.setattr(email, "available", lambda: True)
+    monkeypatch.setattr(
+        email, "send_verification_email", lambda to, link: sent.append((to, link)) or True
+    )
+
+    r = _register(client, email="gate@example.com")
+    assert r.status_code == 201
+    assert r.json()["email_verified"] is False
+
+    # Cannot log in until verified.
+    assert _login(client, email="gate@example.com").status_code == 403
+
+    # A verification email was queued (background task ran) with a link token.
+    assert sent and "verify_token=" in sent[0][1]
+
+    token = create_email_token(r.json()["id"])
+    verified = client.post("/auth/verify", json={"token": token})
+    assert verified.status_code == 200
+    assert verified.json()["access_token"]
+
+    # Now login works.
+    assert _login(client, email="gate@example.com").status_code == 200
+
+
+def test_verify_rejects_bad_token(client: TestClient):
+    assert client.post("/auth/verify", json={"token": "garbage"}).status_code == 400
+
+
+def test_resend_always_returns_200(client: TestClient, monkeypatch):
+    from app.services import email
+
+    monkeypatch.setattr(email, "available", lambda: True)
+    monkeypatch.setattr(email, "send_verification_email", lambda to, link: True)
+    r = client.post("/auth/resend-verification", json={"email": "nobody@example.com"})
+    assert r.status_code == 200

@@ -1,7 +1,9 @@
 // Blob Cursor (reactbits.dev-style): gooey blobs that trail the pointer.
 // SVG "goo" filter + requestAnimationFrame lerp; no dependencies.
-// Pointer-events: none, so it never interferes with the UI. Skipped on touch.
-import { useEffect, useRef } from "react";
+// Pointer-events: none, so it never interferes with the UI. Mouse devices
+// only — on touch (coarse pointer) it renders nothing and the OS cursor is
+// left alone (see the `(pointer: fine)` rule in index.css).
+import { useEffect, useRef, useState } from "react";
 
 const BLOBS = [
   { size: 44, lerp: 0.55, opacity: 0.5 },
@@ -11,14 +13,15 @@ const BLOBS = [
 
 export default function BlobCursor({ color = "#FA9EBC" }: { color?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    // Skip on touch-primary devices — no persistent cursor to follow.
-    if (window.matchMedia("(pointer: coarse)").matches) return;
+    setEnabled(window.matchMedia("(pointer: fine)").matches);
+  }, []);
 
-    const blobs = Array.from(
-      containerRef.current?.children ?? []
-    ) as HTMLElement[];
+  useEffect(() => {
+    if (!enabled) return;
+    const blobs = Array.from(containerRef.current?.children ?? []) as HTMLElement[];
     const mouse = { x: -100, y: -100 };
     const pos = BLOBS.map(() => ({ x: -100, y: -100 }));
 
@@ -48,7 +51,9 @@ export default function BlobCursor({ color = "#FA9EBC" }: { color?: string }) {
       window.removeEventListener("mousemove", onMove);
       cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [enabled]);
+
+  if (!enabled) return null;
 
   return (
     <>
@@ -63,7 +68,7 @@ export default function BlobCursor({ color = "#FA9EBC" }: { color?: string }) {
       </svg>
       <div
         ref={containerRef}
-        className="fixed inset-0 pointer-events-none z-[9998] hidden md:block"
+        className="fixed inset-0 pointer-events-none z-[9998]"
         style={{ filter: "url(#blob-goo)" }}
         aria-hidden="true"
       >
