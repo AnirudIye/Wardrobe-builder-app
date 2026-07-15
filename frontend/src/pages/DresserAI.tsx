@@ -52,7 +52,7 @@ export default function DresserAI({ onQuotaBlocked }: { onQuotaBlocked: () => vo
     <div ref={pageRef}>
       <h2 className="text-xl font-semibold mb-1">DresserAI</h2>
       <p className="text-sm text-navy/50 mb-4">
-        Ask for styling advice — DresserAI knows your wardrobe, today's weather, and your
+        Ask for styling advice. DresserAI knows your wardrobe, today's weather, and your
         calendar. Nothing here is saved once you leave.
       </p>
 

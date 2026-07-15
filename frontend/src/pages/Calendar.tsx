@@ -83,7 +83,7 @@ export default function Calendar() {
     <div ref={pageRef}>
       <h2 className="text-xl font-semibold mb-4">Your calendar</h2>
       <p className="text-sm text-navy/50 mb-4">
-        Add the events you're attending — outfit suggestions for that day will match the dress code.
+        Add the events you're attending, and outfit suggestions for that day will match the dress code.
       </p>
 
       <form onSubmit={submit} className="clay-card p-6 mb-6 grid gap-4 sm:grid-cols-2">

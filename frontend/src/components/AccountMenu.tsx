@@ -144,7 +144,7 @@ export default function AccountMenu({ onUpgrade }: { onUpgrade: () => void }) {
       <ConfirmDialog
         open={panel === "delete"}
         title="Delete your account?"
-        message="This permanently deletes your account and everything in it — wardrobe, calendar, and usage history. This cannot be undone."
+        message="This permanently deletes your account and everything in it: wardrobe, calendar, and usage history. This cannot be undone."
         confirmLabel="Delete forever"
         requireText="DELETE"
         onConfirm={del}

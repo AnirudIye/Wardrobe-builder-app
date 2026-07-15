@@ -65,7 +65,7 @@ export default function App() {
     const token = params.get("verify_token");
     if (!token) return;
     verifyEmail(token)
-      .then(() => setVerifyMsg("Email confirmed — you're all set!"))
+      .then(() => setVerifyMsg("Email confirmed, you're all set!"))
       .catch(() => setVerifyMsg("That confirmation link is invalid or has expired."))
       .finally(() => {
         params.delete("verify_token");

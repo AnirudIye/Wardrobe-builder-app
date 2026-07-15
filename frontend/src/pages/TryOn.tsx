@@ -44,7 +44,7 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
       setStreamActive(true);
     } catch (err) {
       setCameraError(
-        "Couldn't access your camera — check your browser's permission settings and try again."
+        "Couldn't access your camera. Check your browser's permission settings and try again."
       );
     }
   };

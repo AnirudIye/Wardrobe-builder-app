@@ -44,7 +44,7 @@ export default function Login({ onBack }: { onBack?: () => void }) {
       await api.resendVerification(email);
       setResendMsg("Confirmation email sent. Check your inbox.");
     } catch {
-      setResendMsg("Couldn't resend right now — try again shortly.");
+      setResendMsg("Couldn't resend right now. Try again shortly.");
     }
   };
 

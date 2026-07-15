@@ -4,110 +4,70 @@ _Last updated: 2026-07-15_
 
 ## Goal
 
-BetterDresser is a portfolio-grade web app for managing a digital wardrobe and getting AI styling help. A logged-in user:
+BetterDresser is a portfolio-grade web app for managing a digital wardrobe and getting AI styling help. A logged-in user signs up (with email confirmation), builds a wardrobe by uploading clothing photos (AI auto-tags) or adding real products from the web, then gets weather- and calendar-aware "what to wear today" outfits, "what to buy next" gap analysis with real shoppable links, free-form styling chat (DresserAI), AI try-on photos (TryOn), and account management (avatar, password, style preferences, deletion). A public **marketing landing page** greets logged-out visitors.
 
-- Signs up with **email confirmation** (verify-before-use), manages their **account** (profile photo, password, location, style preferences) from a header avatar menu, and can **delete their account** and everything in it.
-- Builds a wardrobe by **uploading clothing photos** (AI auto-tags category, colors, warmth, formality, seasons) or **searching the web** and adding real products.
-- Gets a **weather- and calendar-aware "what to wear today"** outfit assembled from items they own.
-- Gets **"what to buy next"** gap analysis with real shoppable links.
-- Chats with **DresserAI**, a free-form styling assistant grounded in their wardrobe/weather/calendar.
-- Generates **AI try-on photos** (TryOn) — their camera photo + a garment rendered into one image.
-- Adds **calendar events** (interview, wedding, gym…) so that day's outfit matches the dress code.
+Monetization: outfit recommendations are free/unlimited; Buy Next, DresserAI and TryOn are each metered (weekly free limit), with a $5/month Plus plan (Stripe) unlocking unlimited.
 
-Monetization: outfit recommendations are free/unlimited; **Buy Next, DresserAI, and TryOn are each metered** (own weekly free limit), with a **$5/month Plus plan** (Stripe) unlocking unlimited.
+**Stack:** FastAPI (Python 3.9, SQLite dev) + React/Vite/TypeScript/Tailwind SPA. Text AI via provider-agnostic `services/llm.py` (Anthropic or Gemini); email via best-effort `services/email.py` (stdlib SMTP). Repo root is `Wardrobe builder app/`; remote `github.com/AnirudIye/Wardrobe-builder-app` (private).
 
 ## Current state
 
-**Working and verified end-to-end** (both servers running locally, driven in a real browser + full test suite):
-- **Auth with email confirmation** (JWT): verify-before-use gate — register → unverified → login blocked (403) until the emailed link is clicked (which auto-logs in); resend supported. **Auto-verifies when no SMTP is configured**, so the app still runs with zero secrets.
-- **Account menu** (header avatar + dropdown): plan badge, account settings (avatar upload/remove, change password, location), style-preferences customization (feeds the AI recommender), and **type-to-confirm account deletion** (hard-deletes the user + all their data).
-- Wardrobe CRUD + photo upload, AI tagging, web product search + add. **Delete actions now go through a styled confirmation modal.**
-- **Blob-only cursor**: the OS cursor is hidden on mouse devices so only the blob cursor shows (touch untouched).
-- Today outfit (AI path, `source: "ai"`), calendar with dress-code matching, weather widget with city/map/change-location.
-- DresserAI chat (replies reference real wardrobe items + weather).
-- Buy Next suggestions with guaranteed Google-Shopping fallback links.
-- Plan/quota tracking for all three metered features; Stripe checkout reaches hosted page in test mode.
-- Client caching, skeleton loaders, optimistic UI, AI-estimated warmth (read-only).
-- Claymorphic design (navy `#0B1957` / blush `#FA9EBC` / cream), Ramaraja brand font, anime.js motion, blob cursor, click spark, circular gallery, legal footer (ToS + Privacy).
+**On `main` and working end-to-end** (verified earlier this session in a real browser): auth + email confirmation, wardrobe CRUD + AI tagging, web product search/add, Today outfit, calendar, weather, DresserAI, Buy Next, TryOn (code-complete; blocked only by Google image quota), Plan/quota, Stripe checkout, blob cursor, click spark, delete-confirmation modals, account avatar/dropdown menu, and a **marketing landing page** for logged-out visitors.
 
-**Tests:** 96 backend tests pass (`pytest -q`). Frontend `npm run build` (tsc + vite) is clean.
+- Backend: **96 tests pass** (`pytest -q`). Frontend `npm run build` was clean as of the last successful run.
+- Git: `main` is at commit `fa042c0` (landing-page scaffold, merged from `feature/landing-page`). **`main` has NOT been pushed to `origin` since that merge** — `origin/main` is one commit behind at `bc6e524` (the PR #1 merge).
 
-**Stack:** FastAPI (Python 3.9, SQLite dev) + React/Vite/TypeScript/Tailwind SPA. AI via a provider-agnostic `services/llm.py` (Anthropic *or* Google Gemini); email via a best-effort `services/email.py` (stdlib SMTP). Repo root is this `Wardrobe builder app/` directory; pushed to `github.com/AnirudIye/Wardrobe-builder-app` (private).
+**In progress / UNCOMMITTED (this session's landing redesign):** the landing page was restyled per request — em-dashes removed, organic blob shapes, and every emoji/icon replaced with flat SVG illustrations. These changes are **only in the working tree, not committed**, and the last change (a blob-clipping fix) is **not yet re-verified by a build or browser preview** (a classifier outage blocked the rebuild).
 
-**Branch / PR:** the account + email + cursor + delete work lives on branch `feature/account-email-cursor-delete`, **open as [PR #1](https://github.com/AnirudIye/Wardrobe-builder-app/pull/1)** against `main` (not yet merged). `main` is still at the pre-feature commit `0efc935`. Design spec + implementation plan are in `docs/superpowers/`.
+**Dev servers are DOWN.** The backgrounded `uvicorn` (:8000) and `vite` (:5173) both exited (code 4) and need restarting before you can test on localhost.
 
-## Files (what exists / was touched)
+## Files touched (this session)
 
-The whole app was built in this workspace; git history (`git log --oneline`) is the authoritative change record. Key areas:
+**Landing page — created:**
+- `frontend/src/pages/Landing.tsx` — the full landing page (nav, hero with floating outfit card, marquee, stats, feature grid, how-it-works, app-window showcase, Free/Plus pricing, testimonials, gradient CTA, footer). Committed in `fa042c0`, then heavily rewritten (uncommitted) to use illustrations + blobs + dash-free copy.
+- `frontend/src/components/illustrations.tsx` *(uncommitted, new)* — flat vector illustration set: garments (`Tee`, `Coat`, `Jeans`, `Sneaker`, `Derby`, `Belt`), weather (`SunCloud`), concepts (`Wardrobe`, `Bag`, `Chat`, `Mirror`, `Calendar`), steps (`Camera`, `Pin`, `Sparkles`, `Bags`), and `Avatar`. Each actually depicts the thing (no emoji/network assets).
 
-**Backend `backend/app/`**
-- `services/llm.py` — single gateway for all text AI (Anthropic→Gemini fallback, placeholder-key hygiene, Gemini token/role quirks).
-- `services/email.py` — **best-effort SMTP gateway** (`available`/`send`/`send_verification_email`), mirrors `llm.py`'s catch-log-degrade contract; no-ops + logs the verification link when unconfigured.
-- `services/` — `vision`, `recommendation`, `trends`, `dresser_ai`, `tryon`, `shopping`, `weather`, `quota`, `billing`, `images` (incl. shared `download_image_bytes`).
-- `routers/auth.py` — register (gated), login (403 until verified), **`/auth/verify`**, **`/auth/resend-verification`**, `/auth/me`.
-- `routers/profile.py` — profile GET/PATCH, `/profile/location`, **`POST/DELETE /profile/avatar`**, **`POST /profile/password`**, **`DELETE /profile`** (hard-delete cascade: garments + image files, calendar events, usage rows, avatar file, then the user).
-- other `routers/` — `wardrobe` (incl. `/items/{id}/retag`, `/search`, `/items/from-web`), `recommendations`, `calendar`, `dresser_ai`, `tryon`, `billing`.
-- `core/security.py` — JWT access tokens + **`create_email_token`/`decode_email_token`** (purpose-scoped verify tokens).
-- `models/user.py` — now includes **`email_verified`** and **`avatar_key`** (+ billing/plan fields); `garment`, `calendar_event`, `recommendation_event` (quota source of truth).
-- `storage/` — `StorageBackend` ABC + `LocalStorage` (avatars stored under `avatar_<uuid>.jpg`, served at `/media`).
-- `config.py` — all settings/keys incl. **SMTP (`smtp_host/port/user/password/from`, `smtp_starttls`, `email_verify_expire_minutes`)**; `main.py` — app factory + router registration.
+**Modified:**
+- `frontend/src/App.tsx` — renders `Landing` as the default logged-out view with an `authView` "landing" | "login" switch (verify-link visitors go straight to auth); em-dash removed. (Landing wiring committed in `fa042c0`; nothing new uncommitted here beyond the em-dash edit.)
+- `frontend/src/pages/Login.tsx` — added an optional `onBack` prop + "back to home" links (committed `fa042c0`); em-dash removed (uncommitted).
+- `frontend/src/index.css` — added landing motion/texture keyframes (`floaty`, `blobmorph`, `gradient-pan`, `marquee`, grain) committed in `fa042c0`; then added **blob shape classes** `.blob-a..d`, `.blob-pill`, `.blob-card-a..d` (uncommitted).
+- **Em-dash removal (uncommitted, visible copy only):** `components/AccountMenu.tsx`, `components/LegalFooter.tsx`, `pages/Wardrobe.tsx`, `pages/DresserAI.tsx`, `pages/Upgrade.tsx`, `pages/TryOn.tsx`, `pages/Calendar.tsx`. (Code comments still contain em-dashes; only user-facing strings were changed.)
 
-**Frontend `frontend/src/`**
-- `cache.ts` + `store.ts` — shared session cache (deduped, per-resource; `profileCache` drives the header avatar/plan).
-- `pages/` — `Wardrobe`, `Today`, `BuyNext`, `Calendar`, `DresserAI`, `TryOn`, `Upgrade`, `Login` (now with a "check your email / resend" panel).
-- `components/` — **`ConfirmDialog`** (reusable, with type-to-confirm), **`Modal`** (generic shell), **`AccountMenu`** (avatar + dropdown), **`AccountSettings`**, **`Customization`**, plus `Skeleton`, `WeatherWidget`, `BlobCursor` (now renders at all widths on mouse devices), `ClickSpark`, `CircularGallery`, `LegalFooter`.
-- `api.ts` (typed client — adds `verifyEmail`/`resendVerification`/`uploadAvatar`/`removeAvatar`/`changePassword`/`deleteAccount`), `App.tsx` (tabs + header account menu + verify-link landing), `auth.tsx`, `date.ts`, `animations.ts`, `index.css` (clay classes + `cursor: none` on fine-pointer devices).
+## What changed / decisions
 
-**Docs:** `CLAUDE.md` (architecture + conventions, current), `README.md`, `backend/.env.example`, `docs/superpowers/{specs,plans}/`.
-
-## What notably changed / decisions made
-
-- **Email confirmation is verify-before-use** but **degrades to auto-verify when SMTP is unconfigured** — preserving the "runs with zero secrets" principle. Transport is stdlib `smtplib` behind `services/email.py` (provider-agnostic gateway, easy to swap for a hosted API later). Verify tokens are stateless purpose-scoped JWTs; clicking the emailed link auto-logs the user in.
-- **Account management via a header avatar menu**, not a full tab: settings (avatar/password/location) + customization (style preferences, which already feed the recommender) + type-to-confirm hard delete. Avatar upload reuses the existing `StorageBackend`; display name was intentionally left out of scope.
-- **Cursor is blob-only on mouse devices** (`@media (pointer: fine)` hides the OS cursor; the blob renders at all widths). Touch devices are unchanged.
-- **Every delete is confirmed** through one reusable `ConfirmDialog`; account deletion uses its `requireText="DELETE"` mode.
-- **Multi-provider AI** (unchanged): all text AI routed through `llm.py`.
-- **Calendar timezone** (unchanged): client computes its local date via `localISODate()` and passes `?date=` to `/recommendations/today`.
-- **Quota** (unchanged): three independently-metered kinds (`buy-next`, `dresser-ai`, `tryon`); Today stays free.
-- **Warmth is AI-estimated** (unchanged); chat/try-on are not persisted.
+- **Landing integration:** logged-out visitors see the landing by default; any CTA (`onGetStarted`) flips `authView` to the auth screen (which gained a back-to-home link). Refresh always returns to the landing. The email verify-link flow still lands on auth directly.
+- **Illustrations, not emoji/icons:** since real product photography can't be sourced/fetched (and external hotlinks are fragile), garments/weather/concepts are drawn as self-contained flat SVG in `illustrations.tsx`. Swap in real photos later by dropping files in `frontend/public/`.
+- **Blob shapes, two tiers:** small square-ish elements (icon tiles, thumbnails, stat cards, chips) use strong percentage-radius blobs (`.blob-a..d`, `.blob-pill`); large content cards use gentler fixed-rem "card blobs" (`.blob-card-a..d`) so text never clips. Blobs are scoped to the **landing only** — the logged-in app keeps its normal rounded clay.
+- **Em-dashes:** replaced with commas / periods / colons in all visible copy.
 
 ## What failed / known issues
 
-1. **Prod migration MUST backfill `email_verified=true` for existing users.** `email_verified` defaults to `False` and login hard-blocks (403) any unverified user. The eventual Alembic/DDL migration that adds this column must set existing rows to `true`, or every pre-feature account is locked out on deploy. (Documented in `CLAUDE.md` → Database. The **local dev DB has already been migrated** this way — see "Running it locally".)
-2. **No Alembic migrations yet.** Tables auto-create via `create_all`; a schema change in dev requires either an `ALTER TABLE` or deleting `wardrobe.db`. Must add Alembic before any real deployment.
-3. **TryOn image generation is blocked by Google account quota** — code path is complete; `gemini-2.5-flash-image` returns "quota exceeded" until billing is enabled on the Google project. Text AI on the same key works fine. TryOn returns a graceful 503.
-4. **SerpAPI product lookups intermittently time out** — not a code bug; buy-next degrades to the guaranteed Google-Shopping fallback link per suggestion.
-5. **Secrets keep landing in `backend/.env.example`** (a tracked, public template). Real keys must go in the git-ignored `backend/.env`. Watch for it (SMTP keys were added as placeholders only).
-6. **Python 3.9** is past EOL (harmless `FutureWarning`s) + a benign `bcrypt has no attribute __about__` warning. Neither affects behavior.
-7. **Windows + Anaconda SSL gotcha:** venv `python`/`uvicorn`/`pip` can fail with an `_ssl` DLL error; prepend Anaconda's `Library\bin` to PATH first (documented in `CLAUDE.md`).
-
-**Non-blocking review follow-ups** (from the final whole-branch review, optional): harden `decode_email_token`'s `int()` against a non-numeric `sub`; add a `send()`-success test stubbing `smtplib` to cover the STARTTLS/465/login branches; extract a shared async-form hook to DRY `AccountSettings`/`Customization`.
+1. **Blob-card fix is unverified.** The strong blobs initially clipped the Plus pricing card's checklist (blob radius + `overflow-hidden`). Fixed by introducing `.blob-card-*` and swapping all large cards to them — but the rebuild/preview to confirm was **blocked by a temporary classifier outage**, so this has NOT been visually re-checked. First thing next session: rebuild + eyeball the pricing/stat/nav sections.
+2. **Stat cards read as flat ellipses** and the nav/full-width buttons were tuned (nav → `blob-card-a`, full-width pricing buttons → `rounded-full`). The stat-card ellipses may still feel too strong — dial back to `.blob-card-*` if so.
+3. **Couldn't access the user's reference design** (`claude.ai/design/...`): WebFetch 403, the Claude-in-Chrome extension wasn't connected, and the in-app browser hit the claude.ai sign-in wall. The landing was built to match the app + a standard structure, not the linked design. Get a screenshot to align specifics.
+4. **Dev servers exited (code 4)** and must be restarted (see "Running it locally").
+5. **Landing redesign is uncommitted** and `main` is unpushed — see "Next steps".
+6. Pre-existing (unchanged this session): TryOn blocked by Google image-gen quota; no Alembic (schema changes need `ALTER`/DB reset — and the prod migration adding `email_verified` MUST backfill existing users to `true`, see `CLAUDE.md`); Python 3.9 EOL warnings; Windows+Anaconda `_ssl` PATH gotcha.
 
 ## Next steps
 
-- **Review + merge [PR #1](https://github.com/AnirudIye/Wardrobe-builder-app/pull/1)** into `main`.
-- **Add Alembic** and, when adding the `email_verified`/`avatar_key` columns to a real DB, **backfill `email_verified=true`** (see known-issue #1). Switch `DATABASE_URL` to managed Postgres before deploying.
-- **Enable Google image-gen billing** to unblock TryOn (or wire an alternate provider behind `tryon.generate_tryon`).
-- **Deploy:** API (Render/Fly/Railway) + SPA (Vercel/Netlify); move image storage from local disk to S3/R2 behind `StorageBackend`; set a real transactional-email provider (or SMTP) for confirmation emails; register the deployed Stripe webhook URL and set `STRIPE_WEBHOOK_SECRET`.
-- **Complete a real Stripe test purchase** end-to-end (Stripe CLI forwarding webhooks to `localhost:8000/billing/webhook`).
-- **Have the ToS/Privacy copy reviewed by a human** before onboarding real users.
-- Consider **upgrading off Python 3.9** and adding a small frontend test suite (currently backend-only).
+1. **Restart servers, rebuild, and verify the blob fix.** From `frontend/`: `npm run build` (must be clean), then run both servers (below) and open http://localhost:5173 logged out to check the Plus pricing card no longer clips, and that stat cards / nav / buttons look right.
+2. **Commit the landing redesign.** It's currently uncommitted on `main`; branch first (e.g. `feature/landing-illustrations`), commit `illustrations.tsx` + the Landing/index.css/em-dash edits, then merge/PR.
+3. **Push `main` to `origin`** — it's one commit ahead (`fa042c0`) and unpushed.
+4. **Align to the reference design** if desired — ask the user for a screenshot of the linked `AI Dressing Landing Page` design.
+5. Optional: real product **photos** in the hero/showcase; soften the stat-card blobs; sweep code **comments** for em-dashes if "remove all em-dashes" was meant literally everywhere.
 
 ## Running it locally
 
-Two terminals (both servers must run together):
+Two terminals (both must run together). Windows/Anaconda: prepend Anaconda's `Library\bin` to PATH first or the venv fails with an `_ssl` DLL error.
 
 ```bash
-# Backend  (from backend/)   — Windows/Anaconda: prepend Library\bin to PATH first
-uvicorn app.main:app --reload         # :8000, docs at /docs
+# Backend (from backend/)
+export PATH="/c/Users/<you>/anaconda3:/c/Users/<you>/anaconda3/Library/bin:/c/Users/<you>/anaconda3/Scripts:$PATH"
+.venv/Scripts/python -m uvicorn app.main:app --reload   # :8000, docs at /docs
 
 # Frontend (from frontend/)
-npm run dev                           # :5173, proxies /api -> :8000
+npm run dev                                              # :5173, proxies /api -> :8000
 ```
 
-Then open http://localhost:5173. Keys go in `backend/.env` (copy from `.env.example`); the app fully runs with no keys.
-
-- **Schema:** the local `backend/wardrobe.db` has already been migrated for the new `email_verified` + `avatar_key` columns, and the two existing accounts (`demo@wardrobe.app`, `sdasda@gmail.com`) were backfilled to verified so they can still log in. If you recreate the DB from scratch, register fresh accounts instead.
-- **Email confirmation:** with no `SMTP_*` set in `backend/.env`, new signups **auto-verify** (log in immediately). To exercise the real confirmation flow, set `SMTP_HOST`/`SMTP_FROM`/`SMTP_USER`/`SMTP_PASSWORD` (a Mailtrap inbox works well); without a mail server, the verification link is printed to the uvicorn console.
-
-See `CLAUDE.md` for architecture and conventions.
+Then open http://localhost:5173. The local dev DB is already migrated for the `email_verified` + `avatar_key` columns, with the two existing accounts backfilled to verified. With no `SMTP_*` in `backend/.env`, new signups auto-verify. See `CLAUDE.md` for architecture and conventions.

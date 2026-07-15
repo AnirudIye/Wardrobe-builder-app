@@ -87,7 +87,7 @@ export default function Wardrobe() {
       const found = await api.searchClothing(query.trim());
       setResults(found);
       if (found.length === 0) {
-        setSearchError("No products found — try a different search.");
+        setSearchError("No products found. Try a different search.");
       }
     } catch (err) {
       setSearchError((err as Error).message);
@@ -252,7 +252,7 @@ export default function Wardrobe() {
                   onChange={(e) => patchItem(g.id, { category: e.target.value })}
                   className="w-full clay-input px-3 py-1.5 text-sm"
                 >
-                  <option value="">— category —</option>
+                  <option value="">Category</option>
                   {CATEGORIES.map((c) => (
                     <option key={c} value={c}>
                       {c}

@@ -100,7 +100,7 @@ export default function Upgrade() {
           </button>
         ) : (
           <button onClick={startCheckout} disabled={busy} className="w-full clay-btn py-3">
-            {busy ? "Redirecting…" : "Upgrade to Plus — $5/month"}
+            {busy ? "Redirecting…" : "Upgrade to Plus for $5/month"}
           </button>
         )}
       </div>

@@ -125,3 +125,21 @@ html {
     animation: none !important;
   }
 }
+
+/* Organic "blob" shapes — override the rounded-rect radii on the landing so
+   every card, tile and thumbnail reads as a soft blob. Four variants keep the
+   grid from looking mechanical. Declared after the utilities so they win over
+   Tailwind's rounded-* on the same element. */
+.blob-a { border-radius: 47% 53% 61% 39% / 45% 43% 57% 55% !important; }
+.blob-b { border-radius: 61% 39% 46% 54% / 56% 58% 42% 44% !important; }
+.blob-c { border-radius: 39% 61% 56% 44% / 60% 45% 55% 40% !important; }
+.blob-d { border-radius: 54% 46% 39% 61% / 47% 56% 44% 58% !important; }
+.blob-pill { border-radius: 44% 56% 52% 48% / 62% 58% 42% 38% !important; }
+
+/* Gentler organic radii for LARGE content cards. Fixed rem corners (not %) so
+   a big card keeps straight edges and never clips its text the way a full
+   percentage blob would, while still reading as a hand-drawn soft shape. */
+.blob-card-a { border-radius: 1.7rem 2.6rem 2rem 2.4rem !important; }
+.blob-card-b { border-radius: 2.6rem 1.7rem 2.4rem 2rem !important; }
+.blob-card-c { border-radius: 2rem 2.4rem 1.7rem 2.6rem !important; }
+.blob-card-d { border-radius: 2.4rem 2rem 2.6rem 1.7rem !important; }

@@ -15,7 +15,7 @@ function Terms() {
       <p>
         BetterDresser lets you catalogue your clothing, receive outfit recommendations based
         on your wardrobe, weather, calendar, and current trends, and discover items you may
-        wish to purchase. Recommendations are suggestions only — we don't guarantee they fit
+        wish to purchase. Recommendations are suggestions only, and we don't guarantee they fit
         every occasion (or that you'll like them!).
       </p>
       <h4 className="font-semibold">2. Your account</h4>
@@ -28,7 +28,7 @@ function Terms() {
         The free plan includes a limited number of buy-next suggestions per week; outfit
         recommendations are free. BetterDresser Plus ($5/month) unlocks unlimited buy-next
         suggestions. Payments are processed by Stripe; we never see or store your card
-        details. You can cancel any time via the customer portal — access continues until the
+        details. You can cancel any time via the customer portal; access continues until the
         end of the paid period.
       </p>
       <h4 className="font-semibold">4. Shopping links</h4>
@@ -94,7 +94,7 @@ function Privacy() {
       </p>
       <h4 className="font-semibold">6. Cookies</h4>
       <p>
-        We use only a local session token to keep you signed in — no tracking or advertising
+        We use only a local session token to keep you signed in, with no tracking or advertising
         cookies.
       </p>
       <h4 className="font-semibold">7. Contact</h4>
