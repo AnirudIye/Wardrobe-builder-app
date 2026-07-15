@@ -1,34 +1,61 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.core.deps import get_current_user
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import (
+    create_access_token,
+    create_email_token,
+    decode_email_token,
+    hash_password,
+    verify_password,
+)
 from app.database import get_db
 from app.models.user import User
-from app.schemas.auth import Token, UserCreate, UserOut
+from app.schemas.auth import ResendRequest, Token, UserCreate, UserOut, VerifyRequest
+from app.services import email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def _get_user_by_email(db: Session, email: str) -> User | None:
-    return db.execute(select(User).where(User.email == email)).scalar_one_or_none()
+def _get_user_by_email(db: Session, address: str) -> User | None:
+    return db.execute(select(User).where(User.email == address)).scalar_one_or_none()
+
+
+def _verification_link(token: str) -> str:
+    base = get_settings().frontend_base_url.rstrip("/")
+    return f"{base}/?verify_token={token}"
 
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def register(payload: UserCreate, db: Session = Depends(get_db)) -> User:
+def register(
+    payload: UserCreate,
+    background: BackgroundTasks,
+    db: Session = Depends(get_db),
+) -> User:
     if _get_user_by_email(db, payload.email) is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="An account with this email already exists",
         )
-    user = User(email=payload.email, hashed_password=hash_password(payload.password))
+    # With no email service configured, verify immediately so the app still
+    # works with zero secrets (mirrors every other best-effort integration).
+    verified = not email.available()
+    user = User(
+        email=payload.email,
+        hashed_password=hash_password(payload.password),
+        email_verified=verified,
+    )
     db.add(user)
     db.commit()
     db.refresh(user)
+    if not verified:
+        link = _verification_link(create_email_token(user.id))
+        background.add_task(email.send_verification_email, user.email, link)
     return user
 
 
@@ -45,7 +72,40 @@ def login(
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if not user.email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Please confirm your email address before signing in.",
+        )
     return Token(access_token=create_access_token(subject=user.id))
+
+
+@router.post("/verify", response_model=Token)
+def verify_email(payload: VerifyRequest, db: Session = Depends(get_db)) -> Token:
+    user_id = decode_email_token(payload.token)
+    user = db.get(User, user_id) if user_id is not None else None
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification link",
+        )
+    user.email_verified = True
+    db.commit()
+    return Token(access_token=create_access_token(subject=user.id))
+
+
+@router.post("/resend-verification")
+def resend_verification(
+    payload: ResendRequest,
+    background: BackgroundTasks,
+    db: Session = Depends(get_db),
+) -> dict:
+    user = _get_user_by_email(db, payload.email)
+    if user is not None and not user.email_verified and email.available():
+        link = _verification_link(create_email_token(user.id))
+        background.add_task(email.send_verification_email, user.email, link)
+    # Always generic — never reveal whether an account exists.
+    return {"detail": "If that account exists and is unverified, a confirmation email has been sent."}
 
 
 @router.get("/me", response_model=UserOut)

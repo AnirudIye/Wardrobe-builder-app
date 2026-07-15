@@ -29,3 +29,11 @@ class UserOut(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class VerifyRequest(BaseModel):
+    token: str
+
+
+class ResendRequest(BaseModel):
+    email: EmailStr
