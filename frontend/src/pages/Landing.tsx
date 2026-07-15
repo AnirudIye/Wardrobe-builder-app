@@ -2,7 +2,7 @@
 // app's claymorphic language (navy / blush / cream, Ramaraja display font,
 // clay shadows) with organic blob shapes and flat vector illustrations (see
 // components/illustrations) — nothing is fetched from the network.
-import { useFadeRise, useStaggerReveal } from "../animations";
+import { useFadeRise, useReveal } from "../animations";
 import LegalFooter from "../components/LegalFooter";
 import {
   Tee, Coat, Jeans, Sneaker, Derby, SunCloud,
@@ -69,9 +69,15 @@ function Thumb({ Ill, label, blob = "blob-b" }: { Ill: Ill; label: string; blob?
 export default function Landing({ onGetStarted }: { onGetStarted: () => void }) {
   const heroText = useFadeRise<HTMLDivElement>();
   const heroArt = useFadeRise<HTMLDivElement>(150);
-  const featureGrid = useStaggerReveal<HTMLDivElement>(1);
-  const stepGrid = useStaggerReveal<HTMLDivElement>(1);
-  const priceGrid = useStaggerReveal<HTMLDivElement>(1);
+  const statsGrid = useReveal<HTMLDivElement>({ stagger: true });
+  const featuresHead = useReveal<HTMLDivElement>();
+  const featureGrid = useReveal<HTMLDivElement>({ stagger: true });
+  const howHead = useReveal<HTMLDivElement>();
+  const stepGrid = useReveal<HTMLDivElement>({ stagger: true });
+  const showcase = useReveal<HTMLDivElement>();
+  const pricingHead = useReveal<HTMLDivElement>();
+  const priceGrid = useReveal<HTMLDivElement>({ stagger: true });
+  const cta = useReveal<HTMLDivElement>();
 
   return (
     <div className="relative overflow-x-hidden">
@@ -183,7 +189,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
 
       {/* ========================================================== STATS */}
       <section className="max-w-6xl mx-auto px-4 -mt-8 relative z-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div ref={statsGrid} className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {STATS.map((s, i) => (
             <div key={s.l} className={`clay-card ${BLOBS[i % 4]} px-5 py-6 text-center`}>
               <p className="font-brand text-3xl text-navy">{s.v}</p>
@@ -195,7 +201,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
 
       {/* ======================================================= FEATURES */}
       <section id="features" className="max-w-6xl mx-auto px-4 pt-24 pb-8">
-        <div className="text-center max-w-2xl mx-auto">
+        <div ref={featuresHead} className="text-center max-w-2xl mx-auto">
           <span className="clay-chip blob-pill">Everything, in one closet</span>
           <h2 className="font-brand text-4xl sm:text-5xl mt-4">Six ways to dress smarter</h2>
           <p className="text-navy/60 mt-3">From the moment a garment enters your wardrobe to the day you wear it, and the next thing you buy.</p>
@@ -218,7 +224,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
       <section id="how" className="relative overflow-hidden py-24">
         <Glow style={{ width: 380, height: 380, top: 40, left: -140, background: "radial-gradient(circle, rgba(250,158,188,0.35), rgba(250,158,188,0) 70%)" }} />
         <div className="max-w-6xl mx-auto px-4 relative">
-          <div className="text-center max-w-2xl mx-auto">
+          <div ref={howHead} className="text-center max-w-2xl mx-auto">
             <span className="clay-chip blob-pill">Four steps</span>
             <h2 className="font-brand text-4xl sm:text-5xl mt-4">From closet to confident</h2>
           </div>
@@ -239,7 +245,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
 
       {/* ======================================================= SHOWCASE */}
       <section id="showcase" className="max-w-6xl mx-auto px-4 py-16">
-        <div className="clay-card blob-card-a p-3 sm:p-5 overflow-hidden">
+        <div ref={showcase} className="clay-card blob-card-a p-3 sm:p-5 overflow-hidden">
           <div className="rounded-[2rem] bg-cream overflow-hidden shadow-[inset_2px_2px_10px_rgba(11,25,87,0.05)]">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-cream-deep">
               <span className="w-3 h-3 rounded-full bg-blush" />
@@ -296,7 +302,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
 
       {/* ======================================================== PRICING */}
       <section id="pricing" className="max-w-5xl mx-auto px-4 py-24">
-        <div className="text-center max-w-2xl mx-auto">
+        <div ref={pricingHead} className="text-center max-w-2xl mx-auto">
           <span className="clay-chip blob-pill">Simple pricing</span>
           <h2 className="font-brand text-4xl sm:text-5xl mt-4">Start free. Upgrade if you love it.</h2>
           <p className="text-navy/60 mt-3">Outfit recommendations are always free and unlimited. Plus lifts the weekly caps on the extras.</p>
@@ -343,7 +349,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
 
       {/* ============================================================= CTA */}
       <section className="max-w-6xl mx-auto px-4 py-20">
-        <div className="relative overflow-hidden blob-card-a p-10 sm:p-16 text-center text-cream shadow-clay-navy gradient-pan" style={{ backgroundImage: "linear-gradient(120deg, #071140, #1B2C77 45%, #F2769F)" }}>
+        <div ref={cta} className="relative overflow-hidden blob-card-a p-10 sm:p-16 text-center text-cream shadow-clay-navy gradient-pan" style={{ backgroundImage: "linear-gradient(120deg, #071140, #1B2C77 45%, #F2769F)" }}>
           <div className="grain absolute inset-0" />
           <div className="relative">
             <h2 className="font-brand text-4xl sm:text-6xl">Dress better, effortlessly.</h2>
