@@ -5,7 +5,8 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<User>;
+  verifyEmail: (token: string) => Promise<void>;
   logout: () => void;
   refresh: () => Promise<void>;
 }
@@ -39,8 +40,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (email: string, password: string) => {
-    await api.register(email, password);
-    await login(email, password);
+    const created = await api.register(email, password);
+    // If the account is already verified (no email service configured), log in.
+    if (created.email_verified) {
+      await login(email, password);
+    }
+    return created;
+  };
+
+  const verifyEmail = async (token: string) => {
+    await api.verifyEmail(token);
+    await refresh();
   };
 
   const logout = () => {
@@ -49,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refresh }}>
+    <AuthContext.Provider value={{ user, loading, login, register, verifyEmail, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   );

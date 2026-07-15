@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../auth";
 import { useFadeRise } from "../animations";
+import { api, ApiError } from "../api";
 
 export default function Login() {
   const cardRef = useFadeRise<HTMLFormElement>();
@@ -10,20 +11,69 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [needsConfirm, setNeedsConfirm] = useState(false);
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setBusy(true);
     try {
-      if (mode === "login") await login(email, password);
-      else await register(email, password);
-    } catch (err: any) {
-      setError(err?.message ?? "Something went wrong");
+      if (mode === "login") {
+        await login(email, password);
+      } else {
+        const created = await register(email, password);
+        if (!created.email_verified) {
+          setNeedsConfirm(true);
+        }
+      }
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 403) {
+        setNeedsConfirm(true); // unverified email on login
+      } else {
+        setError((err as Error).message ?? "Something went wrong");
+      }
     } finally {
       setBusy(false);
     }
   };
+
+  const resend = async () => {
+    setResendMsg(null);
+    try {
+      await api.resendVerification(email);
+      setResendMsg("Confirmation email sent. Check your inbox.");
+    } catch {
+      setResendMsg("Couldn't resend right now — try again shortly.");
+    }
+  };
+
+  if (needsConfirm) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center px-4 pt-16">
+        <div className="w-full max-w-sm clay-card p-8 space-y-4 text-center">
+          <h1 className="font-brand text-4xl tracking-wide">Check your email</h1>
+          <p className="text-sm text-navy/60">
+            We sent a confirmation link to <span className="font-medium">{email}</span>.
+            Click it to activate your account, then sign in.
+          </p>
+          <button onClick={resend} className="clay-btn px-5 py-2.5 w-full">
+            Resend email
+          </button>
+          {resendMsg && <p className="text-sm text-navy/50">{resendMsg}</p>}
+          <button
+            onClick={() => {
+              setNeedsConfirm(false);
+              setMode("login");
+            }}
+            className="text-sm text-navy underline decoration-blush decoration-2 underline-offset-4 hover:text-blush-deep"
+          >
+            Back to sign in
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4 pt-16">

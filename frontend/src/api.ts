@@ -43,6 +43,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 export interface User {
   id: number;
   email: string;
+  email_verified?: boolean;
   plan: string;
   city?: string | null;
   lat?: number | null;
@@ -121,6 +122,25 @@ export const api = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
+    }),
+
+  verifyEmail: async (token: string) => {
+    const res = await fetch("/api/auth/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    const body = await res.json();
+    if (!res.ok) throw new ApiError(res.status, body?.detail ?? "Verification failed");
+    setToken(body.access_token);
+    return body.access_token as string;
+  },
+
+  resendVerification: (email: string) =>
+    request<{ detail: string }>("/auth/resend-verification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
     }),
 
   login: async (email: string, password: string) => {

@@ -26,8 +26,9 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 export default function App() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, verifyEmail } = useAuth();
   const [tab, setTab] = useState<Tab>("wardrobe");
+  const [verifyMsg, setVerifyMsg] = useState<string | null>(null);
   const brandRef = useRef<HTMLSpanElement>(null);
   const mainRef = useRef<HTMLElement>(null);
 
@@ -50,6 +51,23 @@ export default function App() {
     }
   }, [tab]);
 
+  // Email verification landing: the confirmation email links to
+  // `/?verify_token=...`. Verify once on load, then strip the param.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("verify_token");
+    if (!token) return;
+    verifyEmail(token)
+      .then(() => setVerifyMsg("Email confirmed — you're all set!"))
+      .catch(() => setVerifyMsg("That confirmation link is invalid or has expired."))
+      .finally(() => {
+        params.delete("verify_token");
+        const q = params.toString();
+        window.history.replaceState({}, "", window.location.pathname + (q ? `?${q}` : ""));
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-navy/40">Loading…</div>;
   }
@@ -57,6 +75,12 @@ export default function App() {
   return (
     <ClickSpark>
       <BlobCursor />
+      {verifyMsg && (
+        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[9995] clay-card px-5 py-2 text-sm">
+          {verifyMsg}
+          <button onClick={() => setVerifyMsg(null)} className="ml-3 text-navy/40 hover:text-navy">×</button>
+        </div>
+      )}
       {!user ? (
         <div className="min-h-screen flex flex-col">
           <div className="flex-1">
