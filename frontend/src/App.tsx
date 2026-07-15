@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { animate } from "animejs";
 import { useAuth } from "./auth";
 import Login from "./pages/Login";
+import Landing from "./pages/Landing";
 import Wardrobe from "./pages/Wardrobe";
 import Today from "./pages/Today";
 import BuyNext from "./pages/BuyNext";
@@ -30,6 +31,11 @@ export default function App() {
   const { user, loading, verifyEmail } = useAuth();
   const [tab, setTab] = useState<Tab>("wardrobe");
   const [verifyMsg, setVerifyMsg] = useState<string | null>(null);
+  // Logged-out visitors see the marketing landing first; verify-link visitors
+  // jump straight to the auth view.
+  const [authView, setAuthView] = useState<"landing" | "login">(() =>
+    new URLSearchParams(window.location.search).has("verify_token") ? "login" : "landing"
+  );
   const brandRef = useRef<HTMLSpanElement>(null);
   const mainRef = useRef<HTMLElement>(null);
 
@@ -83,12 +89,16 @@ export default function App() {
         </div>
       )}
       {!user ? (
-        <div className="min-h-screen flex flex-col">
-          <div className="flex-1">
-            <Login />
+        authView === "landing" ? (
+          <Landing onGetStarted={() => setAuthView("login")} />
+        ) : (
+          <div className="min-h-screen flex flex-col">
+            <div className="flex-1">
+              <Login onBack={() => setAuthView("landing")} />
+            </div>
+            <LegalFooter />
           </div>
-          <LegalFooter />
-        </div>
+        )
       ) : (
         <div className="min-h-screen flex flex-col">
           <header className="pt-5">

@@ -3,7 +3,7 @@ import { useAuth } from "../auth";
 import { useFadeRise } from "../animations";
 import { api, ApiError } from "../api";
 
-export default function Login() {
+export default function Login({ onBack }: { onBack?: () => void }) {
   const cardRef = useFadeRise<HTMLFormElement>();
   const { login, register } = useAuth();
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -70,6 +70,14 @@ export default function Login() {
           >
             Back to sign in
           </button>
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="block w-full text-xs text-navy/40 hover:text-navy transition-colors"
+            >
+              ← Back to home
+            </button>
+          )}
         </div>
       </div>
     );
@@ -125,6 +133,16 @@ export default function Login() {
             {mode === "login" ? "Register" : "Sign in"}
           </button>
         </p>
+
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-full text-center text-xs text-navy/40 hover:text-navy transition-colors"
+          >
+            ← Back to home
+          </button>
+        )}
       </form>
     </div>
   );
