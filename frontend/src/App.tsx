@@ -12,6 +12,7 @@ import Upgrade from "./pages/Upgrade";
 import ClickSpark from "./components/ClickSpark";
 import BlobCursor from "./components/BlobCursor";
 import LegalFooter from "./components/LegalFooter";
+import AccountMenu from "./components/AccountMenu";
 
 type Tab = "wardrobe" | "today" | "buy-next" | "calendar" | "dresser-ai" | "tryon" | "upgrade";
 
@@ -26,7 +27,7 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 export default function App() {
-  const { user, loading, logout, verifyEmail } = useAuth();
+  const { user, loading, verifyEmail } = useAuth();
   const [tab, setTab] = useState<Tab>("wardrobe");
   const [verifyMsg, setVerifyMsg] = useState<string | null>(null);
   const brandRef = useRef<HTMLSpanElement>(null);
@@ -96,15 +97,7 @@ export default function App() {
                 <span ref={brandRef} className="font-brand text-3xl tracking-wide">
                   Better<span className="text-blush-deep">Dresser</span>
                 </span>
-                <div className="flex items-center gap-3 text-sm">
-                  <span className="text-navy/50 hidden sm:inline">{user.email}</span>
-                  <button
-                    onClick={logout}
-                    className="clay-btn-blush px-4 py-1.5 text-sm"
-                  >
-                    Sign out
-                  </button>
-                </div>
+                <AccountMenu onUpgrade={() => setTab("upgrade")} />
               </div>
               <nav className="flex gap-2 mt-4 overflow-x-auto pb-1">
                 {TABS.map((t) => (

@@ -48,6 +48,8 @@ export interface User {
   city?: string | null;
   lat?: number | null;
   lon?: number | null;
+  avatar_url?: string | null;
+  style_preferences?: Record<string, unknown> | null;
 }
 export interface Garment {
   id: number;
@@ -161,12 +163,28 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ city }),
     }),
-  updateProfile: (data: Partial<{ city: string; lat: number; lon: number }>) =>
+  updateProfile: (
+    data: Partial<{ city: string; lat: number; lon: number; style_preferences: Record<string, unknown> }>
+  ) =>
     request<User>("/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
+
+  uploadAvatar: (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return request<User>("/profile/avatar", { method: "POST", body: fd });
+  },
+  removeAvatar: () => request<User>("/profile/avatar", { method: "DELETE" }),
+  changePassword: (current_password: string, new_password: string) =>
+    request<{ detail: string }>("/profile/password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ current_password, new_password }),
+    }),
+  deleteAccount: () => request<void>("/profile", { method: "DELETE" }),
 
   listGarments: () => request<Garment[]>("/wardrobe/items"),
   uploadGarment: (file: File) => {
