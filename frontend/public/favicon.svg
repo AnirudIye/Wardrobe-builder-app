@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- BetterDresser mark: a clay wardrobe tile with the brand hanger, matching
+       the hand-drawn illustration style (navy #0B1957 / blush #FA9EBC / cream). -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#FFF6EA"/>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="#0B1957" stroke-width="3"/>
+  <path d="M32 14a5 5 0 1 1 5 5c-2 0-3 1-3 3v2" fill="none" stroke="#0B1957" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M34 24 52 38a3 3 0 0 1-2 5H14a3 3 0 0 1-2-5l18-14a3.4 3.4 0 0 1 4 0Z" fill="#FA9EBC" stroke="#0B1957" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M20 43h24" stroke="#F2769F" stroke-width="3" stroke-linecap="round"/>
+</svg>

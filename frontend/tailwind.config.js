@@ -22,8 +22,18 @@ export default {
         },
       },
       fontFamily: {
-        // Branding font (loaded from Google Fonts in index.html)
+        // Branding/display font (loaded from Google Fonts in index.html)
         brand: ["Ramaraja", "serif"],
+        // Body/UI font: a warm humanist sans that suits the clay aesthetic.
+        // Deliberate pairing with Ramaraja; NOT the default Inter-alike stack.
+        sans: [
+          "Figtree",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "sans-serif",
+        ],
       },
       boxShadow: {
         // Claymorphism: soft outer drop + bright inner top-left + dark inner bottom-right
