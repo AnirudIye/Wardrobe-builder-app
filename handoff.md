@@ -1,61 +1,39 @@
 # BetterDresser — Handoff
 
-_Last updated: 2026-07-15_
+_Last updated: 2026-07-16_
 
 ## Goal
 
-BetterDresser is a portfolio-grade web app for managing a digital wardrobe and getting AI styling help. A logged-in user signs up (with email confirmation), builds a wardrobe by uploading clothing photos (AI auto-tags) or adding real products from the web, then gets weather- and calendar-aware "what to wear today" outfits, "what to buy next" gap analysis with real shoppable links, free-form styling chat (DresserAI), AI try-on photos (TryOn), and account management (avatar, password, style preferences, deletion). A public **marketing landing page** greets logged-out visitors.
+BetterDresser is a portfolio-grade web app for managing a digital wardrobe and getting AI styling help. A logged-in user signs up (with email confirmation), builds a wardrobe by uploading clothing photos (AI auto-tags) or adding real products from the web, then gets weather- and calendar-aware "what to wear today" outfits, "what to buy next" gap analysis with real shoppable links, free-form styling chat (DresserAI), AI try-on photos (TryOn), and account management. A public marketing landing page greets logged-out visitors. Monetization: outfits free/unlimited; Buy Next, DresserAI and TryOn metered weekly with a $5/mo Plus plan (Stripe).
 
-Monetization: outfit recommendations are free/unlimited; Buy Next, DresserAI and TryOn are each metered (weekly free limit), with a $5/month Plus plan (Stripe) unlocking unlimited.
-
-**Stack:** FastAPI (Python 3.9, SQLite dev) + React/Vite/TypeScript/Tailwind SPA. Text AI via provider-agnostic `services/llm.py` (Anthropic or Gemini); email via best-effort `services/email.py` (stdlib SMTP). Repo root is `Wardrobe builder app/`; remote `github.com/AnirudIye/Wardrobe-builder-app` (private).
+**Stack:** FastAPI (Python 3.9, SQLite dev) + React/Vite/TS/Tailwind SPA. Text AI via `services/llm.py` (Anthropic or Gemini); email via `services/email.py` (stdlib SMTP). Repo root is `Wardrobe builder app/`; remote `github.com/AnirudIye/Wardrobe-builder-app` (private).
 
 ## Current state
 
-**On `main` and working end-to-end** (verified earlier this session in a real browser): auth + email confirmation, wardrobe CRUD + AI tagging, web product search/add, Today outfit, calendar, weather, DresserAI, Buy Next, TryOn (code-complete; blocked only by Google image quota), Plan/quota, Stripe checkout, blob cursor, click spark, delete-confirmation modals, account avatar/dropdown menu, and a **marketing landing page** for logged-out visitors.
+**Branch `feature/landing-motion` (all work committed, tree clean), 12 commits ahead of local `main`.** `main` is still at `fa042c0` and has NOT been pushed to origin (origin/main is one further behind at `bc6e524`). Backend: **96 tests pass**; frontend `npm run build` clean.
 
-- Backend: **96 tests pass** (`pytest -q`). Frontend `npm run build` was clean as of the last successful run.
-- Git: `main` is at commit `fa042c0` (landing-page scaffold, merged from `feature/landing-page`). **`main` has NOT been pushed to `origin` since that merge** — `origin/main` is one commit behind at `bc6e524` (the PR #1 merge).
+Committed on the branch this session:
+- **Landing redesign checkpoint** (prior session's illustrations/blobs/dash-free copy) + design spec + implementation plan (`docs/superpowers/`).
+- **Landing motion system:** testimonials + emoji glyphs removed (💨→SVG in WeatherWidget, ✦→SVG diamond); seamless `Marquee` component (measures a set, duplicates to overflow, shifts exactly one set-width — provably seamless, replacing the CSS marquee that gapped on wide viewports); `useReveal` scroll reveals; `CountUp` stats; `HeroField` canvas particle field; `SplitText` headline; cursor parallax + `.text-gradient-pan` accent + hover polish. All gated on `prefers-reduced-motion` and fail open (nothing stays hidden if IO/rAF never run).
+- **TryOn camera fix:** the `<video>` was only mounted after `streamActive`, so the stream attached to a null ref — preview stayed blank and Capture was a silent no-op. Video now stays mounted (hidden), streams stop on failure, capture errors surface.
+- **Buy Next picks in TryOn:** shared `fetchBuyNext()` (cache + in-flight dedupe) and an explicit "Load Buy Next picks" button in TryOn (explicit because a run costs a weekly credit).
+- **`ErrorNote` component:** on-brand blush clay error note (SVG icon, role=alert) replacing bare red text at all 15 error sites. Red kept intentionally on delete-account affordances (danger cue for actions, not messages).
 
-**In progress / UNCOMMITTED (this session's landing redesign):** the landing page was restyled per request — em-dashes removed, organic blob shapes, and every emoji/icon replaced with flat SVG illustrations. These changes are **only in the working tree, not committed**, and the last change (a blob-clipping fix) is **not yet re-verified by a build or browser preview** (a classifier outage blocked the rebuild).
+**Email confirmation WORKS end-to-end** (register → email → click → verified → login), verified live today including the DB flip. Transport is **Gmail SMTP with an App Password** from the dedicated account `BetterDresserConfirmation@gmail.com` (values in `backend/.env`, git-ignored). History: Brevo was tried first and abandoned — its free tier accepts SMTP sends then rejects them internally ("sender not valid") unless the From is a validated sender, its sender-confirmation email never arrived, and Gmail throttles its shared pool (421) anyway. **The Brevo SMTP key + API key were pasted in chat and should be revoked in the Brevo dashboard; they're no longer used.**
 
-**Dev servers are DOWN.** The backgrounded `uvicorn` (:8000) and `vite` (:5173) both exited (code 4) and need restarting before you can test on localhost.
+## Known issues / limitations
 
-## Files touched (this session)
-
-**Landing page — created:**
-- `frontend/src/pages/Landing.tsx` — the full landing page (nav, hero with floating outfit card, marquee, stats, feature grid, how-it-works, app-window showcase, Free/Plus pricing, testimonials, gradient CTA, footer). Committed in `fa042c0`, then heavily rewritten (uncommitted) to use illustrations + blobs + dash-free copy.
-- `frontend/src/components/illustrations.tsx` *(uncommitted, new)* — flat vector illustration set: garments (`Tee`, `Coat`, `Jeans`, `Sneaker`, `Derby`, `Belt`), weather (`SunCloud`), concepts (`Wardrobe`, `Bag`, `Chat`, `Mirror`, `Calendar`), steps (`Camera`, `Pin`, `Sparkles`, `Bags`), and `Avatar`. Each actually depicts the thing (no emoji/network assets).
-
-**Modified:**
-- `frontend/src/App.tsx` — renders `Landing` as the default logged-out view with an `authView` "landing" | "login" switch (verify-link visitors go straight to auth); em-dash removed. (Landing wiring committed in `fa042c0`; nothing new uncommitted here beyond the em-dash edit.)
-- `frontend/src/pages/Login.tsx` — added an optional `onBack` prop + "back to home" links (committed `fa042c0`); em-dash removed (uncommitted).
-- `frontend/src/index.css` — added landing motion/texture keyframes (`floaty`, `blobmorph`, `gradient-pan`, `marquee`, grain) committed in `fa042c0`; then added **blob shape classes** `.blob-a..d`, `.blob-pill`, `.blob-card-a..d` (uncommitted).
-- **Em-dash removal (uncommitted, visible copy only):** `components/AccountMenu.tsx`, `components/LegalFooter.tsx`, `pages/Wardrobe.tsx`, `pages/DresserAI.tsx`, `pages/Upgrade.tsx`, `pages/TryOn.tsx`, `pages/Calendar.tsx`. (Code comments still contain em-dashes; only user-facing strings were changed.)
-
-## What changed / decisions
-
-- **Landing integration:** logged-out visitors see the landing by default; any CTA (`onGetStarted`) flips `authView` to the auth screen (which gained a back-to-home link). Refresh always returns to the landing. The email verify-link flow still lands on auth directly.
-- **Illustrations, not emoji/icons:** since real product photography can't be sourced/fetched (and external hotlinks are fragile), garments/weather/concepts are drawn as self-contained flat SVG in `illustrations.tsx`. Swap in real photos later by dropping files in `frontend/public/`.
-- **Blob shapes, two tiers:** small square-ish elements (icon tiles, thumbnails, stat cards, chips) use strong percentage-radius blobs (`.blob-a..d`, `.blob-pill`); large content cards use gentler fixed-rem "card blobs" (`.blob-card-a..d`) so text never clips. Blobs are scoped to the **landing only** — the logged-in app keeps its normal rounded clay.
-- **Em-dashes:** replaced with commas / periods / colons in all visible copy.
-
-## What failed / known issues
-
-1. **Blob-card fix is unverified.** The strong blobs initially clipped the Plus pricing card's checklist (blob radius + `overflow-hidden`). Fixed by introducing `.blob-card-*` and swapping all large cards to them — but the rebuild/preview to confirm was **blocked by a temporary classifier outage**, so this has NOT been visually re-checked. First thing next session: rebuild + eyeball the pricing/stat/nav sections.
-2. **Stat cards read as flat ellipses** and the nav/full-width buttons were tuned (nav → `blob-card-a`, full-width pricing buttons → `rounded-full`). The stat-card ellipses may still feel too strong — dial back to `.blob-card-*` if so.
-3. **Couldn't access the user's reference design** (`claude.ai/design/...`): WebFetch 403, the Claude-in-Chrome extension wasn't connected, and the in-app browser hit the claude.ai sign-in wall. The landing was built to match the app + a standard structure, not the linked design. Get a screenshot to align specifics.
-4. **Dev servers exited (code 4)** and must be restarted (see "Running it locally").
-5. **Landing redesign is uncommitted** and `main` is unpushed — see "Next steps".
-6. Pre-existing (unchanged this session): TryOn blocked by Google image-gen quota; no Alembic (schema changes need `ALTER`/DB reset — and the prod migration adding `email_verified` MUST backfill existing users to `true`, see `CLAUDE.md`); Python 3.9 EOL warnings; Windows+Anaconda `_ssl` PATH gotcha.
+1. **TryOn generation is paid-only at Google.** Probed every image model the key exposes (2.5-flash-image, 3.1-flash/-lite, 3-pro): all return free-tier `RESOURCE_EXHAUSTED` with `limit: 0` — image generation has NO free tier, on any account. Enabling billing (~$0.03–0.04/image) unlocks it with zero code changes; consider switching `GOOGLE_IMAGE_MODEL` to a cheaper 3.1-lite model then (re-probe first). User chose to leave it; the app 503s gracefully and doesn't burn weekly quota on failures.
+2. **Landing motion not eyeballed.** Structure/geometry/logic verified programmatically; the harness browser pane is a hidden page (no rAF/IO/paint → no screenshots), so actual animation playback needs a human look at http://localhost:5173 logged out.
+3. Stat-card blobs may still read as ellipses (subjective; dial to `.blob-card-*` if disliked).
+4. Pre-existing: no Alembic (prod migration must backfill `email_verified=true` for existing users — see CLAUDE.md); Python 3.9 EOL warnings; benign passlib/bcrypt `__about__` traceback in logs; Windows+Anaconda `_ssl` PATH gotcha.
 
 ## Next steps
 
-1. **Restart servers, rebuild, and verify the blob fix.** From `frontend/`: `npm run build` (must be clean), then run both servers (below) and open http://localhost:5173 logged out to check the Plus pricing card no longer clips, and that stat cards / nav / buttons look right.
-2. **Commit the landing redesign.** It's currently uncommitted on `main`; branch first (e.g. `feature/landing-illustrations`), commit `illustrations.tsx` + the Landing/index.css/em-dash edits, then merge/PR.
-3. **Push `main` to `origin`** — it's one commit ahead (`fa042c0`) and unpushed.
-4. **Align to the reference design** if desired — ask the user for a screenshot of the linked `AI Dressing Landing Page` design.
-5. Optional: real product **photos** in the hero/showcase; soften the stat-card blobs; sweep code **comments** for em-dashes if "remove all em-dashes" was meant literally everywhere.
+1. **Eyeball the landing motion** in a real browser (marquee loop, count-up, hero field, split headline, parallax) and tweak taste items.
+2. **Merge `feature/landing-motion`** (or PR it) once the visuals pass, then **push `main`**.
+3. **Revoke the Brevo keys** (dashboard → SMTP & API) — exposed in chat, unused now.
+4. Optional: enable Google billing for TryOn; soften stat blobs; real product photos in the hero.
 
 ## Running it locally
 
@@ -70,4 +48,4 @@ export PATH="/c/Users/<you>/anaconda3:/c/Users/<you>/anaconda3/Library/bin:/c/Us
 npm run dev                                              # :5173, proxies /api -> :8000
 ```
 
-Then open http://localhost:5173. The local dev DB is already migrated for the `email_verified` + `avatar_key` columns, with the two existing accounts backfilled to verified. With no `SMTP_*` in `backend/.env`, new signups auto-verify. See `CLAUDE.md` for architecture and conventions.
+Open http://localhost:5173. Dev DB has 3 real accounts (all verified). With SMTP configured in `.env` (it is), new signups require email confirmation; wiping the SMTP_* values reverts to auto-verify. See `CLAUDE.md` for architecture and conventions.
