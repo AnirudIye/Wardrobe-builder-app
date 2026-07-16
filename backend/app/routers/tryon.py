@@ -72,7 +72,7 @@ async def try_on(
         # Generation failed / no key — don't charge the user's quota for nothing.
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Try-on generation is unavailable right now — check back later.",
+            detail="TryOn isn't available right now",
         )
     quota.record(db, current_user, "tryon")
     return TryOnOut(image_base64=base64.b64encode(result).decode("ascii"))
