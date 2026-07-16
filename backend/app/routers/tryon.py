@@ -51,15 +51,21 @@ async def try_on(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
     if garment_id is not None:
+        # Read the owned garment's bytes straight from storage — no HTTP
+        # round-trip to our own /media (which the SSRF guard now rejects as a
+        # private address anyway), and it works identically on S3.
         garment = _get_owned_garment(db, current_user, garment_id)
-        garment_url = get_storage().url(garment.image_path)
+        try:
+            garment_bytes = get_storage().read(garment.image_path)
+        except FileNotFoundError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Garment image is missing"
+            ) from exc
     else:
-        garment_url = image_url  # type: ignore[assignment]
-
-    try:
-        garment_bytes = download_image_bytes(garment_url)
-    except ImageDownloadError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+        try:
+            garment_bytes = download_image_bytes(image_url)  # type: ignore[arg-type]
+        except ImageDownloadError as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
     result = tryon.generate_tryon(processed_photo.image_bytes, garment_bytes)
     if result is None:

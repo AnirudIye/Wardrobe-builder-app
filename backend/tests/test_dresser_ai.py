@@ -87,4 +87,4 @@ def test_chat_has_its_own_quota_independent_of_buy_next(
 
     status_resp = client.get("/billing/status", headers=headers).json()
     assert status_resp["chat_remaining_this_week"] == 0
-    assert status_resp["remaining_this_week"] == 4  # one buy-next call consumed above
+    assert status_resp["remaining_today"] == 4  # one buy-next call consumed above

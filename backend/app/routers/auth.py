@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.core.deps import get_current_user
+from app.core.ratelimit import rate_limit
 from app.core.security import (
     create_access_token,
     create_email_token,
@@ -31,7 +32,12 @@ def _verification_link(token: str) -> str:
     return f"{base}/?verify_token={token}"
 
 
-@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=UserOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit("register", 20, 3600))],
+)
 def register(
     payload: UserCreate,
     background: BackgroundTasks,
@@ -59,7 +65,7 @@ def register(
     return user
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=Token, dependencies=[Depends(rate_limit("login", 10, 60))])
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
@@ -80,7 +86,7 @@ def login(
     return Token(access_token=create_access_token(subject=user.id))
 
 
-@router.post("/verify", response_model=Token)
+@router.post("/verify", response_model=Token, dependencies=[Depends(rate_limit("verify", 30, 60))])
 def verify_email(payload: VerifyRequest, db: Session = Depends(get_db)) -> Token:
     user_id = decode_email_token(payload.token)
     user = db.get(User, user_id) if user_id is not None else None
@@ -94,7 +100,11 @@ def verify_email(payload: VerifyRequest, db: Session = Depends(get_db)) -> Token
     return Token(access_token=create_access_token(subject=user.id))
 
 
-@router.post("/resend-verification")
+@router.post(
+    "/resend-verification",
+    # Tightest limit: this endpoint sends real email.
+    dependencies=[Depends(rate_limit("resend", 5, 3600))],
+)
 def resend_verification(
     payload: ResendRequest,
     background: BackgroundTasks,

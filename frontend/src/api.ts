@@ -33,6 +33,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const text = await res.text();
   const body = text ? JSON.parse(text) : null;
   if (!res.ok) {
+    // A 401 here is always a dead/expired token (login and verifyEmail use
+    // their own raw fetch, so wrong-password 401s never reach this path).
+    // Drop it and tell the app so the user lands back on the login screen.
+    if (res.status === 401) {
+      clearToken();
+      window.dispatchEvent(new Event("wb:unauthorized"));
+    }
     const detail = body?.detail ?? res.statusText;
     throw new ApiError(res.status, typeof detail === "string" ? detail : JSON.stringify(detail));
   }
@@ -105,8 +112,8 @@ export interface CalendarEvent {
 export interface BillingStatus {
   plan: string;
   subscription_status?: string | null;
-  remaining_this_week: number | null;
-  weekly_limit: number;
+  remaining_today: number | null;
+  daily_limit: number;
   chat_remaining_this_week: number | null;
   chat_weekly_limit: number;
   tryon_remaining_this_week: number | null;

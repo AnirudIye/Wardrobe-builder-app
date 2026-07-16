@@ -3,6 +3,7 @@ import { api, CalendarEvent } from "../api";
 import { useFadeRise, useStaggerReveal } from "../animations";
 import { ListSkeleton } from "../components/Skeleton";
 import ConfirmDialog from "../components/ConfirmDialog";
+import ErrorNote from "../components/ErrorNote";
 import { localISODate } from "../date";
 import { eventsCache } from "../store";
 
@@ -83,7 +84,7 @@ export default function Calendar() {
     <div ref={pageRef}>
       <h2 className="text-xl font-semibold mb-4">Your calendar</h2>
       <p className="text-sm text-navy/50 mb-4">
-        Add the events you're attending — outfit suggestions for that day will match the dress code.
+        Add the events you're attending, and outfit suggestions for that day will match the dress code.
       </p>
 
       <form onSubmit={submit} className="clay-card p-6 mb-6 grid gap-4 sm:grid-cols-2">
@@ -118,7 +119,7 @@ export default function Calendar() {
           onChange={(e) => setNotes(e.target.value)}
           className="clay-input sm:col-span-2"
         />
-        {error && <p className="text-sm text-red-500 sm:col-span-2">{error}</p>}
+        <ErrorNote message={error} className="sm:col-span-2" />
         <button type="submit" className="clay-btn py-2.5 sm:col-span-2">
           Add event
         </button>

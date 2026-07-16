@@ -107,8 +107,8 @@ def buy_next(
     current_user: User = Depends(get_current_user),
 ) -> BuyNextOut:
     settings = get_settings()
-    # 402 before any paid API call
-    quota.enforce(db, current_user, "buy-next", settings.free_weekly_recommendation_limit)
+    # 402 before any paid API call (buy-next is metered per day, not per week)
+    quota.enforce(db, current_user, "buy-next", settings.free_daily_recommendation_limit, days=1)
     garments = _user_garments(db, current_user)
     trend_summary = trends.get_trends()
     suggestions, source = recommendation.suggest_purchases(

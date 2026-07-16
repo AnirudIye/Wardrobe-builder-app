@@ -6,6 +6,7 @@ import Modal from "./Modal";
 import ConfirmDialog from "./ConfirmDialog";
 import AccountSettings from "./AccountSettings";
 import Customization from "./Customization";
+import ErrorNote from "./ErrorNote";
 
 type Panel = "settings" | "customize" | "delete" | null;
 
@@ -63,11 +64,8 @@ export default function AccountMenu({ onUpgrade }: { onUpgrade: () => void }) {
   return (
     <div className="relative" ref={ref}>
       {deleteErr && (
-        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[9995] clay-card px-5 py-2 text-sm text-red-500">
-          {deleteErr}
-          <button onClick={() => setDeleteErr(null)} className="ml-3 text-navy/40 hover:text-navy">
-            ×
-          </button>
+        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[9995]">
+          <ErrorNote message={deleteErr} onDismiss={() => setDeleteErr(null)} />
         </div>
       )}
       <div className="flex items-center gap-3">
@@ -144,7 +142,7 @@ export default function AccountMenu({ onUpgrade }: { onUpgrade: () => void }) {
       <ConfirmDialog
         open={panel === "delete"}
         title="Delete your account?"
-        message="This permanently deletes your account and everything in it — wardrobe, calendar, and usage history. This cannot be undone."
+        message="This permanently deletes your account and everything in it: wardrobe, calendar, and usage history. This cannot be undone."
         confirmLabel="Delete forever"
         requireText="DELETE"
         onConfirm={del}

@@ -3,6 +3,7 @@ import { api, BillingStatus } from "../api";
 import { useFadeRise } from "../animations";
 import { Skeleton } from "../components/Skeleton";
 import { billingCache } from "../store";
+import ErrorNote from "../components/ErrorNote";
 
 export default function Upgrade() {
   const pageRef = useFadeRise<HTMLDivElement>();
@@ -71,9 +72,9 @@ export default function Upgrade() {
             <div className="text-sm text-navy/50 mt-2 space-y-2">
               <p>
                 <span className="clay-chip mr-1">
-                  {status.remaining_this_week} of {status.weekly_limit}
+                  {status.remaining_today} of {status.daily_limit}
                 </span>
-                buy-next suggestions left this week.
+                buy-next suggestions left today.
               </p>
               <p>
                 <span className="clay-chip mr-1">
@@ -92,7 +93,7 @@ export default function Upgrade() {
           )}
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        <ErrorNote message={error} />
 
         {isPaid ? (
           <button onClick={openPortal} disabled={busy} className="clay-btn-blush px-5 py-2 text-sm">
@@ -100,7 +101,7 @@ export default function Upgrade() {
           </button>
         ) : (
           <button onClick={startCheckout} disabled={busy} className="w-full clay-btn py-3">
-            {busy ? "Redirecting…" : "Upgrade to Plus — $5/month"}
+            {busy ? "Redirecting…" : "Upgrade to Plus for $5/month"}
           </button>
         )}
       </div>

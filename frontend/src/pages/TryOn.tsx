@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { api, ApiError, Garment } from "../api";
 import { useFadeRise } from "../animations";
 import { garmentsCache } from "../store";
-import { getCachedBuyNext } from "./BuyNext";
+import { fetchBuyNext, getCachedBuyNext } from "./BuyNext";
+import ErrorNote from "../components/ErrorNote";
 
 type Target =
   | { kind: "garment"; garment_id: number; thumb: string; label: string }
@@ -20,8 +21,30 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const [garments, setGarments] = useState<Garment[]>(garmentsCache.peek() ?? []);
-  const buyNext = getCachedBuyNext();
   const [selected, setSelected] = useState<Target | null>(null);
+
+  // Buy Next picks as try-on candidates. Seeded from the session cache; loading
+  // is an explicit click because a fresh Buy Next run spends a daily credit.
+  const [buyNext, setBuyNext] = useState(getCachedBuyNext());
+  const [buyNextBusy, setBuyNextBusy] = useState(false);
+  const [buyNextError, setBuyNextError] = useState<string | null>(null);
+
+  const loadBuyNext = async () => {
+    setBuyNextBusy(true);
+    setBuyNextError(null);
+    try {
+      setBuyNext(await fetchBuyNext());
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 402) {
+        onQuotaBlocked();
+        setBuyNextError(err.message);
+      } else {
+        setBuyNextError((err as Error).message);
+      }
+    } finally {
+      setBuyNextBusy(false);
+    }
+  };
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,14 +60,19 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
     setCameraError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+      const video = videoRef.current;
+      if (!video) {
+        // Never leave an unattached stream running (camera light stays on).
+        stream.getTracks().forEach((t) => t.stop());
+        setCameraError("Couldn't start the camera preview. Please try again.");
+        return;
       }
+      video.srcObject = stream;
+      await video.play();
       setStreamActive(true);
     } catch (err) {
       setCameraError(
-        "Couldn't access your camera — check your browser's permission settings and try again."
+        "Couldn't access your camera. Check your browser's permission settings and try again."
       );
     }
   };
@@ -60,6 +88,12 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
+    if (!video.videoWidth || !video.videoHeight) {
+      // No frames yet — capturing now would produce an empty image.
+      setCameraError("The camera preview isn't ready yet. Give it a second and try again.");
+      return;
+    }
+    setCameraError(null);
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d");
@@ -67,7 +101,10 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
     ctx.drawImage(video, 0, 0);
     canvas.toBlob(
       (blob) => {
-        if (!blob) return;
+        if (!blob) {
+          setCameraError("Couldn't capture that frame. Try again.");
+          return;
+        }
         setPhotoBlob(blob);
         setPhotoPreview(URL.createObjectURL(blob));
       },
@@ -126,24 +163,27 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
               Retake
             </button>
           </div>
-        ) : streamActive ? (
+        ) : (
           <div className="flex flex-col items-start gap-3">
+            {/* Keep the <video> mounted even before the camera starts: startCamera
+                needs videoRef to exist to attach the stream (conditionally mounting
+                it left the ref null and the preview permanently blank). */}
             <video
               ref={videoRef}
-              className="w-full max-w-sm rounded-2xl shadow-clay-sm bg-navy/10"
+              className={`w-full max-w-sm rounded-2xl shadow-clay-sm bg-navy/10 ${streamActive ? "" : "hidden"}`}
               playsInline
               muted
             />
-            <button onClick={capture} className="clay-btn px-5 py-2 text-sm">
-              Capture
-            </button>
-          </div>
-        ) : (
-          <div>
-            <button onClick={startCamera} className="clay-btn px-5 py-2 text-sm">
-              Enable camera
-            </button>
-            {cameraError && <p className="text-sm text-red-500 mt-2">{cameraError}</p>}
+            {streamActive ? (
+              <button onClick={capture} className="clay-btn px-5 py-2 text-sm">
+                Capture
+              </button>
+            ) : (
+              <button onClick={startCamera} className="clay-btn px-5 py-2 text-sm">
+                Enable camera
+              </button>
+            )}
+            <ErrorNote message={cameraError} className="mt-2" />
           </div>
         )}
         <canvas ref={canvasRef} hidden />
@@ -152,9 +192,9 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
       {/* Step 2: garment */}
       <div className="clay-card p-5 mb-6">
         <h3 className="font-semibold mb-3">2. Pick something to try on</h3>
-        {garments.length === 0 && !buyNext?.suggestions.length && (
-          <p className="text-sm text-navy/40">
-            Add items to your wardrobe or get Buy Next suggestions first.
+        {garments.length === 0 && (
+          <p className="text-sm text-navy/40 mb-4">
+            Your wardrobe is empty. Add items to try them on, or load Buy Next picks below.
           </p>
         )}
         {garments.length > 0 && (
@@ -186,9 +226,11 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
             </div>
           </>
         )}
-        {buyNext && buyNext.suggestions.some((s) => s.products.length > 0) && (
-          <>
-            <p className="text-xs text-navy/40 mb-2">From Buy Next</p>
+        {/* Buy Next picks: grid when loaded this session, otherwise an explicit
+            load button (a fresh run is quota-metered, so it's never automatic). */}
+        <p className="text-xs text-navy/40 mb-2">From Buy Next</p>
+        {buyNext ? (
+          buyNext.suggestions.some((s) => s.products.length > 0) ? (
             <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
               {buyNext.suggestions.flatMap((s) =>
                 s.products
@@ -217,7 +259,23 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
                   })
               )}
             </div>
-          </>
+          ) : (
+            <p className="text-sm text-navy/40">No shoppable Buy Next picks right now.</p>
+          )
+        ) : (
+          <div>
+            <button
+              onClick={loadBuyNext}
+              disabled={buyNextBusy}
+              className="clay-btn-blush px-4 py-2 text-sm"
+            >
+              {buyNextBusy ? "Finding picks…" : "Load Buy Next picks"}
+            </button>
+            <p className="text-[11px] text-navy/40 mt-1.5">
+              Runs a Buy Next analysis (uses one daily credit on the free plan).
+            </p>
+            <ErrorNote message={buyNextError} className="mt-2" />
+          </div>
         )}
       </div>
 
@@ -230,7 +288,7 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
         {busy ? "Generating your look…" : "Try it on"}
       </button>
 
-      {error && <p className="text-sm text-red-500 mt-3">{error}</p>}
+      <ErrorNote message={error} className="mt-3" />
 
       {resultUrl && (
         <div className="clay-card p-5 mt-6 max-w-sm">

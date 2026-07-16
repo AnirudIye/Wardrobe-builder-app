@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, OutfitRecommendation } from "../api";
 import { useFadeRise, useStaggerReveal } from "../animations";
 import { CardGridSkeleton, Skeleton } from "../components/Skeleton";
+import ErrorNote from "../components/ErrorNote";
 
 // Session cache: switching tabs shows the last result instantly instead of
 // re-fetching. "Refresh" forces a new one. The in-flight promise also guards
@@ -58,7 +59,7 @@ export default function Today() {
           <CardGridSkeleton count={4} cols="grid-cols-2 sm:grid-cols-4" />
         </div>
       )}
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <ErrorNote message={error} className="mb-4" />
 
       {rec && (
         <div className="clay-card p-6">

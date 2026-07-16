@@ -31,6 +31,8 @@ def _mock_httpx_stream(payload: bytes):
     """Mimic httpx.stream context manager yielding a response with payload bytes."""
 
     class _FakeResp:
+        is_redirect = False
+
         def raise_for_status(self):
             return None
 
@@ -47,7 +49,11 @@ def _mock_httpx_stream(payload: bytes):
 def test_add_from_web_creates_garment(client: TestClient):
     headers = auth_headers(client)
     png = sample_image_bytes(color="blue")
-    with patch("app.services.images.httpx.stream", new=_mock_httpx_stream(png)):
+    # Patch the SSRF guard too: img.example deliberately doesn't resolve, and
+    # tests must never depend on real DNS. The guard has its own unit tests.
+    with patch("app.services.images._assert_public_http_url"), patch(
+        "app.services.images.httpx.stream", new=_mock_httpx_stream(png)
+    ):
         resp = client.post(
             "/wardrobe/items/from-web",
             headers=headers,
@@ -65,7 +71,9 @@ def test_add_from_web_creates_garment(client: TestClient):
 
 def test_add_from_web_rejects_non_image(client: TestClient):
     headers = auth_headers(client)
-    with patch("app.services.images.httpx.stream", new=_mock_httpx_stream(b"<html>404</html>")):
+    with patch("app.services.images._assert_public_http_url"), patch(
+        "app.services.images.httpx.stream", new=_mock_httpx_stream(b"<html>404</html>")
+    ):
         resp = client.post(
             "/wardrobe/items/from-web",
             headers=headers,

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError, ChatMessage } from "../api";
 import { useFadeRise, useStaggerReveal } from "../animations";
+import ErrorNote from "../components/ErrorNote";
 
 // Session-only chat: kept in memory so it survives tab switches, but is never
 // persisted server-side and clears on a page refresh.
@@ -52,7 +53,7 @@ export default function DresserAI({ onQuotaBlocked }: { onQuotaBlocked: () => vo
     <div ref={pageRef}>
       <h2 className="text-xl font-semibold mb-1">DresserAI</h2>
       <p className="text-sm text-navy/50 mb-4">
-        Ask for styling advice — DresserAI knows your wardrobe, today's weather, and your
+        Ask for styling advice. DresserAI knows your wardrobe, today's weather, and your
         calendar. Nothing here is saved once you leave.
       </p>
 
@@ -81,7 +82,7 @@ export default function DresserAI({ onQuotaBlocked }: { onQuotaBlocked: () => vo
         <div ref={bottomRef} />
       </div>
 
-      {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
+      <ErrorNote message={error} className="mb-3" />
 
       <form onSubmit={send} className="flex gap-3">
         <input

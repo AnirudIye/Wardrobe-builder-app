@@ -9,14 +9,22 @@ from app.config import get_settings
 
 settings = get_settings()
 
-# SQLite needs check_same_thread=False when used across FastAPI's threadpool.
-connect_args = (
-    {"check_same_thread": False}
-    if settings.database_url.startswith("sqlite")
-    else {}
-)
-
-engine = create_engine(settings.database_url, connect_args=connect_args)
+if settings.database_url.startswith("sqlite"):
+    # SQLite needs check_same_thread=False across FastAPI's threadpool.
+    engine = create_engine(
+        settings.database_url, connect_args={"check_same_thread": False}
+    )
+else:
+    # Managed Postgres (Neon/Supabase/...): pre-ping revalidates connections
+    # that the provider's autosuspend has silently killed, and recycling keeps
+    # them younger than typical proxy idle timeouts.
+    engine = create_engine(
+        settings.database_url,
+        pool_pre_ping=True,
+        pool_size=5,
+        max_overflow=5,
+        pool_recycle=300,
+    )
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 
