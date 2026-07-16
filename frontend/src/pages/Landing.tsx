@@ -5,6 +5,7 @@
 import { useFadeRise, useReveal } from "../animations";
 import LegalFooter from "../components/LegalFooter";
 import Marquee from "../components/Marquee";
+import CountUp from "../components/CountUp";
 import {
   Tee, Coat, Jeans, Sneaker, Derby, SunCloud,
   Wardrobe, Bag, Chat, Mirror, Calendar,
@@ -202,7 +203,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
         <div ref={statsGrid} className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {STATS.map((s, i) => (
             <div key={s.l} className={`clay-card ${BLOBS[i % 4]} px-5 py-6 text-center`}>
-              <p className="font-brand text-3xl text-navy">{s.v}</p>
+              <p className="font-brand text-3xl text-navy"><CountUp value={s.v} /></p>
               <p className="text-xs text-navy/50 mt-1">{s.l}</p>
             </div>
           ))}
