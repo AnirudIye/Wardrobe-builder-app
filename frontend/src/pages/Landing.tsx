@@ -11,7 +11,7 @@ import SplitText from "../components/SplitText";
 import {
   Tee, Coat, Jeans, Sneaker, Derby, SunCloud,
   Wardrobe, Bag, Chat, Mirror, Calendar,
-  Camera, Pin, Sparkles, Bags, Avatar,
+  Camera, Pin, Sparkles, Bags,
 } from "../components/illustrations";
 
 type Ill = (props: { className?: string }) => React.ReactElement;
@@ -35,14 +35,7 @@ const STEPS: { n: string; Ill: Ill; title: string; body: string }[] = [
   { n: "04", Ill: Bags, title: "Shop the gaps", body: "Buy Next shows exactly what's missing, with links to buy it." },
 ];
 
-const STATS = [
-  { v: "1 tap", l: "to add a garment" },
-  { v: "7-day", l: "outfit planning" },
-  { v: "$5/mo", l: "for unlimited" },
-  { v: "$0", l: "card to start" },
-];
-
-const MARQUEE = ["MINIMAL", "STREETWEAR", "SMART CASUAL", "WEATHER-AWARE", "CALENDAR-SYNCED", "AI TRY-ON", "SHOP THE GAPS", "OWN YOUR STYLE"];
+const MARQUEE = ["DRESSED FOR THE FORECAST", "KNOWS YOUR CALENDAR", "AI AUTO-TAGGING", "VIRTUAL TRY-ON", "SHOP ONLY THE GAPS", "YOUR CLOSET, DIGITISED"];
 
 /* ----------------------------------------------------------- decorations */
 function Glow({ className, style }: { className?: string; style?: React.CSSProperties }) {
@@ -82,7 +75,6 @@ function Thumb({ Ill, label, blob = "blob-b" }: { Ill: Ill; label: string; blob?
 export default function Landing({ onGetStarted }: { onGetStarted: () => void }) {
   const heroText = useFadeRise<HTMLDivElement>();
   const heroArt = useFadeRise<HTMLDivElement>(150);
-  const statsGrid = useReveal<HTMLDivElement>({ stagger: true });
   const featuresHead = useReveal<HTMLDivElement>();
   const featureGrid = useReveal<HTMLDivElement>({ stagger: true });
   const howHead = useReveal<HTMLDivElement>();
@@ -147,28 +139,21 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
 
         <div className="relative max-w-6xl mx-auto px-4 pt-16 pb-20 md:pt-24 md:pb-28 grid md:grid-cols-2 gap-12 items-center">
           <div ref={heroText}>
-            <span className="clay-chip blob-pill inline-flex items-center gap-1.5"><Sparkles className="w-4 h-4" /> Your AI-powered personal stylist</span>
-            <h1 className="font-brand text-5xl sm:text-6xl lg:text-7xl leading-[1.05] mt-5">
+            <h1 className="font-brand text-5xl sm:text-6xl lg:text-7xl leading-[1.05] tracking-tight">
               <SplitText text={"Your wardrobe,\nstyled by AI."} accentFrom={2} accentClass="text-gradient-pan" />
             </h1>
-            <p className="text-lg text-navy/60 mt-5 max-w-md">
-              BetterDresser catalogues every piece you own, then dresses you for the weather, your
-              calendar and your taste, and tells you exactly what's worth buying next.
+            <p className="text-lg text-navy/60 mt-6 max-w-md">
+              Photograph your clothes once. BetterDresser tags every piece, checks the forecast
+              and your calendar each morning, and hands you a full outfit from what you already own.
             </p>
             <div className="flex flex-wrap items-center gap-3 mt-8">
               <button onClick={onGetStarted} className="clay-btn blob-pill px-7 py-3 text-base">Get started free</button>
               <a href="#how" className="clay-btn-blush blob-pill px-7 py-3 text-base">See how it works</a>
             </div>
-            <div className="flex items-center gap-4 mt-6 text-sm text-navy/50">
-              <div className="flex -space-x-2">
-                {[0, 1, 2, 3].map((n) => (
-                  <span key={n} className="w-8 h-8 rounded-full overflow-hidden shadow-clay-sm ring-2 ring-cream-soft">
-                    <Avatar i={n} />
-                  </span>
-                ))}
-              </div>
-              <span>Free outfits forever, no card required</span>
-            </div>
+            <p className="flex items-center gap-2 mt-6 text-sm text-navy/50">
+              <span className="text-blush-deep"><Check /></span>
+              Outfit recommendations are free and unlimited. No card required.
+            </p>
           </div>
 
           {/* Hero art: a floating "Today" card + satellites */}
@@ -219,18 +204,6 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
               </span>
             ))}
           </Marquee>
-        </div>
-      </section>
-
-      {/* ========================================================== STATS */}
-      <section className="max-w-6xl mx-auto px-4 -mt-8 relative z-10">
-        <div ref={statsGrid} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {STATS.map((s, i) => (
-            <div key={s.l} className={`clay-card ${BLOBS[i % 4]} px-5 py-6 text-center`}>
-              <p className="font-brand text-3xl text-navy"><CountUp value={s.v} /></p>
-              <p className="text-xs text-navy/50 mt-1">{s.l}</p>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -347,7 +320,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
           {/* Free */}
           <div className="clay-card blob-card-a p-8">
             <p className="font-brand text-2xl">Free</p>
-            <p className="mt-2"><span className="font-brand text-5xl">$0</span><span className="text-navy/50"> / forever</span></p>
+            <p className="mt-2"><CountUp value="$0" className="font-brand text-5xl" /><span className="text-navy/50"> / forever</span></p>
             <button onClick={onGetStarted} className="clay-btn-blush rounded-full w-full py-3 mt-6">Get started</button>
             <ul className="mt-6 space-y-3 text-sm">
               {["Unlimited outfit recommendations", "Full wardrobe + AI auto-tagging", "Weather & calendar aware", "Daily Buy Next runs, weekly DresserAI & TryOn"].map((t) => (
@@ -367,7 +340,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
                 <p className="font-brand text-2xl">Plus</p>
                 <span className="blob-pill bg-blush text-navy text-xs font-semibold px-3 py-1">Most popular</span>
               </div>
-              <p className="mt-2"><span className="font-brand text-5xl">$5</span><span className="text-cream/60"> / month</span></p>
+              <p className="mt-2"><CountUp value="$5" className="font-brand text-5xl" /><span className="text-cream/60"> / month</span></p>
               <button onClick={onGetStarted} className="clay-btn-blush rounded-full w-full py-3 mt-6">Go Plus</button>
               <ul className="mt-6 space-y-3 text-sm">
                 {["Everything in Free", "Unlimited Buy Next suggestions", "Unlimited DresserAI chat", "Unlimited Virtual TryOn renders", "Cancel anytime, keep access to term-end"].map((t) => (
