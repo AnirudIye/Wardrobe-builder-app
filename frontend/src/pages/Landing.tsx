@@ -6,6 +6,7 @@ import { useFadeRise, useReveal } from "../animations";
 import LegalFooter from "../components/LegalFooter";
 import Marquee from "../components/Marquee";
 import CountUp from "../components/CountUp";
+import HeroField from "../components/HeroField";
 import {
   Tee, Coat, Jeans, Sneaker, Derby, SunCloud,
   Wardrobe, Bag, Chat, Mirror, Calendar,
@@ -115,6 +116,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
 
       {/* =========================================================== HERO */}
       <section className="relative grain overflow-hidden">
+        <HeroField className="absolute inset-0" />
         <Glow className="animate-blobmorph animate-floaty-slow" style={{ width: 460, height: 460, top: -120, right: -120, background: "radial-gradient(circle at 30% 30%, rgba(250,158,188,0.55), rgba(250,158,188,0) 70%)" }} />
         <Glow className="animate-floaty" style={{ width: 420, height: 420, top: 180, left: -160, background: "radial-gradient(circle at 50% 50%, rgba(27,44,119,0.28), rgba(27,44,119,0) 70%)" }} />
         <Glow style={{ width: 300, height: 300, bottom: -80, right: 120, background: "radial-gradient(circle at 50% 50%, rgba(247,233,212,0.9), rgba(247,233,212,0) 70%)" }} />
