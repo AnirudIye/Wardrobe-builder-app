@@ -1,6 +1,6 @@
 # BetterDresser — Handoff
 
-_Last updated: 2026-07-16_
+_Last updated: 2026-07-16 (security hardening pass)_
 
 ## Goal
 
@@ -20,6 +20,8 @@ Committed on the branch this session:
 - **`ErrorNote` component:** on-brand blush clay error note (SVG icon, role=alert) replacing bare red text at all 15 error sites. Red kept intentionally on delete-account affordances (danger cue for actions, not messages).
 
 **Email confirmation WORKS end-to-end** (register → email → click → verified → login), verified live today including the DB flip. Transport is **Gmail SMTP with an App Password** from the dedicated account `BetterDresserConfirmation@gmail.com` (values in `backend/.env`, git-ignored). History: Brevo was tried first and abandoned — its free tier accepts SMTP sends then rejects them internally ("sender not valid") unless the From is a validated sender, its sender-confirmation email never arrived, and Gmail throttles its shared pool (421) anyway. **The Brevo SMTP key + API key were pasted in chat and should be revoked in the Brevo dashboard; they're no longer used.**
+
+**Since the motion-system handoff, also landed on `feature/landing-motion`:** TryOn camera fix (video ref race) + Buy Next picks loadable from TryOn; on-brand `ErrorNote` at all 15 error sites; buy-next quota now **5/day** (per-kind window in `quota.py`; `remaining_today`/`daily_limit` in BillingStatus); nav tabs renamed (My Wardrobe / Today's Recommendations / What To Buy Next); **email confirmation working end-to-end via Gmail SMTP** (app password on `BetterDresserConfirmation@gmail.com`; Brevo abandoned — its keys passed through chat and should be revoked); and a full **security-hardening + production data layer pass** (see `docs/deploy.md` and CLAUDE.md "Security posture"): env-driven production posture with fail-fast validation, security-headers middleware, auth rate limiting, SSRF-guarded image fetches (TryOn reads owned garments from storage directly), build-time CSP, 401 token-expiry handling, Alembic wired with baseline migration, managed-Postgres support (psycopg3), and an S3/R2 storage backend. Suite is now **127 tests**, all passing.
 
 ## Known issues / limitations
 
