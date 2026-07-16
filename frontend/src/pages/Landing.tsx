@@ -7,6 +7,7 @@ import LegalFooter from "../components/LegalFooter";
 import Marquee from "../components/Marquee";
 import CountUp from "../components/CountUp";
 import HeroField from "../components/HeroField";
+import SplitText from "../components/SplitText";
 import {
   Tee, Coat, Jeans, Sneaker, Derby, SunCloud,
   Wardrobe, Bag, Chat, Mirror, Calendar,
@@ -125,9 +126,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
           <div ref={heroText}>
             <span className="clay-chip blob-pill inline-flex items-center gap-1.5"><Sparkles className="w-4 h-4" /> Your AI-powered personal stylist</span>
             <h1 className="font-brand text-5xl sm:text-6xl lg:text-7xl leading-[1.05] mt-5">
-              Your wardrobe,
-              <br />
-              <span className="text-blush-deep">styled by AI.</span>
+              <SplitText text={"Your wardrobe,\nstyled by AI."} accentFrom={2} />
             </h1>
             <p className="text-lg text-navy/60 mt-5 max-w-md">
               BetterDresser catalogues every piece you own, then dresses you for the weather, your
