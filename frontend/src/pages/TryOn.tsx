@@ -37,10 +37,15 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
     setCameraError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+      const video = videoRef.current;
+      if (!video) {
+        // Never leave an unattached stream running (camera light stays on).
+        stream.getTracks().forEach((t) => t.stop());
+        setCameraError("Couldn't start the camera preview. Please try again.");
+        return;
       }
+      video.srcObject = stream;
+      await video.play();
       setStreamActive(true);
     } catch (err) {
       setCameraError(
@@ -60,6 +65,12 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
+    if (!video.videoWidth || !video.videoHeight) {
+      // No frames yet — capturing now would produce an empty image.
+      setCameraError("The camera preview isn't ready yet. Give it a second and try again.");
+      return;
+    }
+    setCameraError(null);
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d");
@@ -67,7 +78,10 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
     ctx.drawImage(video, 0, 0);
     canvas.toBlob(
       (blob) => {
-        if (!blob) return;
+        if (!blob) {
+          setCameraError("Couldn't capture that frame. Try again.");
+          return;
+        }
         setPhotoBlob(blob);
         setPhotoPreview(URL.createObjectURL(blob));
       },
@@ -126,23 +140,26 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
               Retake
             </button>
           </div>
-        ) : streamActive ? (
+        ) : (
           <div className="flex flex-col items-start gap-3">
+            {/* Keep the <video> mounted even before the camera starts: startCamera
+                needs videoRef to exist to attach the stream (conditionally mounting
+                it left the ref null and the preview permanently blank). */}
             <video
               ref={videoRef}
-              className="w-full max-w-sm rounded-2xl shadow-clay-sm bg-navy/10"
+              className={`w-full max-w-sm rounded-2xl shadow-clay-sm bg-navy/10 ${streamActive ? "" : "hidden"}`}
               playsInline
               muted
             />
-            <button onClick={capture} className="clay-btn px-5 py-2 text-sm">
-              Capture
-            </button>
-          </div>
-        ) : (
-          <div>
-            <button onClick={startCamera} className="clay-btn px-5 py-2 text-sm">
-              Enable camera
-            </button>
+            {streamActive ? (
+              <button onClick={capture} className="clay-btn px-5 py-2 text-sm">
+                Capture
+              </button>
+            ) : (
+              <button onClick={startCamera} className="clay-btn px-5 py-2 text-sm">
+                Enable camera
+              </button>
+            )}
             {cameraError && <p className="text-sm text-red-500 mt-2">{cameraError}</p>}
           </div>
         )}
