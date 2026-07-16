@@ -4,6 +4,7 @@
 // components/illustrations) — nothing is fetched from the network.
 import { useFadeRise, useReveal } from "../animations";
 import LegalFooter from "../components/LegalFooter";
+import Marquee from "../components/Marquee";
 import {
   Tee, Coat, Jeans, Sneaker, Derby, SunCloud,
   Wardrobe, Bag, Chat, Mirror, Calendar,
@@ -49,6 +50,15 @@ function Check() {
   return (
     <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round">
       <path d="M5 12.5l4.5 4.5L19 7" />
+    </svg>
+  );
+}
+
+/* Four-point sparkle used as the marquee separator (replaces the old star glyph). */
+function Diamond({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M12 0l2.6 9.4L24 12l-9.4 2.6L12 24l-2.6-9.4L0 12l9.4-2.6z" />
     </svg>
   );
 }
@@ -176,14 +186,14 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
         </div>
 
         {/* marquee ribbon */}
-        <div className="relative border-y border-cream-deep bg-cream-soft/60 py-4 overflow-hidden">
-          <div className="flex w-max animate-marquee gap-10 pr-10">
-            {[...MARQUEE, ...MARQUEE].map((w, i) => (
-              <span key={i} className="font-brand text-xl text-navy/30 whitespace-nowrap flex items-center gap-10">
-                {w}<span className="text-blush">✦</span>
+        <div className="relative border-y border-cream-deep bg-cream-soft/60 py-4">
+          <Marquee speed={45} gap={40}>
+            {MARQUEE.map((w) => (
+              <span key={w} className="font-brand text-xl text-navy/30 whitespace-nowrap flex items-center gap-10">
+                {w}<Diamond className="w-3.5 h-3.5 text-blush" />
               </span>
             ))}
-          </div>
+          </Marquee>
         </div>
       </section>
 
