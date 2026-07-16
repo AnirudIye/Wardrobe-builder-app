@@ -101,33 +101,35 @@ export default function App() {
         )
       ) : (
         <div className="min-h-screen flex flex-col">
-          <header className="pt-5">
-            <div className="max-w-4xl mx-auto px-4">
-              <div className="clay-card px-6 py-4 flex items-center justify-between">
-                <span ref={brandRef} className="font-brand text-3xl tracking-wide">
-                  Better<span className="text-blush-deep">Dresser</span>
-                </span>
-                <AccountMenu onUpgrade={() => setTab("upgrade")} />
+          <header className="sticky top-0 z-40 pt-4 pb-2 bg-cream/85 backdrop-blur-md">
+            <div className="max-w-5xl mx-auto px-4">
+              <div className="clay-card px-5 sm:px-6 py-3.5">
+                <div className="flex items-center justify-between">
+                  <span ref={brandRef} className="font-brand text-2xl sm:text-3xl tracking-wide leading-none">
+                    Better<span className="text-blush-deep">Dresser</span>
+                  </span>
+                  <AccountMenu onUpgrade={() => setTab("upgrade")} />
+                </div>
+                <nav aria-label="Primary" className="flex gap-1.5 mt-3 overflow-x-auto pb-0.5">
+                  {TABS.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setTab(t.id)}
+                      className={`px-4 py-1.5 text-sm rounded-full whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 ${
+                        tab === t.id
+                          ? "bg-navy text-cream font-medium shadow-clay-navy"
+                          : "text-navy/60 hover:text-navy hover:bg-cream"
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </nav>
               </div>
-              <nav className="flex gap-2 mt-4 overflow-x-auto pb-1">
-                {TABS.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setTab(t.id)}
-                    className={`px-5 py-2 text-sm rounded-2xl whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 ${
-                      tab === t.id
-                        ? "bg-navy text-cream font-medium shadow-clay-navy"
-                        : "bg-cream-soft text-navy/70 shadow-clay-sm hover:text-navy hover:shadow-clay"
-                    }`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </nav>
             </div>
           </header>
 
-          <main ref={mainRef} className="max-w-4xl mx-auto px-4 py-6 w-full flex-1">
+          <main ref={mainRef} className="max-w-5xl mx-auto px-4 py-10 w-full flex-1">
             {tab === "wardrobe" && <Wardrobe />}
             {tab === "today" && <Today />}
             {tab === "buy-next" && <BuyNext onQuotaBlocked={() => setTab("upgrade")} />}
