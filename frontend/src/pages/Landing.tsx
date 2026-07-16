@@ -2,7 +2,7 @@
 // app's claymorphic language (navy / blush / cream, Ramaraja display font,
 // clay shadows) with organic blob shapes and flat vector illustrations (see
 // components/illustrations) — nothing is fetched from the network.
-import { useFadeRise, useReveal } from "../animations";
+import { useFadeRise, useReveal, prefersReducedMotion } from "../animations";
 import LegalFooter from "../components/LegalFooter";
 import Marquee from "../components/Marquee";
 import CountUp from "../components/CountUp";
@@ -92,6 +92,29 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
   const priceGrid = useReveal<HTMLDivElement>({ stagger: true });
   const cta = useReveal<HTMLDivElement>();
 
+  // Cursor parallax for the hero art (fine pointers only, respects reduced motion).
+  const parallaxOn =
+    typeof window !== "undefined" &&
+    window.matchMedia("(pointer: fine)").matches &&
+    !prefersReducedMotion();
+  const onHeroMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!parallaxOn) return;
+    const host = heroArt.current;
+    if (!host) return;
+    const r = host.getBoundingClientRect();
+    const nx = (e.clientX - r.left) / r.width - 0.5;
+    const ny = (e.clientY - r.top) / r.height - 0.5;
+    host.querySelectorAll<HTMLElement>("[data-depth]").forEach((el) => {
+      const d = Number(el.dataset.depth);
+      el.style.translate = `${-nx * d}px ${-ny * d}px`;
+    });
+  };
+  const onHeroLeave = () => {
+    heroArt.current
+      ?.querySelectorAll<HTMLElement>("[data-depth]")
+      .forEach((el) => (el.style.translate = "0px 0px"));
+  };
+
   return (
     <div className="relative overflow-x-hidden">
       {/* ============================================================ NAV */}
@@ -126,7 +149,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
           <div ref={heroText}>
             <span className="clay-chip blob-pill inline-flex items-center gap-1.5"><Sparkles className="w-4 h-4" /> Your AI-powered personal stylist</span>
             <h1 className="font-brand text-5xl sm:text-6xl lg:text-7xl leading-[1.05] mt-5">
-              <SplitText text={"Your wardrobe,\nstyled by AI."} accentFrom={2} />
+              <SplitText text={"Your wardrobe,\nstyled by AI."} accentFrom={2} accentClass="text-gradient-pan" />
             </h1>
             <p className="text-lg text-navy/60 mt-5 max-w-md">
               BetterDresser catalogues every piece you own, then dresses you for the weather, your
@@ -149,8 +172,8 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
           </div>
 
           {/* Hero art: a floating "Today" card + satellites */}
-          <div ref={heroArt} className="relative h-[440px] sm:h-[470px]">
-            <div className="absolute inset-x-2 top-4 clay-card blob-card-a p-6 animate-floaty">
+          <div ref={heroArt} onMouseMove={onHeroMove} onMouseLeave={onHeroLeave} className="relative h-[440px] sm:h-[470px]">
+            <div data-depth="18" className="absolute inset-x-2 top-4 clay-card blob-card-a p-6 animate-floaty">
               <div className="flex items-center justify-between">
                 <p className="font-brand text-2xl">Today</p>
                 <span className="clay-chip blob-pill inline-flex items-center gap-1.5"><SunCloud className="w-4 h-4" /> 14° · breezy</span>
@@ -166,7 +189,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
               </div>
             </div>
 
-            <div className="absolute -left-2 sm:-left-6 bottom-6 clay-card blob-card-d px-4 py-3 animate-floaty-slow max-w-[220px]">
+            <div data-depth="34" className="absolute -left-2 sm:-left-6 bottom-6 clay-card blob-card-d px-4 py-3 animate-floaty-slow max-w-[220px]">
               <div className="flex items-center gap-2">
                 <span className="w-7 h-7 blob-pill bg-navy text-cream grid place-items-center text-[10px] font-semibold">AI</span>
                 <p className="text-xs text-navy/50">DresserAI</p>
@@ -174,7 +197,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
               <p className="text-sm mt-1.5">"Swap the white tee for the striped one. It lifts the whole fit."</p>
             </div>
 
-            <div className="absolute right-0 sm:-right-4 bottom-24 clay-card blob-card-b px-4 py-3 animate-floaty">
+            <div data-depth="26" className="absolute right-0 sm:-right-4 bottom-24 clay-card blob-card-b px-4 py-3 animate-floaty">
               <p className="text-xs text-navy/50">Buy next</p>
               <div className="flex items-center gap-2 mt-1">
                 <span className="w-10 h-10 blob-c bg-cream grid place-items-center p-1.5 shadow-clay-sm"><Derby className="w-full h-full" /></span>
@@ -221,8 +244,8 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
 
         <div ref={featureGrid} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
           {FEATURES.map((f, i) => (
-            <div key={f.title} className={`clay-card clay-card-hover ${CARD_BLOBS[i % 4]} p-7`}>
-              <div className={`w-16 h-16 ${BLOBS[(i + 1) % 4]} bg-cream grid place-items-center p-3 shadow-clay-sm`}>
+            <div key={f.title} className={`group clay-card clay-card-hover ${CARD_BLOBS[i % 4]} p-7`}>
+              <div className={`w-16 h-16 ${BLOBS[(i + 1) % 4]} bg-cream grid place-items-center p-3 shadow-clay-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}>
                 <f.Ill className="w-full h-full" />
               </div>
               <h3 className="font-brand text-2xl mt-5">{f.title}</h3>
@@ -242,8 +265,8 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
           </div>
           <div ref={stepGrid} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
             {STEPS.map((s, i) => (
-              <div key={s.n} className={`clay-card clay-card-hover ${CARD_BLOBS[i % 4]} p-6`}>
-                <div className={`w-14 h-14 ${BLOBS[(i + 2) % 4]} bg-cream grid place-items-center p-2.5 shadow-clay-sm`}>
+              <div key={s.n} className={`group clay-card clay-card-hover ${CARD_BLOBS[i % 4]} p-6`}>
+                <div className={`w-14 h-14 ${BLOBS[(i + 2) % 4]} bg-cream grid place-items-center p-2.5 shadow-clay-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}>
                   <s.Ill className="w-full h-full" />
                 </div>
                 <p className="font-brand text-blush-deep text-lg mt-4">{s.n}</p>

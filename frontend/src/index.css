@@ -100,6 +100,17 @@ html {
   animation: gradient-pan 10s ease infinite;
 }
 
+/* Animated blush→navy gradient clipped to text, for accent words. */
+.text-gradient-pan {
+  background-image: linear-gradient(100deg, #F2769F, #1B2C77, #F2769F);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-pan 8s ease infinite;
+}
+
 /* Subtle film grain overlay (self-contained SVG noise). */
 .grain::after {
   content: "";
@@ -115,7 +126,8 @@ html {
   .animate-floaty-slow,
   .animate-blobmorph,
   .animate-spin-slow,
-  .gradient-pan {
+  .gradient-pan,
+  .text-gradient-pan {
     animation: none !important;
   }
 }
