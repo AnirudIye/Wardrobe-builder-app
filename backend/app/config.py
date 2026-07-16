@@ -48,8 +48,8 @@ class Settings(BaseSettings):
     # "thinking" tokens; lite is fast and fits the app's cheapest-model policy.
     google_text_model: str = "gemini-flash-lite-latest"
 
-    # Quota
-    free_weekly_recommendation_limit: int = 5
+    # Quota (buy-next is metered per DAY; chat and tryon per trailing week)
+    free_daily_recommendation_limit: int = 5
     free_weekly_chat_limit: int = 20
     free_weekly_tryon_limit: int = 5
 

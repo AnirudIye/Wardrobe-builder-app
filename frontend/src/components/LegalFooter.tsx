@@ -25,7 +25,7 @@ function Terms() {
       </p>
       <h4 className="font-semibold">3. Subscriptions & billing</h4>
       <p>
-        The free plan includes a limited number of buy-next suggestions per week; outfit
+        The free plan includes a limited number of buy-next suggestions per day; outfit
         recommendations are free. BetterDresser Plus ($5/month) unlocks unlimited buy-next
         suggestions. Payments are processed by Stripe; we never see or store your card
         details. You can cancel any time via the customer portal; access continues until the

@@ -18,8 +18,8 @@ router = APIRouter(prefix="/billing", tags=["billing"])
 class BillingStatus(BaseModel):
     plan: str
     subscription_status: Optional[str] = None
-    remaining_this_week: Optional[int] = None  # None = unlimited (paid); buy-next
-    weekly_limit: int
+    remaining_today: Optional[int] = None  # None = unlimited (paid); buy-next (daily)
+    daily_limit: int
     chat_remaining_this_week: Optional[int] = None  # None = unlimited (paid)
     chat_weekly_limit: int
     tryon_remaining_this_week: Optional[int] = None  # None = unlimited (paid)
@@ -41,10 +41,10 @@ def billing_status(
     return BillingStatus(
         plan=current_user.plan,
         subscription_status=current_user.subscription_status,
-        remaining_this_week=quota.remaining(
-            db, current_user, "buy-next", settings.free_weekly_recommendation_limit
+        remaining_today=quota.remaining(
+            db, current_user, "buy-next", settings.free_daily_recommendation_limit, days=1
         ),
-        weekly_limit=settings.free_weekly_recommendation_limit,
+        daily_limit=settings.free_daily_recommendation_limit,
         chat_remaining_this_week=quota.remaining(
             db, current_user, "dresser-ai", settings.free_weekly_chat_limit
         ),

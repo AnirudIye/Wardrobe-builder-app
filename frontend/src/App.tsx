@@ -18,9 +18,9 @@ import AccountMenu from "./components/AccountMenu";
 type Tab = "wardrobe" | "today" | "buy-next" | "calendar" | "dresser-ai" | "tryon" | "upgrade";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "wardrobe", label: "Wardrobe" },
-  { id: "today", label: "Today" },
-  { id: "buy-next", label: "Buy Next" },
+  { id: "wardrobe", label: "My Wardrobe" },
+  { id: "today", label: "Today's Recommendations" },
+  { id: "buy-next", label: "What To Buy Next" },
   { id: "calendar", label: "Calendar" },
   { id: "dresser-ai", label: "DresserAI" },
   { id: "tryon", label: "TryOn" },

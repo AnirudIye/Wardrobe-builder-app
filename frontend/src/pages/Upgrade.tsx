@@ -72,9 +72,9 @@ export default function Upgrade() {
             <div className="text-sm text-navy/50 mt-2 space-y-2">
               <p>
                 <span className="clay-chip mr-1">
-                  {status.remaining_this_week} of {status.weekly_limit}
+                  {status.remaining_today} of {status.daily_limit}
                 </span>
-                buy-next suggestions left this week.
+                buy-next suggestions left today.
               </p>
               <p>
                 <span className="clay-chip mr-1">

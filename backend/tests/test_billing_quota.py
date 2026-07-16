@@ -46,7 +46,7 @@ def test_today_is_never_paywalled(client: TestClient):
     for _ in range(5):
         assert client.get("/recommendations/buy-next", headers=headers).status_code == 200
     assert client.get("/recommendations/buy-next", headers=headers).status_code == 402
-    # Today keeps working well past the old 5/week limit.
+    # Today keeps working well past the buy-next daily limit.
     for i in range(7):
         assert client.get("/recommendations/today", headers=headers).status_code == 200, i
 
@@ -66,13 +66,13 @@ def test_old_events_do_not_count(client: TestClient, db_session: Session):
     headers = auth_headers(client)
     _setup_wardrobe(client, headers)
     user = _get_user(db_session)
-    # Five events from 8 days ago — outside the 7-day window.
-    old = datetime.now(timezone.utc) - timedelta(days=8)
+    # Five events from 25 hours ago — just outside buy-next's 1-day window.
+    old = datetime.now(timezone.utc) - timedelta(hours=25)
     for _ in range(5):
         db_session.add(RecommendationEvent(user_id=user.id, kind="buy-next", created_at=old))
     db_session.commit()
 
-    # Still allowed, because the window only counts the last 7 days.
+    # Still allowed, because the daily window only counts the last 24 hours.
     assert client.get("/recommendations/buy-next", headers=headers).status_code == 200
 
 
@@ -94,8 +94,8 @@ def test_billing_status_reports_remaining(client: TestClient):
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["plan"] == "free"
-    assert body["weekly_limit"] == 5
-    assert body["remaining_this_week"] == 5
+    assert body["daily_limit"] == 5
+    assert body["remaining_today"] == 5
 
 
 def test_webhook_apply_flips_free_to_paid_and_back(client: TestClient, db_session: Session):
@@ -135,4 +135,4 @@ def test_paid_status_shows_unlimited(client: TestClient, db_session: Session):
 
     body = client.get("/billing/status", headers=headers).json()
     assert body["plan"] == "paid"
-    assert body["remaining_this_week"] is None  # unlimited
+    assert body["remaining_today"] is None  # unlimited

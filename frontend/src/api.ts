@@ -105,8 +105,8 @@ export interface CalendarEvent {
 export interface BillingStatus {
   plan: string;
   subscription_status?: string | null;
-  remaining_this_week: number | null;
-  weekly_limit: number;
+  remaining_today: number | null;
+  daily_limit: number;
   chat_remaining_this_week: number | null;
   chat_weekly_limit: number;
   tryon_remaining_this_week: number | null;

@@ -340,7 +340,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
         <div ref={pricingHead} className="text-center max-w-2xl mx-auto">
           <span className="clay-chip blob-pill">Simple pricing</span>
           <h2 className="font-brand text-4xl sm:text-5xl mt-4">Start free. Upgrade if you love it.</h2>
-          <p className="text-navy/60 mt-3">Outfit recommendations are always free and unlimited. Plus lifts the weekly caps on the extras.</p>
+          <p className="text-navy/60 mt-3">Outfit recommendations are always free and unlimited. Plus lifts the caps on the extras.</p>
         </div>
 
         <div ref={priceGrid} className="grid md:grid-cols-2 gap-6 mt-12 items-start">
@@ -350,7 +350,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
             <p className="mt-2"><span className="font-brand text-5xl">$0</span><span className="text-navy/50"> / forever</span></p>
             <button onClick={onGetStarted} className="clay-btn-blush rounded-full w-full py-3 mt-6">Get started</button>
             <ul className="mt-6 space-y-3 text-sm">
-              {["Unlimited outfit recommendations", "Full wardrobe + AI auto-tagging", "Weather & calendar aware", "A weekly allowance of Buy Next, DresserAI & TryOn"].map((t) => (
+              {["Unlimited outfit recommendations", "Full wardrobe + AI auto-tagging", "Weather & calendar aware", "Daily Buy Next runs, weekly DresserAI & TryOn"].map((t) => (
                 <li key={t} className="flex items-start gap-2.5">
                   <span className="text-blush-deep mt-0.5"><Check /></span>
                   <span className="text-navy/70">{t}</span>

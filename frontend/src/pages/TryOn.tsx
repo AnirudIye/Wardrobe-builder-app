@@ -24,7 +24,7 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
   const [selected, setSelected] = useState<Target | null>(null);
 
   // Buy Next picks as try-on candidates. Seeded from the session cache; loading
-  // is an explicit click because a fresh Buy Next run spends a weekly credit.
+  // is an explicit click because a fresh Buy Next run spends a daily credit.
   const [buyNext, setBuyNext] = useState(getCachedBuyNext());
   const [buyNextBusy, setBuyNextBusy] = useState(false);
   const [buyNextError, setBuyNextError] = useState<string | null>(null);
@@ -272,7 +272,7 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
               {buyNextBusy ? "Finding picks…" : "Load Buy Next picks"}
             </button>
             <p className="text-[11px] text-navy/40 mt-1.5">
-              Runs a Buy Next analysis (uses one weekly credit on the free plan).
+              Runs a Buy Next analysis (uses one daily credit on the free plan).
             </p>
             <ErrorNote message={buyNextError} className="mt-2" />
           </div>
