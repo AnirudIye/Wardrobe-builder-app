@@ -407,7 +407,13 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
       </section>
 
       {/* ======================================================= SHOWCASE */}
-      <section id="showcase" className="max-w-6xl mx-auto px-4 py-16">
+      <section id="showcase" className="max-w-6xl mx-auto px-4 py-20">
+        <div className="max-w-2xl mb-10">
+          <h2 className="font-brand text-4xl sm:text-5xl tracking-tight">This is the actual app</h2>
+          <p className="text-navy/60 mt-4 text-lg">Not a concept render. What you see here is what you sign into.</p>
+        </div>
+        {/* TODO(D10): swap the inner mock for real screenshots at /screens/*.png
+            once the app relayout lands; the frame below stays as-is. */}
         <div ref={showcase} className="clay-card blob-card-a p-3 sm:p-5 overflow-hidden">
           <div className="rounded-[2rem] bg-cream overflow-hidden shadow-[inset_2px_2px_10px_rgba(11,25,87,0.05)]">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-cream-deep">
@@ -416,8 +422,8 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
               <span className="w-3 h-3 rounded-full bg-navy/20" />
               <span className="font-brand text-lg ml-3">Better<span className="text-blush-deep">Dresser</span></span>
               <div className="ml-auto hidden sm:flex gap-2 text-xs text-navy/50">
-                {["Wardrobe", "Today", "Buy Next", "DresserAI", "TryOn"].map((t, i) => (
-                  <span key={t} className={`px-3 py-1 blob-pill ${i === 1 ? "bg-navy text-cream" : "bg-cream-soft shadow-clay-sm"}`}>{t}</span>
+                {["My Wardrobe", "Today's Recommendations", "DresserAI"].map((t, i) => (
+                  <span key={t} className={`px-3 py-1 blob-pill whitespace-nowrap ${i === 1 ? "bg-navy text-cream" : "bg-cream-soft shadow-clay-sm"}`}>{t}</span>
                 ))}
               </div>
             </div>
@@ -464,47 +470,50 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
       </section>
 
       {/* ======================================================== PRICING */}
+      {/* Deliberately asymmetric: Free is a quiet panel, Plus is the hero
+          card. Same information, honest visual weight. */}
       <section id="pricing" className="max-w-5xl mx-auto px-4 py-24">
-        <div ref={pricingHead} className="text-center max-w-2xl mx-auto">
-          <span className="clay-chip blob-pill">Simple pricing</span>
-          <h2 className="font-brand text-4xl sm:text-5xl mt-4">Start free. Upgrade if you love it.</h2>
-          <p className="text-navy/60 mt-3">Outfit recommendations are always free and unlimited. Plus lifts the caps on the extras.</p>
+        <div ref={pricingHead} className="max-w-2xl">
+          <h2 className="font-brand text-4xl sm:text-5xl tracking-tight">Start free. Upgrade if you love it.</h2>
+          <p className="text-navy/60 mt-4 text-lg">Outfit recommendations never cost anything. Plus lifts the caps on the extras.</p>
         </div>
 
-        <div ref={priceGrid} className="grid md:grid-cols-2 gap-6 mt-12 items-start">
-          {/* Free */}
-          <div className="clay-card blob-card-a p-8">
+        <div ref={priceGrid} className="grid md:grid-cols-5 gap-6 mt-12 items-center">
+          {/* Free: compact, quiet */}
+          <div className="md:col-span-2 rounded-3xl border-2 border-cream-deep bg-cream-soft p-7">
             <p className="font-brand text-2xl">Free</p>
-            <p className="mt-2"><CountUp value="$0" className="font-brand text-5xl" /><span className="text-navy/50"> / forever</span></p>
-            <button onClick={onGetStarted} className="clay-btn-blush rounded-full w-full py-3 mt-6">Get started</button>
-            <ul className="mt-6 space-y-3 text-sm">
-              {["Unlimited outfit recommendations", "Full wardrobe + AI auto-tagging", "Weather & calendar aware", "Daily Buy Next runs, weekly DresserAI & TryOn"].map((t) => (
+            <p className="mt-1"><CountUp value="$0" className="font-brand text-4xl" /><span className="text-navy/50 text-sm"> forever, no card</span></p>
+            <ul className="mt-5 space-y-2.5 text-sm">
+              {["Unlimited outfit recommendations", "Full wardrobe with AI auto-tagging", "Daily Buy Next, weekly DresserAI & TryOn"].map((t) => (
                 <li key={t} className="flex items-start gap-2.5">
                   <span className="text-blush-deep mt-0.5"><Check /></span>
                   <span className="text-navy/70">{t}</span>
                 </li>
               ))}
             </ul>
+            <button onClick={onGetStarted} className="w-full mt-6 py-2.5 rounded-full border-2 border-navy/15 text-navy font-medium hover:border-navy/40 transition-colors">
+              Get started
+            </button>
           </div>
 
-          {/* Plus */}
-          <div className="clay-card blob-card-d p-8 relative bg-navy text-cream shadow-clay-navy overflow-hidden">
+          {/* Plus: the hero card */}
+          <div className="md:col-span-3 clay-card blob-card-d p-8 sm:p-10 relative bg-navy text-cream shadow-clay-navy overflow-hidden">
             <Glow style={{ width: 260, height: 260, top: -100, right: -80, background: "radial-gradient(circle, rgba(250,158,188,0.5), rgba(250,158,188,0) 70%)" }} />
             <div className="relative">
               <div className="flex items-center justify-between">
-                <p className="font-brand text-2xl">Plus</p>
+                <p className="font-brand text-3xl">Plus</p>
                 <span className="blob-pill bg-blush text-navy text-xs font-semibold px-3 py-1">Most popular</span>
               </div>
-              <p className="mt-2"><CountUp value="$5" className="font-brand text-5xl" /><span className="text-cream/60"> / month</span></p>
-              <button onClick={onGetStarted} className="clay-btn-blush rounded-full w-full py-3 mt-6">Go Plus</button>
-              <ul className="mt-6 space-y-3 text-sm">
+              <p className="mt-2"><CountUp value="$5" className="font-brand text-6xl" /><span className="text-cream/60"> / month</span></p>
+              <ul className="mt-6 space-y-3 text-sm sm:columns-2 sm:gap-8">
                 {["Everything in Free", "Unlimited Buy Next suggestions", "Unlimited DresserAI chat", "Unlimited Virtual TryOn renders", "Cancel anytime, keep access to term-end"].map((t) => (
-                  <li key={t} className="flex items-start gap-2.5">
+                  <li key={t} className="flex items-start gap-2.5 break-inside-avoid mb-3">
                     <span className="text-blush mt-0.5"><Check /></span>
                     <span className="text-cream/85">{t}</span>
                   </li>
                 ))}
               </ul>
+              <button onClick={onGetStarted} className="clay-btn-blush rounded-full w-full sm:w-auto sm:px-10 py-3 mt-4">Go Plus</button>
             </div>
           </div>
         </div>
