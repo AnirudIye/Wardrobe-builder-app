@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api, ApiError, Garment } from "../api";
 import { useFadeRise } from "../animations";
 import { garmentsCache } from "../store";
-import { getCachedBuyNext } from "./BuyNext";
+import { fetchBuyNext, getCachedBuyNext } from "./BuyNext";
 
 type Target =
   | { kind: "garment"; garment_id: number; thumb: string; label: string }
@@ -20,8 +20,30 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const [garments, setGarments] = useState<Garment[]>(garmentsCache.peek() ?? []);
-  const buyNext = getCachedBuyNext();
   const [selected, setSelected] = useState<Target | null>(null);
+
+  // Buy Next picks as try-on candidates. Seeded from the session cache; loading
+  // is an explicit click because a fresh Buy Next run spends a weekly credit.
+  const [buyNext, setBuyNext] = useState(getCachedBuyNext());
+  const [buyNextBusy, setBuyNextBusy] = useState(false);
+  const [buyNextError, setBuyNextError] = useState<string | null>(null);
+
+  const loadBuyNext = async () => {
+    setBuyNextBusy(true);
+    setBuyNextError(null);
+    try {
+      setBuyNext(await fetchBuyNext());
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 402) {
+        onQuotaBlocked();
+        setBuyNextError(err.message);
+      } else {
+        setBuyNextError((err as Error).message);
+      }
+    } finally {
+      setBuyNextBusy(false);
+    }
+  };
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -169,9 +191,9 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
       {/* Step 2: garment */}
       <div className="clay-card p-5 mb-6">
         <h3 className="font-semibold mb-3">2. Pick something to try on</h3>
-        {garments.length === 0 && !buyNext?.suggestions.length && (
-          <p className="text-sm text-navy/40">
-            Add items to your wardrobe or get Buy Next suggestions first.
+        {garments.length === 0 && (
+          <p className="text-sm text-navy/40 mb-4">
+            Your wardrobe is empty. Add items to try them on, or load Buy Next picks below.
           </p>
         )}
         {garments.length > 0 && (
@@ -203,9 +225,11 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
             </div>
           </>
         )}
-        {buyNext && buyNext.suggestions.some((s) => s.products.length > 0) && (
-          <>
-            <p className="text-xs text-navy/40 mb-2">From Buy Next</p>
+        {/* Buy Next picks: grid when loaded this session, otherwise an explicit
+            load button (a fresh run is quota-metered, so it's never automatic). */}
+        <p className="text-xs text-navy/40 mb-2">From Buy Next</p>
+        {buyNext ? (
+          buyNext.suggestions.some((s) => s.products.length > 0) ? (
             <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
               {buyNext.suggestions.flatMap((s) =>
                 s.products
@@ -234,7 +258,23 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
                   })
               )}
             </div>
-          </>
+          ) : (
+            <p className="text-sm text-navy/40">No shoppable Buy Next picks right now.</p>
+          )
+        ) : (
+          <div>
+            <button
+              onClick={loadBuyNext}
+              disabled={buyNextBusy}
+              className="clay-btn-blush px-4 py-2 text-sm"
+            >
+              {buyNextBusy ? "Finding picks…" : "Load Buy Next picks"}
+            </button>
+            <p className="text-[11px] text-navy/40 mt-1.5">
+              Runs a Buy Next analysis (uses one weekly credit on the free plan).
+            </p>
+            {buyNextError && <p className="text-sm text-red-500 mt-2">{buyNextError}</p>}
+          </div>
         )}
       </div>
 

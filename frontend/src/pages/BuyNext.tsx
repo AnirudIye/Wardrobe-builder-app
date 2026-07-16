@@ -16,6 +16,25 @@ export function getCachedBuyNext(): BuyNextData | null {
   return cached;
 }
 
+// Shared fetch for any tab that wants Buy Next data. Serves the session cache
+// unless forced, and dedupes concurrent callers through the same in-flight
+// promise so a quota-counted request is never double-fired.
+export function fetchBuyNext(force = false): Promise<BuyNextData> {
+  if (!force && cached) return Promise.resolve(cached);
+  if (!inflight) {
+    inflight = api
+      .buyNext()
+      .then((result) => {
+        cached = result;
+        return result;
+      })
+      .finally(() => {
+        inflight = null;
+      });
+  }
+  return inflight;
+}
+
 export default function BuyNext({ onQuotaBlocked }: { onQuotaBlocked: () => void }) {
   const [data, setData] = useState<BuyNextData | null>(cached);
   const [error, setError] = useState<string | null>(null);
@@ -28,13 +47,7 @@ export default function BuyNext({ onQuotaBlocked }: { onQuotaBlocked: () => void
     setBusy(true);
     setError(null);
     try {
-      if (!inflight) {
-        inflight = api.buyNext().finally(() => {
-          inflight = null;
-        });
-      }
-      const result = await inflight;
-      cached = result;
+      const result = await fetchBuyNext(true);
       setData(result);
     } catch (err) {
       if (err instanceof ApiError && err.status === 402) {
