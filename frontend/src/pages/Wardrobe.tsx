@@ -6,6 +6,7 @@ import WeatherWidget from "../components/WeatherWidget";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { CardGridSkeleton, Skeleton } from "../components/Skeleton";
 import { garmentsCache } from "../store";
+import ErrorNote from "../components/ErrorNote";
 
 const CATEGORIES = ["top", "bottom", "outerwear", "dress", "footwear", "accessory", "other"];
 
@@ -159,7 +160,7 @@ export default function Wardrobe() {
         </label>
       </div>
 
-      {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
+      <ErrorNote message={error} className="mb-3" />
 
       {/* Add from the web */}
       <div className="clay-card p-6 mb-6">
@@ -182,7 +183,7 @@ export default function Wardrobe() {
             {searching ? "Searching…" : "Search"}
           </button>
         </form>
-        {searchError && <p className="text-sm text-red-500 mt-2">{searchError}</p>}
+        <ErrorNote message={searchError} className="mt-2" />
         {searching && !results && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5">
             {Array.from({ length: 4 }).map((_, i) => (

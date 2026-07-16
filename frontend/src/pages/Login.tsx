@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../auth";
 import { useFadeRise } from "../animations";
 import { api, ApiError } from "../api";
+import ErrorNote from "../components/ErrorNote";
 
 export default function Login({ onBack }: { onBack?: () => void }) {
   const cardRef = useFadeRise<HTMLFormElement>();
@@ -117,7 +118,7 @@ export default function Login({ onBack }: { onBack?: () => void }) {
           className="w-full clay-input"
         />
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        <ErrorNote message={error} />
 
         <button type="submit" disabled={busy} className="w-full clay-btn py-2.5">
           {busy ? "…" : mode === "login" ? "Sign in" : "Create account"}

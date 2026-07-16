@@ -5,6 +5,7 @@ import { api, User, Weather } from "../api";
 import { useFadeRise } from "../animations";
 import { Skeleton } from "../components/Skeleton";
 import { profileCache, weatherCache } from "../store";
+import ErrorNote from "./ErrorNote";
 
 export default function WeatherWidget() {
   const cardRef = useFadeRise<HTMLDivElement>();
@@ -143,7 +144,7 @@ export default function WeatherWidget() {
               Set your city to get weather-aware outfit recommendations.
             </p>
           )}
-          {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
+          <ErrorNote message={error} className="mt-2" />
         </div>
 
         {hasLocation && (

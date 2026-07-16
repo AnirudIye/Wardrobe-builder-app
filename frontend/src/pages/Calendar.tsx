@@ -3,6 +3,7 @@ import { api, CalendarEvent } from "../api";
 import { useFadeRise, useStaggerReveal } from "../animations";
 import { ListSkeleton } from "../components/Skeleton";
 import ConfirmDialog from "../components/ConfirmDialog";
+import ErrorNote from "../components/ErrorNote";
 import { localISODate } from "../date";
 import { eventsCache } from "../store";
 
@@ -118,7 +119,7 @@ export default function Calendar() {
           onChange={(e) => setNotes(e.target.value)}
           className="clay-input sm:col-span-2"
         />
-        {error && <p className="text-sm text-red-500 sm:col-span-2">{error}</p>}
+        <ErrorNote message={error} className="sm:col-span-2" />
         <button type="submit" className="clay-btn py-2.5 sm:col-span-2">
           Add event
         </button>

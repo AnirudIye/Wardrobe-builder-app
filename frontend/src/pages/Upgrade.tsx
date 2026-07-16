@@ -3,6 +3,7 @@ import { api, BillingStatus } from "../api";
 import { useFadeRise } from "../animations";
 import { Skeleton } from "../components/Skeleton";
 import { billingCache } from "../store";
+import ErrorNote from "../components/ErrorNote";
 
 export default function Upgrade() {
   const pageRef = useFadeRise<HTMLDivElement>();
@@ -92,7 +93,7 @@ export default function Upgrade() {
           )}
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        <ErrorNote message={error} />
 
         {isPaid ? (
           <button onClick={openPortal} disabled={busy} className="clay-btn-blush px-5 py-2 text-sm">

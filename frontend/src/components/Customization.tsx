@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api, User } from "../api";
+import ErrorNote from "./ErrorNote";
 
 interface Props {
   profile: User | null;
@@ -59,7 +60,7 @@ export default function Customization({ profile, onProfileChange }: Props) {
         Save
       </button>
       {msg && <p className="text-green-600">{msg}</p>}
-      {err && <p className="text-red-500">{err}</p>}
+      <ErrorNote message={err} />
     </div>
   );
 }

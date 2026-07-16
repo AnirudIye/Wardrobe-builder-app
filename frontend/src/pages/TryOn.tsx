@@ -3,6 +3,7 @@ import { api, ApiError, Garment } from "../api";
 import { useFadeRise } from "../animations";
 import { garmentsCache } from "../store";
 import { fetchBuyNext, getCachedBuyNext } from "./BuyNext";
+import ErrorNote from "../components/ErrorNote";
 
 type Target =
   | { kind: "garment"; garment_id: number; thumb: string; label: string }
@@ -182,7 +183,7 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
                 Enable camera
               </button>
             )}
-            {cameraError && <p className="text-sm text-red-500 mt-2">{cameraError}</p>}
+            <ErrorNote message={cameraError} className="mt-2" />
           </div>
         )}
         <canvas ref={canvasRef} hidden />
@@ -273,7 +274,7 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
             <p className="text-[11px] text-navy/40 mt-1.5">
               Runs a Buy Next analysis (uses one weekly credit on the free plan).
             </p>
-            {buyNextError && <p className="text-sm text-red-500 mt-2">{buyNextError}</p>}
+            <ErrorNote message={buyNextError} className="mt-2" />
           </div>
         )}
       </div>
@@ -287,7 +288,7 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
         {busy ? "Generating your look…" : "Try it on"}
       </button>
 
-      {error && <p className="text-sm text-red-500 mt-3">{error}</p>}
+      <ErrorNote message={error} className="mt-3" />
 
       {resultUrl && (
         <div className="clay-card p-5 mt-6 max-w-sm">
