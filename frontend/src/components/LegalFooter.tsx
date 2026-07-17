@@ -6,7 +6,7 @@ import { fadeRise } from "../animations";
 type Doc = "terms" | "privacy" | null;
 
 const TERMS_UPDATED = "July 17, 2026";
-const PRIVACY_UPDATED = "July 13, 2026";
+const PRIVACY_UPDATED = "July 17, 2026";
 
 function Terms() {
   return (
@@ -98,43 +98,93 @@ function Privacy() {
   return (
     <div className="space-y-3 text-sm leading-relaxed">
       <p className="text-navy/60">Last updated: {PRIVACY_UPDATED}</p>
-      <h4 className="font-semibold">1. What we collect</h4>
+      <h4 className="font-semibold">1. Who we are</h4>
       <p>
-        Your email and password (stored as a secure hash), wardrobe photos and their AI tags,
-        your city/location (if provided) for weather, calendar events you add, style
-        preferences, and recommendation usage counts.
+        BetterDresser is the data controller for the personal information described here.
+        For anything privacy-related, email iyengar.anirud@gmail.com.
       </p>
-      <h4 className="font-semibold">2. How it's used</h4>
+      <h4 className="font-semibold">2. What we collect</h4>
       <p>
-        Solely to run the service: tagging your photos, generating recommendations, showing
-        weather-appropriate outfits, and enforcing plan limits. We don't sell your data or
-        use it for advertising.
+        Account details (email, password stored as a secure hash), wardrobe photos and their
+        AI tags, an optional avatar photo, your city and coordinates (if you set a location),
+        calendar events you add, style preferences, subscription status, and usage counts for
+        plan limits. Some things we deliberately never store: DresserAI chats live only on
+        your device and are gone on refresh, and TryOn photos are processed for the single
+        request and never saved.
       </p>
-      <h4 className="font-semibold">3. Third-party processors</h4>
+      <h4 className="font-semibold">3. Why we use it, and our legal bases</h4>
       <p>
-        Wardrobe photos are processed by Anthropic (Claude) for tagging; your coordinates are
-        sent to OpenWeather for forecasts; shopping queries (never your identity) go to
-        SerpAPI; payments are handled by Stripe. Each processes data under its own privacy
-        policy.
+        We process your data only to run the service: tagging your photos, generating outfit
+        and shopping recommendations, showing weather for your city, sending account emails
+        (confirmation, password reset), taking payments, and enforcing plan limits. Under the
+        GDPR our legal bases are performance of our contract with you (running the features
+        you signed up for), legitimate interests (keeping the service secure, e.g. rate
+        limiting), and consent for optional extras such as setting your location or signing
+        in with Google, which you can stop using at any time. We don't use your data for
+        advertising, we don't sell it, and we don't "share" it for cross-context behavioral
+        advertising as the CCPA defines those terms.
       </p>
-      <h4 className="font-semibold">4. Storage & security</h4>
+      <h4 className="font-semibold">4. Who processes it for us</h4>
+      <p>
+        We use a small set of service providers, each under its own privacy policy and only
+        for the purpose named: Anthropic and Google (AI photo tagging, recommendations, chat
+        replies, and TryOn image generation), OpenWeather (your coordinates, for forecasts
+        and city lookup), SerpAPI (shopping search queries, never your identity), Stripe
+        (payments; we never see your card details), Google (email delivery for confirmation
+        and reset messages, and optional Sign in with Google). We share data with no one
+        else, except if the law requires it.
+      </p>
+      <h4 className="font-semibold">5. International transfers</h4>
+      <p>
+        Our service providers operate primarily in the United States, so your data may be
+        processed outside your country. Where GDPR applies, these transfers rely on the
+        providers' recognized safeguards, such as the EU-US Data Privacy Framework or
+        standard contractual clauses.
+      </p>
+      <h4 className="font-semibold">6. How long we keep it</h4>
+      <p>
+        Everything tied to your account is kept only while the account exists. Deleting a
+        wardrobe item or calendar event removes it immediately; deleting your account
+        removes your profile, photos, events, preferences, and usage history. Chats and
+        TryOn photos are never stored in the first place. Payment records are retained by
+        Stripe as required for financial compliance.
+      </p>
+      <h4 className="font-semibold">7. Your rights</h4>
+      <p>
+        Wherever you live, you can see and edit your data in the app, and delete your
+        account yourself (account menu, "Delete account"), which erases everything at once.
+        If you're in the EU/EEA or UK, you also have the rights of access, rectification,
+        erasure, restriction, portability, and objection, the right to withdraw consent at
+        any time, and the right to complain to your supervisory authority. If you're a
+        California resident, you have the rights to know, access, correct, and delete your
+        personal information, the right to opt out of sale or sharing (we do neither), and
+        the right not to be discriminated against for exercising them. To exercise any right
+        you can't action in the app, email us and we'll respond within the legally required
+        time (30 days for CCPA requests, one month under GDPR).
+      </p>
+      <h4 className="font-semibold">8. Storage & security</h4>
       <p>
         Data is stored in our database and image storage; passwords are hashed with bcrypt
         and sessions use signed tokens. No method of storage is 100% secure, but we follow
         standard practices.
       </p>
-      <h4 className="font-semibold">5. Your rights</h4>
+      <h4 className="font-semibold">9. Cookies & local storage</h4>
       <p>
-        You can edit or delete wardrobe items and calendar events in the app. To delete your
-        account and all associated data, email us and we'll action it within 30 days.
+        We use only a local session token to keep you signed in, with no tracking or
+        advertising cookies. Because there's nothing to consent to, there's no cookie
+        banner.
       </p>
-      <h4 className="font-semibold">6. Cookies</h4>
+      <h4 className="font-semibold">10. Children</h4>
       <p>
-        We use only a local session token to keep you signed in, with no tracking or advertising
-        cookies.
+        BetterDresser isn't directed at children under 13, and we don't knowingly collect
+        their data. We have no actual knowledge of selling or sharing any minor's personal
+        information (we sell no one's).
       </p>
-      <h4 className="font-semibold">7. Contact</h4>
-      <p>Privacy questions? Email iyengar.anirud@gmail.com.</p>
+      <h4 className="font-semibold">11. Changes & contact</h4>
+      <p>
+        Material changes to this policy will be announced in the app. Privacy questions?
+        Email iyengar.anirud@gmail.com.
+      </p>
     </div>
   );
 }
