@@ -189,6 +189,24 @@ export const api = {
     return body.access_token as string;
   },
 
+  googleConfig: () => request<{ client_id: string | null }>("/auth/google/config"),
+
+  googleSignIn: async (credential: string) => {
+    // Raw fetch like login: a failure here is not a dead session.
+    const res = await fetch("/api/auth/google", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credential }),
+    });
+    const body = await res.json();
+    if (!res.ok) {
+      const detail = body?.detail;
+      throw new ApiError(res.status, typeof detail === "string" ? detail : "Google sign-in failed");
+    }
+    setToken(body.access_token);
+    return body.access_token as string;
+  },
+
   me: () => request<User>("/auth/me"),
   profile: () => request<User>("/profile"),
   weather: () => request<Weather>("/weather"),

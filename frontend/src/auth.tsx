@@ -8,6 +8,7 @@ interface AuthState {
   register: (email: string, password: string) => Promise<User>;
   verifyEmail: (token: string) => Promise<void>;
   resetPassword: (token: string, password: string) => Promise<void>;
+  googleSignIn: (credential: string) => Promise<void>;
   logout: () => void;
   refresh: () => Promise<void>;
 }
@@ -68,6 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await refresh();
   };
 
+  const googleSignIn = async (credential: string) => {
+    await api.googleSignIn(credential);
+    await refresh();
+  };
+
   const logout = () => {
     clearToken();
     setUser(null);
@@ -75,7 +81,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, verifyEmail, resetPassword, logout, refresh }}
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        verifyEmail,
+        resetPassword,
+        googleSignIn,
+        logout,
+        refresh,
+      }}
     >
       {children}
     </AuthContext.Provider>

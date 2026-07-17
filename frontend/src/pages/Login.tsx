@@ -3,6 +3,7 @@ import { useAuth } from "../auth";
 import { useFadeRise } from "../animations";
 import { api, ApiError } from "../api";
 import ErrorNote from "../components/ErrorNote";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 import { Coat, Sneaker, SunCloud, Tee } from "../components/illustrations";
 
 type Mode = "login" | "register" | "forgot" | "reset";
@@ -245,6 +246,10 @@ export default function Login({
                     ? "Email me a reset link"
                     : "Set new password"}
           </button>
+
+          {(mode === "login" || mode === "register") && (
+            <GoogleSignInButton onError={setError} />
+          )}
 
           {mode === "login" || mode === "register" ? (
             <p className="text-center text-sm text-navy/50">

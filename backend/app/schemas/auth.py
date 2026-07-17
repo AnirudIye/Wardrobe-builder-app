@@ -47,3 +47,7 @@ class ResetPasswordRequest(BaseModel):
     token: str
     # Same rules as UserCreate.password.
     password: str = Field(min_length=8, max_length=128)
+
+
+class GoogleSignInRequest(BaseModel):
+    credential: str  # Google ID token from the GIS button
