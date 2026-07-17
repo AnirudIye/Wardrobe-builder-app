@@ -1,7 +1,8 @@
 // Small weather widget: user's city, current conditions, a mini map, and an
-// inline "change location" flow (city name -> geocoded server-side).
+// inline "change location" flow. Typing a city lists every matching place
+// (same-named cities exist worldwide) and the user picks the right one.
 import { useEffect, useState } from "react";
-import { api, User, Weather } from "../api";
+import { api, LocationCandidate, User, Weather } from "../api";
 import { useFadeRise } from "../animations";
 import { Skeleton } from "../components/Skeleton";
 import { profileCache, weatherCache } from "../store";
@@ -14,6 +15,7 @@ export default function WeatherWidget() {
   const [loading, setLoading] = useState(profileCache.peek() === null);
   const [editing, setEditing] = useState(false);
   const [city, setCity] = useState("");
+  const [candidates, setCandidates] = useState<LocationCandidate[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,20 +42,42 @@ export default function WeatherWidget() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const saveLocation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (city.trim().length < 2) return;
+  const applyLocation = async (label: string, lat?: number, lon?: number) => {
     setBusy(true);
     setError(null);
     try {
-      const updated = await api.setLocation(city.trim());
+      const updated = await api.setLocation(label, lat, lon);
       profileCache.set(updated);
       setProfile(updated);
       setEditing(false);
       setCity("");
+      setCandidates(null);
       weatherCache.clear();
       setWeather(null);
       await loadWeather(updated, true);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Search first; save directly only when the name is unambiguous.
+  const searchCity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (city.trim().length < 2) return;
+    setBusy(true);
+    setError(null);
+    setCandidates(null);
+    try {
+      const found = await api.searchLocations(city.trim());
+      if (found.length === 0) {
+        setError(`Couldn't find a place called "${city.trim()}".`);
+      } else if (found.length === 1) {
+        await applyLocation(found[0].label, found[0].lat, found[0].lon);
+      } else {
+        setCandidates(found);
+      }
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -94,6 +118,7 @@ export default function WeatherWidget() {
               onClick={() => {
                 setEditing((v) => !v);
                 setError(null);
+                setCandidates(null);
               }}
               className="clay-btn-blush px-3 py-1 text-xs"
             >
@@ -102,22 +127,42 @@ export default function WeatherWidget() {
           </div>
 
           {editing ? (
-            <form onSubmit={saveLocation} className="mt-3 flex gap-2">
-              <input
-                autoFocus
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="City, e.g. Waterloo"
-                className="flex-1 clay-input px-3 py-1.5 text-sm"
-              />
-              <button
-                type="submit"
-                disabled={busy || city.trim().length < 2}
-                className="clay-btn px-4 py-1.5 text-sm"
-              >
-                {busy ? "…" : "Save"}
-              </button>
-            </form>
+            <div className="mt-3">
+              <form onSubmit={searchCity} className="flex gap-2">
+                <input
+                  autoFocus
+                  value={city}
+                  onChange={(e) => {
+                    setCity(e.target.value);
+                    setCandidates(null);
+                  }}
+                  placeholder="City, e.g. Waterloo"
+                  className="flex-1 clay-input px-3 py-1.5 text-sm"
+                />
+                <button
+                  type="submit"
+                  disabled={busy || city.trim().length < 2}
+                  className="clay-btn px-4 py-1.5 text-sm"
+                >
+                  {busy ? "…" : "Search"}
+                </button>
+              </form>
+              {candidates && (
+                <div className="mt-2 space-y-1.5">
+                  <p className="text-xs text-navy/50">Which one?</p>
+                  {candidates.map((c) => (
+                    <button
+                      key={`${c.lat},${c.lon}`}
+                      onClick={() => applyLocation(c.label, c.lat, c.lon)}
+                      disabled={busy}
+                      className="block w-full text-left text-sm px-3 py-1.5 rounded-xl bg-cream hover:bg-blush-soft/60 transition-colors"
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           ) : hasLocation ? (
             <div className="mt-2">
               <p className="font-brand text-2xl leading-tight">{profile?.city ?? "Your city"}</p>

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date as date_type, datetime, timezone
 from typing import Optional
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Date, DateTime, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -17,6 +17,9 @@ class CalendarEvent(Base):
     """An event the user is attending; outfit suggestions consider its dress code."""
 
     __tablename__ = "calendar_events"
+    # Today's-events lookup runs `WHERE user_id = ? AND date = ?` on every
+    # recommendation and chat request — serve it with one composite index.
+    __table_args__ = (Index("ix_calendar_events_user_date", "user_id", "date"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(

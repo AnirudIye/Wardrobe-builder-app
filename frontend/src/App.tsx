@@ -12,6 +12,8 @@ import TryOn from "./pages/TryOn";
 import Upgrade from "./pages/Upgrade";
 import ClickSpark from "./components/ClickSpark";
 import { CardGridSkeleton, Skeleton } from "./components/Skeleton";
+import StyleSurvey from "./components/StyleSurvey";
+import { profileCache } from "./store";
 import BlobCursor from "./components/BlobCursor";
 import LegalFooter from "./components/LegalFooter";
 import AccountMenu from "./components/AccountMenu";
@@ -45,6 +47,25 @@ export default function App() {
   );
   const brandRef = useRef<HTMLSpanElement>(null);
   const mainRef = useRef<HTMLElement>(null);
+  // First-run style survey: shows once while the profile has no
+  // style_preferences yet (fresh account), and never again after save/skip.
+  const [showSurvey, setShowSurvey] = useState(false);
+  useEffect(() => {
+    if (!user) {
+      setShowSurvey(false);
+      return;
+    }
+    let stale = false;
+    profileCache
+      .get()
+      .then((p) => {
+        if (!stale) setShowSurvey(p.style_preferences == null);
+      })
+      .catch(() => {});
+    return () => {
+      stale = true;
+    };
+  }, [user]);
 
   // Brand entrance: rises in once on load.
   useEffect(() => {
@@ -137,6 +158,7 @@ export default function App() {
         )
       ) : (
         <div className="min-h-screen flex flex-col">
+          {showSurvey && <StyleSurvey onDone={() => setShowSurvey(false)} />}
           <header className="sticky top-0 z-40 pt-4 pb-2 bg-cream/85 backdrop-blur-md">
             <div className="max-w-5xl mx-auto px-4">
               <div className="clay-card px-5 sm:px-6 py-3.5">
