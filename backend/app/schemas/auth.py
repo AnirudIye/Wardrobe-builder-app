@@ -37,3 +37,13 @@ class VerifyRequest(BaseModel):
 
 class ResendRequest(BaseModel):
     email: EmailStr
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    # Same rules as UserCreate.password.
+    password: str = Field(min_length=8, max_length=128)

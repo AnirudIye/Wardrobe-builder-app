@@ -16,6 +16,10 @@ def test_send_verification_email_noops_without_config():
     assert email.send_verification_email("x@example.com", "http://x/?verify_token=abc") is False
 
 
+def test_send_password_reset_email_noops_without_config():
+    assert email.send_password_reset_email("x@example.com", "http://x/?reset_token=abc") is False
+
+
 def test_send_swallows_malformed_headers(monkeypatch):
     # Even when SMTP is "configured", a header with an embedded newline must not
     # escape send() — best-effort contract: log and return False, never raise.

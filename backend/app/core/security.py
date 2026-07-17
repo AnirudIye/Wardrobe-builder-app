@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, Tuple
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -57,3 +58,45 @@ def decode_email_token(token: str) -> Optional[int]:
         return None
     sub = payload.get("sub")
     return int(sub) if sub is not None else None
+
+
+def password_fingerprint(hashed_password: str) -> str:
+    """Short digest of a password hash, embedded in reset tokens.
+
+    Changing the password changes the fingerprint, which is what makes a reset
+    token single-use without any server-side token storage.
+    """
+    return hashlib.sha256(hashed_password.encode()).hexdigest()[:16]
+
+
+def create_reset_token(user_id: int, hashed_password: str) -> str:
+    """Signed, short-lived token authorizing a password reset."""
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.password_reset_expire_minutes
+    )
+    payload = {
+        "sub": str(user_id),
+        "purpose": "reset_password",
+        "pw": password_fingerprint(hashed_password),
+        "exp": expire,
+    }
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def decode_reset_token(token: str) -> Optional[Tuple[int, str]]:
+    """Return (user id, password fingerprint) from a valid reset token, else None.
+
+    The caller must still compare the fingerprint against the user's current
+    hash — a mismatch means the password already changed and the token is dead.
+    """
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+    except JWTError:
+        return None
+    if payload.get("purpose") != "reset_password":
+        return None
+    sub = payload.get("sub")
+    fingerprint = payload.get("pw")
+    if sub is None or fingerprint is None:
+        return None
+    return int(sub), fingerprint

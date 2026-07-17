@@ -84,6 +84,7 @@ class Settings(BaseSettings):
     smtp_from: str = ""
     smtp_starttls: bool = True
     email_verify_expire_minutes: int = 1440  # 24h
+    password_reset_expire_minutes: int = 60
 
     @property
     def is_production(self) -> bool:

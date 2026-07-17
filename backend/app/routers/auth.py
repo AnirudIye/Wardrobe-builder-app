@@ -11,13 +11,24 @@ from app.core.ratelimit import rate_limit
 from app.core.security import (
     create_access_token,
     create_email_token,
+    create_reset_token,
     decode_email_token,
+    decode_reset_token,
     hash_password,
+    password_fingerprint,
     verify_password,
 )
 from app.database import get_db
 from app.models.user import User
-from app.schemas.auth import ResendRequest, Token, UserCreate, UserOut, VerifyRequest
+from app.schemas.auth import (
+    ForgotPasswordRequest,
+    ResendRequest,
+    ResetPasswordRequest,
+    Token,
+    UserCreate,
+    UserOut,
+    VerifyRequest,
+)
 from app.services import email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -30,6 +41,11 @@ def _get_user_by_email(db: Session, address: str) -> User | None:
 def _verification_link(token: str) -> str:
     base = get_settings().frontend_base_url.rstrip("/")
     return f"{base}/?verify_token={token}"
+
+
+def _reset_link(token: str) -> str:
+    base = get_settings().frontend_base_url.rstrip("/")
+    return f"{base}/?reset_token={token}"
 
 
 @router.post(
@@ -116,6 +132,47 @@ def resend_verification(
         background.add_task(email.send_verification_email, user.email, link)
     # Always generic — never reveal whether an account exists.
     return {"detail": "If that account exists and is unverified, a confirmation email has been sent."}
+
+
+@router.post(
+    "/forgot-password",
+    # Tight limit: this endpoint sends real email (same tier as resend).
+    dependencies=[Depends(rate_limit("forgot", 5, 3600))],
+)
+def forgot_password(
+    payload: ForgotPasswordRequest,
+    background: BackgroundTasks,
+    db: Session = Depends(get_db),
+) -> dict:
+    user = _get_user_by_email(db, payload.email)
+    if user is not None and email.available():
+        link = _reset_link(create_reset_token(user.id, user.hashed_password))
+        background.add_task(email.send_password_reset_email, user.email, link)
+    # Always generic — never reveal whether an account exists.
+    return {"detail": "If that account exists, a password reset email has been sent."}
+
+
+@router.post(
+    "/reset-password",
+    response_model=Token,
+    dependencies=[Depends(rate_limit("reset", 10, 60))],
+)
+def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)) -> Token:
+    decoded = decode_reset_token(payload.token)
+    user = db.get(User, decoded[0]) if decoded is not None else None
+    # The fingerprint pins the token to the hash it was issued against, so a
+    # token dies the moment the password changes (single-use, no storage).
+    if user is None or decoded[1] != password_fingerprint(user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset link",
+        )
+    user.hashed_password = hash_password(payload.password)
+    # Redeeming a link mailed to the address proves inbox ownership — the same
+    # property email verification certifies.
+    user.email_verified = True
+    db.commit()
+    return Token(access_token=create_access_token(subject=user.id))
 
 
 @router.get("/me", response_model=UserOut)
