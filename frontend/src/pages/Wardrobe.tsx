@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, Garment, Product } from "../api";
 import { useFadeRise, useStaggerReveal, pulse } from "../animations";
+import CameraCapture from "../components/CameraCapture";
 import CircularGallery from "../components/CircularGallery";
 import WeatherWidget from "../components/WeatherWidget";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -23,6 +24,7 @@ export default function Wardrobe() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Web search state
@@ -65,21 +67,29 @@ export default function Wardrobe() {
       });
   }, [items]);
 
-  const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const addPhotoFile = async (file: File) => {
     setUploading(true);
     setError(null);
     try {
       const created = await api.uploadGarment(file);
-      syncItems([created, ...items]);
+      syncItems([created, ...(garmentsCache.peek() ?? items)]);
       pulse(gridRef.current);
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setUploading(false);
-      if (fileRef.current) fileRef.current.value = "";
     }
+  };
+
+  const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) await addPhotoFile(file);
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const onCameraCapture = (blob: Blob) => {
+    setCameraOpen(false);
+    addPhotoFile(new File([blob], "camera.jpg", { type: "image/jpeg" }));
   };
 
   const search = async (e: React.FormEvent) => {
@@ -149,12 +159,28 @@ export default function Wardrobe() {
             : `${items.length} ${items.length === 1 ? "piece" : "pieces"} catalogued`
         }
         action={
-          <label className="clay-btn px-5 py-2 text-sm cursor-pointer">
-            {uploading ? "Uploading…" : "+ Add photo"}
-            <input ref={fileRef} type="file" accept="image/*" hidden onChange={onUpload} />
-          </label>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCameraOpen((v) => !v)}
+              className="clay-btn-blush px-4 py-2 text-sm"
+            >
+              {cameraOpen ? "Close camera" : "Use camera"}
+            </button>
+            <label className="clay-btn px-5 py-2 text-sm cursor-pointer">
+              {uploading ? "Uploading…" : "+ Add photo"}
+              <input ref={fileRef} type="file" accept="image/*" hidden onChange={onUpload} />
+            </label>
+          </div>
         }
       />
+
+      {cameraOpen && (
+        <CameraCapture
+          title="Photograph a garment"
+          onCapture={onCameraCapture}
+          onClose={() => setCameraOpen(false)}
+        />
+      )}
 
       <ErrorNote message={error} className="mb-4" />
 
