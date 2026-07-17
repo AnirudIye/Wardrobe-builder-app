@@ -65,6 +65,13 @@ def test_login_wrong_password_unauthorized(client: TestClient):
     _register(client)
     resp = _login(client, password="wrongpassword1")
     assert resp.status_code == 401
+    assert resp.json()["detail"] == "Incorrect password"
+
+
+def test_login_unknown_email_says_so(client: TestClient):
+    resp = _login(client, email="ghost@example.com")
+    assert resp.status_code == 401
+    assert resp.json()["detail"] == "Couldn't find an account with that email"
 
 
 def test_me_requires_auth(client: TestClient):
