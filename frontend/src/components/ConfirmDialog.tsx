@@ -69,7 +69,7 @@ export default function ConfirmDialog({
           <button
             onClick={onConfirm}
             disabled={confirmDisabled}
-            className="rounded-2xl bg-red-500 text-white font-medium px-4 py-2 text-sm shadow-clay-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-600 active:translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
+            className="rounded-2xl bg-red-500 text-white font-medium px-4 py-2 text-sm shadow-clay-sm transition duration-200 ease-out-strong hover:-translate-y-0.5 hover:bg-red-600 active:translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
           >
             {confirmLabel}
           </button>

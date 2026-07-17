@@ -151,7 +151,8 @@ function Privacy() {
       </p>
       <h4 className="font-semibold">7. Your rights</h4>
       <p>
-        Wherever you live, you can see and edit your data in the app, and delete your
+        Wherever you live, you can see and edit your data in the app, download everything we
+        hold about you as a JSON file (account menu, "Export my data"), and delete your
         account yourself (account menu, "Delete account"), which erases everything at once.
         If you're in the EU/EEA or UK, you also have the rights of access, rectification,
         erasure, restriction, portability, and objection, the right to withdraw consent at

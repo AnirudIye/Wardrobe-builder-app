@@ -225,7 +225,7 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
                           label: g.subcategory ?? g.category ?? "item",
                         })
                       }
-                      className={`rounded-2xl overflow-hidden shadow-clay-sm transition-all ${
+                      className={`rounded-2xl overflow-hidden shadow-clay-sm transition duration-200 ease-out-strong ${
                         isSelected ? "ring-4 ring-blush" : "hover:-translate-y-0.5"
                       }`}
                     >
@@ -260,7 +260,7 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
                               label: p.title,
                             })
                           }
-                          className={`rounded-2xl overflow-hidden shadow-clay-sm transition-all ${
+                          className={`rounded-2xl overflow-hidden shadow-clay-sm transition duration-200 ease-out-strong ${
                             isSelected ? "ring-4 ring-blush" : "hover:-translate-y-0.5"
                           }`}
                         >
