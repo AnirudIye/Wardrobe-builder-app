@@ -1,0 +1,80 @@
+# Render Blueprint for the BetterDresser API (the FastAPI backend).
+# Deploy: push this repo, then in the Render dashboard "New +" -> "Blueprint"
+# and point it at the repo. Render reads this file and provisions the service.
+#
+# Secrets marked `sync: false` are NOT stored here (never commit secrets) — set
+# them once in the service's Environment tab. The values you'll need are in
+# backend/.env.example and docs/deploy.md.
+services:
+  - type: web
+    name: betterdresser-api
+    runtime: python
+    plan: free # bump to "starter" ($7/mo) to avoid free-tier cold starts
+    rootDir: backend # build + start commands run from backend/
+    buildCommand: pip install -r requirements.txt
+    # Migrate, THEN serve. Running `alembic upgrade head` in the start command
+    # keeps the schema step explicit (the app never create_all()s in prod) and
+    # works on the free plan. On paid plans, move it to `preDeployCommand:` so
+    # migrations run once before the new version goes live instead of on every
+    # boot. --proxy-headers + --forwarded-allow-ips lets the rate limiter see
+    # real client IPs through Render's proxy (see docs/deploy.md section 1).
+    startCommand: >-
+      alembic upgrade head &&
+      uvicorn app.main:app --host 0.0.0.0 --port $PORT
+      --proxy-headers --forwarded-allow-ips '*'
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.12.13 # verified against this exact version; bump if Render lacks it
+      - key: JWT_SECRET
+        generateValue: true # Render mints a strong random secret
+      - key: JWT_EXPIRE_MINUTES
+        value: "4320" # 3 days
+      # --- Set these yourself in the Environment tab (sync: false) ---
+      - key: DATABASE_URL # Neon: postgresql+psycopg://USER:PASS@HOST/db?sslmode=require
+        sync: false
+      - key: CORS_ORIGINS # your Vercel URL, e.g. https://betterdresser.vercel.app
+        sync: false
+      - key: FRONTEND_BASE_URL # same Vercel URL (reset/verify links, Stripe redirects)
+        sync: false
+      - key: STORAGE_BACKEND
+        value: s3 # Render disks are ephemeral; use R2/S3 for uploaded photos
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ENDPOINT_URL # R2: https://<account>.r2.cloudflarestorage.com
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_PUBLIC_BASE_URL # the bucket's public URL
+        sync: false
+      # --- Feature keys (optional; unset = that feature degrades gracefully) ---
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: SERPAPI_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PRICE_ID
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
