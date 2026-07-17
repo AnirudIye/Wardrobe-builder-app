@@ -3,6 +3,9 @@ import { api, OutfitRecommendation } from "../api";
 import { useFadeRise, useStaggerReveal } from "../animations";
 import { CardGridSkeleton, Skeleton } from "../components/Skeleton";
 import ErrorNote from "../components/ErrorNote";
+import PageHeader from "../components/PageHeader";
+import EmptyState from "../components/EmptyState";
+import { Wardrobe as WardrobeIll } from "../components/illustrations";
 
 // Session cache: switching tabs shows the last result instantly instead of
 // re-fetching. "Refresh" forces a new one. The in-flight promise also guards
@@ -43,43 +46,67 @@ export default function Today() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const dateLine = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+
   return (
     <div ref={pageRef}>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">What to wear today</h2>
-        <button onClick={generate} disabled={busy} className="clay-btn px-5 py-2 text-sm">
-          {busy ? "Thinking…" : rec ? "Refresh" : "Get recommendation"}
-        </button>
-      </div>
+      <PageHeader
+        title="Today's Recommendations"
+        context={
+          rec?.weather
+            ? `${dateLine} · ${Math.round(rec.weather.temp_c)}°C, ${rec.weather.description}`
+            : dateLine
+        }
+        action={
+          <button onClick={generate} disabled={busy} className="clay-btn px-5 py-2 text-sm">
+            {busy ? "Thinking…" : rec ? "Refresh" : "Get recommendation"}
+          </button>
+        }
+      />
 
       {busy && !rec && (
-        <div className="clay-card p-6">
+        <div className="clay-card blob-card-b p-8">
           <Skeleton className="h-6 w-40 mb-3" />
-          <Skeleton className="h-4 w-3/4 mb-5" />
+          <Skeleton className="h-4 w-3/4 mb-6" />
           <CardGridSkeleton count={4} cols="grid-cols-2 sm:grid-cols-4" />
         </div>
       )}
       <ErrorNote message={error} className="mb-4" />
 
-      {rec && (
-        <div className="clay-card p-6">
-          {rec.weather && (
-            <span className="clay-chip inline-block mb-3">
-              {Math.round(rec.weather.temp_c)}°C · {rec.weather.description}
-            </span>
-          )}
-          <p className="mb-5">{rec.rationale}</p>
-          <div ref={itemsRef} className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-            {rec.items.map((g) => (
-              <div key={g.id} className="clay-card clay-card-hover overflow-hidden">
-                <img src={g.thumbnail_url} alt="" className="w-full aspect-square object-cover" />
-                <p className="text-xs p-2.5 text-navy/70 font-medium">
-                  {g.subcategory ?? g.category ?? "item"}
-                </p>
-              </div>
-            ))}
+      {rec && rec.items.length === 0 && !busy && (
+        <EmptyState
+          Ill={WardrobeIll}
+          title="Nothing to style yet"
+          body="Add a few pieces to your wardrobe first. Once your closet has tops, bottoms and shoes, a full look appears here every morning."
+        />
+      )}
+
+      {rec && rec.items.length > 0 && (
+        <div className="clay-card blob-card-b overflow-hidden">
+          <div className="p-6 sm:p-9 grid lg:grid-cols-5 gap-8 lg:gap-10 items-center">
+            {/* The reasoning reads like a stylist's note, not metadata. */}
+            <div className="lg:col-span-2">
+              <p className="text-lg text-navy/80 leading-relaxed">{rec.rationale}</p>
+              <p className="text-xs text-navy/40 mt-5">
+                {rec.source === "ai" ? "Styled by DresserAI" : "Styled by house rules"}
+                {rec.weather ? ` · ${Math.round(rec.weather.temp_c)}°C ${rec.weather.description}` : ""}
+              </p>
+            </div>
+            <div ref={itemsRef} className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-4">
+              {rec.items.map((g) => (
+                <div key={g.id} className="clay-card clay-card-hover overflow-hidden">
+                  <img src={g.thumbnail_url} alt="" className="w-full aspect-square object-cover" />
+                  <p className="text-xs px-3 py-2.5 text-navy/70 font-medium capitalize">
+                    {g.subcategory ?? g.category ?? "item"}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
-          <p className="text-xs text-navy/40 mt-4">Source: {rec.source}</p>
         </div>
       )}
     </div>
