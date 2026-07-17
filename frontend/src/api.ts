@@ -152,6 +152,29 @@ export const api = {
       body: JSON.stringify({ email }),
     }),
 
+  forgotPassword: (email: string) =>
+    request<{ detail: string }>("/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    }),
+
+  resetPassword: async (token: string, password: string) => {
+    // Raw fetch like verifyEmail: a 400 here is a dead link, not a dead session.
+    const res = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password }),
+    });
+    const body = await res.json();
+    if (!res.ok) {
+      const detail = body?.detail;
+      throw new ApiError(res.status, typeof detail === "string" ? detail : "Password reset failed");
+    }
+    setToken(body.access_token);
+    return body.access_token as string;
+  },
+
   login: async (email: string, password: string) => {
     const form = new URLSearchParams({ username: email, password });
     const res = await fetch("/api/auth/login", { method: "POST", body: form });

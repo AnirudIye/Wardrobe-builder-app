@@ -7,6 +7,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<User>;
   verifyEmail: (token: string) => Promise<void>;
+  resetPassword: (token: string, password: string) => Promise<void>;
   logout: () => void;
   refresh: () => Promise<void>;
 }
@@ -61,13 +62,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await refresh();
   };
 
+  // A successful reset returns a session token, so the user lands signed in.
+  const resetPassword = async (token: string, password: string) => {
+    await api.resetPassword(token, password);
+    await refresh();
+  };
+
   const logout = () => {
     clearToken();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, verifyEmail, logout, refresh }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, register, verifyEmail, resetPassword, logout, refresh }}
+    >
       {children}
     </AuthContext.Provider>
   );
