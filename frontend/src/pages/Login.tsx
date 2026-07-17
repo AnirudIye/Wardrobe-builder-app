@@ -11,15 +11,17 @@ type Mode = "login" | "register" | "forgot" | "reset";
 export default function Login({
   onBack,
   resetToken,
+  initialMode = "login",
 }: {
   onBack?: () => void;
   resetToken?: string | null;
+  initialMode?: "login" | "register";
 }) {
   const cardRef = useFadeRise<HTMLDivElement>();
   const { login, register, resetPassword } = useAuth();
   // Arriving via an emailed `/?reset_token=...` link opens straight on the
-  // set-a-new-password view.
-  const [mode, setMode] = useState<Mode>(resetToken ? "reset" : "login");
+  // set-a-new-password view; landing CTAs open register or sign-in directly.
+  const [mode, setMode] = useState<Mode>(resetToken ? "reset" : initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
