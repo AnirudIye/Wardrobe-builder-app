@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, ApiError, BuyNext as BuyNextData } from "../api";
+import { api, ApiError, BuyNext as BuyNextData, Product } from "../api";
 import { useFadeRise, useStaggerReveal } from "../animations";
 import { ListSkeleton } from "../components/Skeleton";
 import ErrorNote from "../components/ErrorNote";
@@ -39,10 +39,30 @@ export function fetchBuyNext(force = false): Promise<BuyNextData> {
   return inflight;
 }
 
+// SerpAPI prices are display strings ("$49.99", "CA$60.00"); parse best-effort.
+function parsePrice(p: Product): number | null {
+  if (!p.price) return null;
+  const n = parseFloat(p.price.replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? n : null;
+}
+
+const PRICE_CAPS = [25, 50, 100, 200];
+
 export default function BuyNext({ onQuotaBlocked }: { onQuotaBlocked: () => void }) {
   const [data, setData] = useState<BuyNextData | null>(cached);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+
+  // Client-side filter: the suggestion (the reasoning) always stays; only the
+  // shoppable picks narrow. Unknown prices are hidden once a cap is set.
+  const visibleProducts = (products: Product[]) =>
+    maxPrice === null
+      ? products
+      : products.filter((p) => {
+          const n = parsePrice(p);
+          return n !== null && n <= maxPrice;
+        });
 
   const pageRef = useFadeRise<HTMLDivElement>();
   const listRef = useStaggerReveal<HTMLDivElement>(data ? data.suggestions.length : null);
@@ -83,6 +103,31 @@ export default function BuyNext({ onQuotaBlocked }: { onQuotaBlocked: () => void
         }
       />
 
+      {data && data.suggestions.some((s) => s.products.length > 0) && (
+        <div className="flex items-center gap-2 mb-6 flex-wrap">
+          <span className="text-xs font-medium text-navy/50">Price:</span>
+          <button
+            onClick={() => setMaxPrice(null)}
+            className={`px-3 py-1 text-xs rounded-full transition-colors ${
+              maxPrice === null ? "bg-navy text-cream" : "bg-cream text-navy/60 hover:text-navy"
+            }`}
+          >
+            Any
+          </button>
+          {PRICE_CAPS.map((cap) => (
+            <button
+              key={cap}
+              onClick={() => setMaxPrice(cap)}
+              className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                maxPrice === cap ? "bg-navy text-cream" : "bg-cream text-navy/60 hover:text-navy"
+              }`}
+            >
+              Under ${cap}
+            </button>
+          ))}
+        </div>
+      )}
+
       {busy && !data && <ListSkeleton count={3} height="h-32" />}
       <ErrorNote message={error} className="mb-4" />
 
@@ -102,9 +147,15 @@ export default function BuyNext({ onQuotaBlocked }: { onQuotaBlocked: () => void
               <h3 className="font-brand text-2xl sm:text-3xl tracking-tight capitalize">{s.description}</h3>
               <p className="text-navy/60 mt-2 leading-relaxed">{s.rationale}</p>
             </div>
-            {s.products.length > 0 && (
+            {s.products.length > 0 && visibleProducts(s.products).length === 0 && (
+              <p className="text-sm text-navy/40 mt-4">
+                No picks under ${maxPrice} for this one. Raise the price filter or use the
+                search link below.
+              </p>
+            )}
+            {visibleProducts(s.products).length > 0 && (
               <div className="flex gap-4 mt-6 overflow-x-auto pb-2 -mx-1 px-1">
-                {s.products.map((p, j) => (
+                {visibleProducts(s.products).map((p, j) => (
                   <a
                     key={j}
                     href={p.link ?? s.search_url ?? "#"}
