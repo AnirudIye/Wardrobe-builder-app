@@ -97,7 +97,11 @@ export default function Calendar() {
     <div ref={pageRef}>
       <PageHeader
         title="Your Calendar"
-        context="Outfit recommendations match the dress code of whatever the day holds."
+        context={`Today is ${new Date().toLocaleDateString(undefined, {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+        })}. Outfit recommendations match the dress code of whatever the day holds.`}
       />
 
       <div className="grid lg:grid-cols-3 gap-6 items-start">
@@ -114,7 +118,9 @@ export default function Calendar() {
               className="clay-input w-full mt-1.5"
             />
           </label>
-          <div className="grid grid-cols-2 gap-3">
+          {/* Stacked on lg where the rail is narrow: a date input needs about
+              110px of content width or Chrome clips the value into invisibility. */}
+          <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 lg:gap-4">
             <label className="block">
               <span className="text-xs font-medium text-navy/50">Date</span>
               <input
