@@ -5,12 +5,13 @@ import { fadeRise } from "../animations";
 
 type Doc = "terms" | "privacy" | null;
 
-const LAST_UPDATED = "July 13, 2026";
+const TERMS_UPDATED = "July 17, 2026";
+const PRIVACY_UPDATED = "July 13, 2026";
 
 function Terms() {
   return (
     <div className="space-y-3 text-sm leading-relaxed">
-      <p className="text-navy/60">Last updated: {LAST_UPDATED}</p>
+      <p className="text-navy/60">Last updated: {TERMS_UPDATED}</p>
       <h4 className="font-semibold">1. The service</h4>
       <p>
         BetterDresser lets you catalogue your clothing, receive outfit recommendations based
@@ -31,28 +32,63 @@ function Terms() {
         details. You can cancel any time via the customer portal; access continues until the
         end of the paid period.
       </p>
-      <h4 className="font-semibold">4. Shopping links</h4>
+      <h4 className="font-semibold">4. Fulfillment</h4>
+      <p>
+        BetterDresser is a fully digital service, so nothing is shipped. Plus features unlock
+        on your account automatically as soon as Stripe confirms your payment, typically
+        within a minute, and remain active for the duration of your subscription. If you've
+        paid and Plus hasn't activated, email us (section 11) and we'll fix it or refund the
+        charge.
+      </p>
+      <h4 className="font-semibold">5. Refunds</h4>
+      <p>
+        You can cancel any time via the customer portal; your plan stays active until the end
+        of the period you've paid for, and you won't be charged again. Beyond that,
+        subscription payments are non-refundable, except that we will refund charges made in
+        error (such as duplicate charges), charges after a cancellation, and periods where
+        paid features were unavailable for a significant time. To request a refund, email us
+        within 30 days of the charge; approved refunds go back to your original payment
+        method through Stripe. Nothing in this policy limits any non-waivable rights you have
+        under local consumer law.
+      </p>
+      <h4 className="font-semibold">6. Shopping links</h4>
       <p>
         Product suggestions link to third-party retailers. We're not a party to those
         purchases and aren't responsible for third-party products, prices, or availability.
+        Refunds for items you buy from a retailer are governed by that retailer's own policy.
       </p>
-      <h4 className="font-semibold">5. Acceptable use</h4>
+      <h4 className="font-semibold">7. Acceptable use</h4>
       <p>
         Don't misuse the service: no unlawful content, no attempts to break, overload, or
         reverse-engineer the platform, and no scraping other users' data.
       </p>
-      <h4 className="font-semibold">6. Disclaimer & liability</h4>
+      <h4 className="font-semibold">8. Warranty disclaimer</h4>
       <p>
-        The service is provided "as is" without warranties of any kind. To the maximum extent
-        permitted by law, our liability is limited to the amount you paid us in the past 12
-        months.
+        The service is provided "as is" and "as available", without warranties of any kind,
+        whether express, implied, or statutory, including implied warranties of
+        merchantability, fitness for a particular purpose, and non-infringement. We don't
+        warrant that the service will be uninterrupted, error-free, or secure. AI-generated
+        content, including outfit recommendations, garment tags, shopping suggestions, chat
+        replies, and try-on images, can be inaccurate; it is provided for inspiration only
+        and isn't professional, medical, or purchasing advice.
       </p>
-      <h4 className="font-semibold">7. Changes</h4>
+      <h4 className="font-semibold">9. Limitation of liability</h4>
+      <p>
+        To the maximum extent permitted by law, BetterDresser will not be liable for any
+        indirect, incidental, special, consequential, or punitive damages, or for lost
+        profits, data, goodwill, or purchases made from third-party retailers, arising out of
+        or relating to your use of the service, even if we've been advised such damages are
+        possible. Our total liability for all claims combined is limited to the amount you
+        paid BetterDresser in the 12 months before the event giving rise to the claim. Some
+        jurisdictions don't allow certain exclusions or limits, so parts of this section may
+        not apply to you; nothing here excludes liability that cannot be excluded by law.
+      </p>
+      <h4 className="font-semibold">10. Changes</h4>
       <p>
         We may update these terms; material changes will be announced in the app. Continued
         use after changes means you accept them.
       </p>
-      <h4 className="font-semibold">8. Contact</h4>
+      <h4 className="font-semibold">11. Contact</h4>
       <p>Questions? Email iyengar.anirud@gmail.com.</p>
     </div>
   );
@@ -61,7 +97,7 @@ function Terms() {
 function Privacy() {
   return (
     <div className="space-y-3 text-sm leading-relaxed">
-      <p className="text-navy/60">Last updated: {LAST_UPDATED}</p>
+      <p className="text-navy/60">Last updated: {PRIVACY_UPDATED}</p>
       <h4 className="font-semibold">1. What we collect</h4>
       <p>
         Your email and password (stored as a secure hash), wardrobe photos and their AI tags,
