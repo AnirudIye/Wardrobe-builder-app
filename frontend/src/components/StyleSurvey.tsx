@@ -26,7 +26,7 @@ function Chip({
     <button
       type="button"
       onClick={onClick}
-      className={`px-3.5 py-1.5 text-sm rounded-full transition-all duration-150 ${
+      className={`px-3.5 py-1.5 text-sm rounded-full transition duration-150 ease-out-strong ${
         active
           ? "bg-navy text-cream shadow-clay-navy"
           : "bg-cream text-navy/60 hover:text-navy hover:bg-cream-deep/60"

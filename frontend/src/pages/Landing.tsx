@@ -526,7 +526,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
           <div className="relative">
             <h2 className="font-brand text-4xl sm:text-6xl">Dress better, effortlessly.</h2>
             <p className="text-cream/70 mt-4 max-w-lg mx-auto">Your closet already has great outfits in it. Let BetterDresser find them, free, no card required.</p>
-            <button onClick={onGetStarted} className="mt-8 blob-pill bg-cream text-navy font-semibold px-8 py-3.5 shadow-clay hover:-translate-y-0.5 active:translate-y-0.5 transition-all">
+            <button onClick={onGetStarted} className="mt-8 blob-pill bg-cream text-navy font-semibold px-8 py-3.5 shadow-clay hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ease-out-strong">
               Start dressing smarter →
             </button>
           </div>

@@ -79,10 +79,11 @@ export default function App() {
     }
   }, [user]);
 
-  // Cross-fade the main area whenever the tab changes.
+  // Cross-fade the main area whenever the tab changes. Tab switching is a
+  // high-frequency action, so keep it brisk (emil-design-eng skill).
   useEffect(() => {
     if (mainRef.current) {
-      animate(mainRef.current, { opacity: [0, 1], duration: 300, ease: "outQuad" });
+      animate(mainRef.current, { opacity: [0, 1], duration: 200, ease: "outQuad" });
     }
   }, [tab]);
 
@@ -173,7 +174,7 @@ export default function App() {
                     <button
                       key={t.id}
                       onClick={() => setTab(t.id)}
-                      className={`px-4 py-1.5 text-sm rounded-full whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 ${
+                      className={`px-4 py-1.5 text-sm rounded-full whitespace-nowrap transition duration-200 ease-out-strong hover:-translate-y-0.5 ${
                         tab === t.id
                           ? "bg-navy text-cream font-medium shadow-clay-navy"
                           : "text-navy/60 hover:text-navy hover:bg-cream"

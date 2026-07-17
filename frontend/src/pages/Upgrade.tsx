@@ -30,7 +30,7 @@ function Meter({
       </div>
       <div className="h-2.5 mt-1.5 rounded-full bg-cream-deep overflow-hidden">
         <div
-          className="h-full rounded-full bg-blush-deep transition-all duration-500"
+          className="h-full rounded-full bg-blush-deep transition-[width] duration-500 ease-out-strong"
           style={{ width: `${pct}%` }}
         />
       </div>

@@ -2,6 +2,11 @@
 import { animate, stagger } from "animejs";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
+// Strong ease-out: built-in easings are too weak to read as intentional, and
+// ease-out front-loads the movement right when the user is watching
+// (emil-design-eng skill).
+const EASE_OUT_STRONG = "cubicBezier(0.23, 1, 0.32, 1)";
+
 /** True when the user has asked the OS to minimise motion. */
 export function prefersReducedMotion(): boolean {
   return (
@@ -16,10 +21,10 @@ export function fadeRise(el: Element | null, delay = 0) {
   if (!el) return;
   animate(el, {
     opacity: [0, 1],
-    translateY: [14, 0],
-    duration: 500,
+    translateY: [12, 0],
+    duration: 320,
     delay,
-    ease: "outQuad",
+    ease: EASE_OUT_STRONG,
   });
 }
 
@@ -30,18 +35,18 @@ export function staggerChildren(container: Element | null, selector = ":scope > 
   if (children.length === 0) return;
   animate(children, {
     opacity: [0, 1],
-    translateY: [16, 0],
+    translateY: [12, 0],
     scale: [0.97, 1],
-    duration: 450,
-    delay: stagger(55),
-    ease: "outQuad",
+    duration: 300,
+    delay: stagger(40),
+    ease: EASE_OUT_STRONG,
   });
 }
 
 /** Gentle attention pulse (e.g. when new content pops in). */
 export function pulse(el: Element | null) {
   if (!el) return;
-  animate(el, { scale: [1, 1.03, 1], duration: 350, ease: "inOutQuad" });
+  animate(el, { scale: [1, 1.02, 1], duration: 250, ease: "inOutQuad" });
 }
 
 /** Hook: run a staggered reveal on the ref'd container whenever `key` changes. */

@@ -45,7 +45,17 @@ export default {
         "clay-blush":
           "0 12px 22px -8px rgba(242, 118, 159, 0.5), inset 4px 4px 10px rgba(255, 255, 255, 0.55), inset -5px -5px 12px rgba(190, 60, 105, 0.3)",
       },
+      transitionTimingFunction: {
+        // Strong ease-out for interactive elements: default CSS easings are
+        // too weak to read as intentional (emil-design-eng skill).
+        "out-strong": "cubic-bezier(0.23, 1, 0.32, 1)",
+      },
     },
+  },
+  future: {
+    // Gate every hover: utility behind (hover:hover) and (pointer:fine) so
+    // touch devices don't get sticky fake-hover states on tap.
+    hoverOnlyWhenSupported: true,
   },
   plugins: [],
 };
