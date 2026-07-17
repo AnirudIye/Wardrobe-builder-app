@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str = ""
     stripe_price_id: str = ""
     frontend_base_url: str = "http://localhost:5173"
+    # OAuth client id for "Sign in with Google" (Google Cloud console ->
+    # Credentials -> OAuth client ID, type Web). Unset = button hidden.
+    google_oauth_client_id: str = ""
 
     # AI (Google Gemini — TryOn image generation, and all text AI when no
     # Anthropic key is configured)

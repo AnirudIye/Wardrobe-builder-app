@@ -10,14 +10,17 @@ import react from "@vitejs/plugin-react";
 // NOTE for deploy time: meta CSP cannot express frame-ancestors — when a
 // static host exists, move this same policy to a real response header and add
 // frame-ancestors 'none'.
+// The accounts.google.com/gsi/ entries are Google's documented CSP for the
+// Sign in with Google button (script + iframe + XHR); harmless when the
+// feature is unconfigured, required when it is.
 const CSP = [
   "default-src 'self'",
-  "script-src 'self'",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "script-src 'self' https://accounts.google.com/gsi/client",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style",
   "font-src https://fonts.gstatic.com",
   "img-src 'self' data: blob: https:",
-  "connect-src 'self'",
-  "frame-src https://www.openstreetmap.org",
+  "connect-src 'self' https://accounts.google.com/gsi/",
+  "frame-src https://www.openstreetmap.org https://accounts.google.com/gsi/",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

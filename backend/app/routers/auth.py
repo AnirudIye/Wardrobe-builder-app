@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import secrets
+
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
@@ -23,6 +25,7 @@ from app.database import get_db
 from app.models.user import User
 from app.schemas.auth import (
     ForgotPasswordRequest,
+    GoogleSignInRequest,
     ResendRequest,
     ResetPasswordRequest,
     Token,
@@ -30,7 +33,7 @@ from app.schemas.auth import (
     UserOut,
     VerifyRequest,
 )
-from app.services import email
+from app.services import email, google_oauth
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -188,6 +191,58 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     user.email_verified = True
     db.commit()
     lockout.clear(user.id)
+    return Token(access_token=create_access_token(subject=user.id))
+
+
+@router.get("/google/config")
+def google_config() -> dict:
+    # Public: the SPA needs the client id to render Google's button. Null when
+    # Google sign-in isn't configured, and the SPA hides the button.
+    return {"client_id": google_oauth.client_id()}
+
+
+@router.post(
+    "/google",
+    response_model=Token,
+    dependencies=[Depends(rate_limit("google", 10, 60))],
+)
+def google_sign_in(payload: GoogleSignInRequest, db: Session = Depends(get_db)) -> Token:
+    """Sign in (creating the account on first use) with a Google ID token."""
+    if not google_oauth.available():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Google sign-in isn't available right now",
+        )
+    identity = google_oauth.verify(payload.credential)
+    if identity is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Google sign-in failed. Please try again.",
+        )
+    if not identity.email_verified:
+        # Linking on email requires Google to have verified it, else someone
+        # could claim an unowned address and inherit a local account.
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This Google account's email address is unverified.",
+        )
+    user = _get_user_by_email(db, identity.email)
+    if user is None:
+        # First Google sign-in creates the account. The random placeholder
+        # password is unguessable; setting a real one later works through the
+        # normal forgot-password flow.
+        user = User(
+            email=identity.email,
+            hashed_password=hash_password(secrets.token_urlsafe(32)),
+            email_verified=True,
+        )
+        db.add(user)
+    else:
+        # Google vouches for the address, which is exactly what our own email
+        # confirmation certifies.
+        user.email_verified = True
+    db.commit()
+    db.refresh(user)
     return Token(access_token=create_access_token(subject=user.id))
 
 
