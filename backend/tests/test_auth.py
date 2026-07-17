@@ -65,13 +65,16 @@ def test_login_wrong_password_unauthorized(client: TestClient):
     _register(client)
     resp = _login(client, password="wrongpassword1")
     assert resp.status_code == 401
-    assert resp.json()["detail"] == "Incorrect password"
+    assert resp.json()["detail"] == "Incorrect email or password"
 
 
-def test_login_unknown_email_says_so(client: TestClient):
-    resp = _login(client, email="ghost@example.com")
-    assert resp.status_code == 401
-    assert resp.json()["detail"] == "Couldn't find an account with that email"
+def test_login_unknown_email_gets_the_same_generic_message(client: TestClient):
+    # Anti-enumeration: unknown email and wrong password are indistinguishable.
+    _register(client)
+    unknown = _login(client, email="ghost@example.com")
+    wrong = _login(client, password="wrongpassword1")
+    assert unknown.status_code == wrong.status_code == 401
+    assert unknown.json()["detail"] == wrong.json()["detail"]
 
 
 def test_me_requires_auth(client: TestClient):
