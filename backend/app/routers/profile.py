@@ -72,6 +72,24 @@ def update_profile(
 
 class LocationIn(BaseModel):
     city: str = Field(min_length=2, max_length=120)
+    # When set (a candidate picked from /profile/location/search), the city is
+    # stored as-is with these coordinates — no second geocoding round-trip.
+    lat: Optional[float] = Field(default=None, ge=-90, le=90)
+    lon: Optional[float] = Field(default=None, ge=-180, le=180)
+
+
+@router.get("/profile/location/search")
+def search_locations(
+    q: str = Query(min_length=2, max_length=120),
+    current_user: User = Depends(get_current_user),
+) -> list:
+    """List matching places so the user can pick the right same-named city."""
+    try:
+        return weather.geocode_candidates(q)
+    except WeatherServiceError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+        ) from exc
 
 
 @router.post("/profile/location", response_model=ProfileOut)
@@ -80,16 +98,21 @@ def set_location(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ProfileOut:
-    """Set the user's location by city name (geocoded via OpenWeather)."""
-    try:
-        place = weather.geocode(payload.city)
-    except WeatherServiceError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
-        ) from exc
-    current_user.city = place.name
-    current_user.lat = place.lat
-    current_user.lon = place.lon
+    """Set the user's location: a picked candidate, or a city name to geocode."""
+    if payload.lat is not None and payload.lon is not None:
+        current_user.city = payload.city
+        current_user.lat = payload.lat
+        current_user.lon = payload.lon
+    else:
+        try:
+            place = weather.geocode(payload.city)
+        except WeatherServiceError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+            ) from exc
+        current_user.city = place.name
+        current_user.lat = place.lat
+        current_user.lon = place.lon
     db.commit()
     db.refresh(current_user)
     return _serialize(current_user)

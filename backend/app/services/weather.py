@@ -86,17 +86,24 @@ class GeocodeResult(BaseModel):
     lon: float
 
 
-def geocode(query: str) -> GeocodeResult:
-    """Resolve a city name to coordinates via OpenWeather's geocoding API.
+class GeocodeCandidate(BaseModel):
+    label: str  # display name, e.g. "Waterloo, Ontario, CA"
+    lat: float
+    lon: float
 
-    Raises WeatherServiceError if no key is configured, the lookup fails, or
-    the place is unknown.
+
+def geocode_candidates(query: str, limit: int = 5) -> list:
+    """Look up up to `limit` places matching a city name.
+
+    Same-named cities exist worldwide (Waterloo ON vs Waterloo IA), so the
+    picker must offer every candidate rather than guessing. Returns [] when
+    nothing matches; raises WeatherServiceError on config/network problems.
     """
     settings = get_settings()
     if not settings.openweather_api_key:
         raise WeatherServiceError("OpenWeather API key is not configured")
 
-    params = {"q": query, "limit": 1, "appid": settings.openweather_api_key}
+    params = {"q": query, "limit": limit, "appid": settings.openweather_api_key}
     try:
         resp = httpx.get(_OWM_GEO_URL, params=params, timeout=10.0)
         resp.raise_for_status()
@@ -104,12 +111,26 @@ def geocode(query: str) -> GeocodeResult:
     except (httpx.HTTPError, ValueError) as exc:
         raise WeatherServiceError(f"Failed to look up location: {exc}") from exc
 
-    if not results:
-        raise WeatherServiceError(f"Could not find a place called {query!r}")
+    candidates = []
+    for place in results or []:
+        name = str(place.get("name", query))
+        label = ", ".join(
+            str(p) for p in [name, place.get("state"), place.get("country")] if p
+        )
+        candidates.append(
+            GeocodeCandidate(label=label, lat=float(place["lat"]), lon=float(place["lon"]))
+        )
+    return candidates
 
-    top = results[0]
-    name = str(top.get("name", query))
-    state = top.get("state")
-    country = top.get("country")
-    display = ", ".join(p for p in [name, state, country] if p)
-    return GeocodeResult(name=display, lat=float(top["lat"]), lon=float(top["lon"]))
+
+def geocode(query: str) -> GeocodeResult:
+    """Resolve a city name to its top geocoding hit.
+
+    Raises WeatherServiceError if no key is configured, the lookup fails, or
+    the place is unknown.
+    """
+    candidates = geocode_candidates(query, limit=1)
+    if not candidates:
+        raise WeatherServiceError(f"Could not find a place called {query!r}")
+    top = candidates[0]
+    return GeocodeResult(name=top.label, lat=top.lat, lon=top.lon)

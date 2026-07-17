@@ -71,6 +71,11 @@ export interface Garment {
   warmth_rating?: number | null;
   seasons: string[];
 }
+export interface LocationCandidate {
+  label: string;
+  lat: number;
+  lon: number;
+}
 export interface Weather {
   temp_c: number;
   feels_like_c: number;
@@ -187,11 +192,13 @@ export const api = {
   me: () => request<User>("/auth/me"),
   profile: () => request<User>("/profile"),
   weather: () => request<Weather>("/weather"),
-  setLocation: (city: string) =>
+  searchLocations: (q: string) =>
+    request<LocationCandidate[]>(`/profile/location/search?q=${encodeURIComponent(q)}`),
+  setLocation: (city: string, lat?: number, lon?: number) =>
     request<User>("/profile/location", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ city }),
+      body: JSON.stringify({ city, lat, lon }),
     }),
   updateProfile: (
     data: Partial<{ city: string; lat: number; lon: number; style_preferences: Record<string, unknown> }>

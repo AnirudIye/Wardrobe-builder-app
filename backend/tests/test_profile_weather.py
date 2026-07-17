@@ -81,3 +81,45 @@ def test_set_location_unknown_city_400(client: TestClient, monkeypatch: pytest.M
 def test_geocode_without_key_raises():
     with pytest.raises(weather.WeatherServiceError):
         weather.geocode("London")
+
+
+def test_location_search_returns_candidates(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(
+        weather,
+        "geocode_candidates",
+        lambda q, limit=5: [
+            weather.GeocodeCandidate(label="Waterloo, Ontario, CA", lat=43.46, lon=-80.52),
+            weather.GeocodeCandidate(label="Waterloo, Iowa, US", lat=42.49, lon=-92.34),
+        ],
+    )
+    headers = auth_headers(client)
+    resp = client.get("/profile/location/search?q=waterloo", headers=headers)
+    assert resp.status_code == 200, resp.text
+    labels = [c["label"] for c in resp.json()]
+    assert labels == ["Waterloo, Ontario, CA", "Waterloo, Iowa, US"]
+
+
+def test_location_search_without_key_400(client: TestClient):
+    # conftest blanks the OpenWeather key, so the real service raises -> 400.
+    headers = auth_headers(client)
+    assert client.get("/profile/location/search?q=london", headers=headers).status_code == 400
+
+
+def test_set_location_with_explicit_coordinates_skips_geocoding(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+):
+    def _boom(q):
+        raise AssertionError("geocode must not be called when coordinates are supplied")
+
+    monkeypatch.setattr(weather, "geocode", _boom)
+    headers = auth_headers(client)
+    resp = client.post(
+        "/profile/location",
+        headers=headers,
+        json={"city": "Waterloo, Ontario, CA", "lat": 43.46, "lon": -80.52},
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["city"] == "Waterloo, Ontario, CA"
+    assert body["lat"] == 43.46
+    assert body["lon"] == -80.52
