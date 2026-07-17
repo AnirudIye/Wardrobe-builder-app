@@ -61,6 +61,23 @@ export default function AccountMenu({ onUpgrade }: { onUpgrade: () => void }) {
     }
   };
 
+  // GDPR data portability, self-serve: download everything as one JSON file.
+  const exportData = async () => {
+    setOpen(false);
+    setDeleteErr(null);
+    try {
+      const blob = await api.exportData();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "betterdresser-export.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setDeleteErr((e as Error).message);
+    }
+  };
+
   return (
     <div className="relative" ref={ref}>
       {deleteErr && (
@@ -113,6 +130,12 @@ export default function AccountMenu({ onUpgrade }: { onUpgrade: () => void }) {
             }}
           >
             Customization
+          </button>
+          <button
+            className="w-full text-left px-3 py-2 rounded-xl text-sm hover:bg-cream-deep/50"
+            onClick={exportData}
+          >
+            Export my data
           </button>
           <button
             className="w-full text-left px-3 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50"

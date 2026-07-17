@@ -241,6 +241,15 @@ export const api = {
     }),
   deleteAccount: () => request<void>("/profile", { method: "DELETE" }),
 
+  // Raw fetch: the response is a JSON file to download, not an object to parse.
+  exportData: async () => {
+    const res = await fetch("/api/profile/export", {
+      headers: { Authorization: `Bearer ${getToken()}` },
+    });
+    if (!res.ok) throw new ApiError(res.status, "Couldn't export your data. Please try again.");
+    return res.blob();
+  },
+
   listGarments: () => request<Garment[]>("/wardrobe/items"),
   uploadGarment: (file: File) => {
     const fd = new FormData();

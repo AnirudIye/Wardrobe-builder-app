@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
@@ -174,6 +175,80 @@ def change_password(
     current_user.hashed_password = hash_password(payload.new_password)
     db.commit()
     return {"detail": "Password updated"}
+
+
+@router.get("/profile/export")
+def export_data(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    """Everything we hold about the user, as one downloadable JSON file.
+
+    This is the GDPR data-portability right, self-serve. Never include the
+    password hash or internal storage keys; images are referenced by URL.
+    """
+    storage = get_storage()
+    garments = db.execute(
+        select(Garment).where(Garment.user_id == current_user.id)
+    ).scalars().all()
+    events = db.execute(
+        select(CalendarEvent).where(CalendarEvent.user_id == current_user.id)
+    ).scalars().all()
+    usage = db.execute(
+        select(RecommendationEvent).where(RecommendationEvent.user_id == current_user.id)
+    ).scalars().all()
+
+    payload = {
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "profile": {
+            "email": current_user.email,
+            "email_verified": current_user.email_verified,
+            "city": current_user.city,
+            "lat": current_user.lat,
+            "lon": current_user.lon,
+            "style_preferences": _parse_prefs(current_user.style_preferences),
+            "plan": current_user.plan,
+            "subscription_status": current_user.subscription_status,
+            "created_at": current_user.created_at,
+            "avatar_url": storage.url(current_user.avatar_key) if current_user.avatar_key else None,
+        },
+        "garments": [
+            {
+                "id": g.id,
+                "category": g.category,
+                "subcategory": g.subcategory,
+                "colors": g.colors,
+                "pattern": g.pattern,
+                "material": g.material,
+                "formality": g.formality,
+                "warmth_rating": g.warmth_rating,
+                "seasons": g.seasons,
+                "created_at": g.created_at,
+                "image_url": storage.url(g.image_path),
+                "thumbnail_url": storage.url(g.thumbnail_path),
+            }
+            for g in garments
+        ],
+        "calendar_events": [
+            {
+                "id": e.id,
+                "title": e.title,
+                "date": e.date,
+                "event_type": e.event_type,
+                "notes": e.notes,
+                "created_at": e.created_at,
+            }
+            for e in events
+        ],
+        "usage_events": [
+            {"kind": u.kind, "created_at": u.created_at} for u in usage
+        ],
+    }
+    return Response(
+        content=json.dumps(payload, indent=2, default=str),
+        media_type="application/json",
+        headers={"Content-Disposition": 'attachment; filename="betterdresser-export.json"'},
+    )
 
 
 @router.delete("/profile", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
