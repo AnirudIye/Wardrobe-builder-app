@@ -1,47 +1,44 @@
 # BetterDresser — Handoff
 
-_Last updated: 2026-07-16 (design elevation pass)_
-
-**Design elevation (`feature/design-elevation`, merged):** research-driven de-slop redesign. Landing: no badge-over-H1, no stat banner, no numbered steps, no identical card grids — editorial alternating feature rows, connected how-it-works flow, de-twinned pricing, concrete copy. Global: Figtree body font paired with Ramaraja, favicon + meta/OG, ::selection/:focus-visible/scrollbar detail layer. App: PageHeader/EmptyState system, Wardrobe rail layout, Today look card, DresserAI chat surface with starter prompts, Buy Next editorial rows, TryOn two-panel, Calendar two-pane with formality tints, Upgrade live meters, split-panel Login. **Outstanding: swap the landing showcase mock for real app screenshots** (marked TODO in Landing.tsx; needs a real browser session — the harness pane can't screenshot and no Chrome extension was connected). Research sources in `docs/superpowers/` plan file.
+_Last updated: 2026-07-16, end of session (motion system → email fix → security hardening → full design elevation, all merged and pushed)._
 
 ## Goal
 
-BetterDresser is a portfolio-grade web app for managing a digital wardrobe and getting AI styling help. A logged-in user signs up (with email confirmation), builds a wardrobe by uploading clothing photos (AI auto-tags) or adding real products from the web, then gets weather- and calendar-aware "what to wear today" outfits, "what to buy next" gap analysis with real shoppable links, free-form styling chat (DresserAI), AI try-on photos (TryOn), and account management. A public marketing landing page greets logged-out visitors. Monetization: outfits free/unlimited; Buy Next, DresserAI and TryOn metered weekly with a $5/mo Plus plan (Stripe).
+BetterDresser is a portfolio-grade web app for managing a digital wardrobe and getting AI styling help. Users sign up (email confirmation), build a wardrobe from photos (AI auto-tags) or web products, then get weather- and calendar-aware outfits ("Today's Recommendations", free/unlimited), gap analysis with shoppable links ("What To Buy Next", 5/day free), styling chat (DresserAI, 20/week free), AI try-on photos (TryOn, 5/week free), and account management. $5/mo Plus (Stripe) lifts all caps. A marketing landing page greets logged-out visitors.
 
-**Stack:** FastAPI (Python 3.9, SQLite dev) + React/Vite/TS/Tailwind SPA. Text AI via `services/llm.py` (Anthropic or Gemini); email via `services/email.py` (stdlib SMTP). Repo root is `Wardrobe builder app/`; remote `github.com/AnirudIye/Wardrobe-builder-app` (private).
+**Stack:** FastAPI (Python 3.9, SQLite dev, Postgres-ready) + React/Vite/TS/Tailwind SPA. Text AI via provider-agnostic `services/llm.py` (Anthropic or Gemini); email via `services/email.py` (stdlib SMTP). Repo root is `Wardrobe builder app/`; remote `github.com/AnirudIye/Wardrobe-builder-app` (private).
 
 ## Current state
 
-**Branch `feature/landing-motion` (all work committed, tree clean), 12 commits ahead of local `main`.** `main` is still at `fa042c0` and has NOT been pushed to origin (origin/main is one further behind at `bc6e524`). Backend: **96 tests pass**; frontend `npm run build` clean.
+**`main` = `a887e52`, pushed, tree clean, in sync with origin.** Backend: **127 tests pass** (`pytest -q`). Frontend `npm run build` clean. Everything below is merged:
 
-Committed on the branch this session:
-- **Landing redesign checkpoint** (prior session's illustrations/blobs/dash-free copy) + design spec + implementation plan (`docs/superpowers/`).
-- **Landing motion system:** testimonials + emoji glyphs removed (💨→SVG in WeatherWidget, ✦→SVG diamond); seamless `Marquee` component (measures a set, duplicates to overflow, shifts exactly one set-width — provably seamless, replacing the CSS marquee that gapped on wide viewports); `useReveal` scroll reveals; `CountUp` stats; `HeroField` canvas particle field; `SplitText` headline; cursor parallax + `.text-gradient-pan` accent + hover polish. All gated on `prefers-reduced-motion` and fail open (nothing stays hidden if IO/rAF never run).
-- **TryOn camera fix:** the `<video>` was only mounted after `streamActive`, so the stream attached to a null ref — preview stayed blank and Capture was a silent no-op. Video now stays mounted (hidden), streams stop on failure, capture errors surface.
-- **Buy Next picks in TryOn:** shared `fetchBuyNext()` (cache + in-flight dedupe) and an explicit "Load Buy Next picks" button in TryOn (explicit because a run costs a weekly credit).
-- **`ErrorNote` component:** on-brand blush clay error note (SVG icon, role=alert) replacing bare red text at all 15 error sites. Red kept intentionally on delete-account affordances (danger cue for actions, not messages).
+1. **Landing motion system** — seamless `Marquee` (measures + duplicates, provably no seam), `useReveal` scroll reveals, `CountUp`, `HeroField` canvas particles, `SplitText` headline, cursor parallax. All reduced-motion-gated and fail-open.
+2. **Email confirmation WORKS end-to-end** (register → email → click → verified → login, verified live incl. DB flip). Transport: **Gmail SMTP app password** on the dedicated `BetterDresserConfirmation@gmail.com` account (values in git-ignored `backend/.env`). Brevo was tried and abandoned: its free tier accepts SMTP sends then rejects internally ("sender not valid"), and Gmail throttles its shared pool.
+3. **Quota:** buy-next is **5/day** (`quota.enforce(..., days=1)`, `BillingStatus.remaining_today`/`daily_limit`); chat/tryon stay weekly. Tabs renamed: My Wardrobe / Today's Recommendations / What To Buy Next.
+4. **Security hardening + prod data layer** (see `docs/deploy.md` + CLAUDE.md "Security posture"): `ENVIRONMENT=production` fail-fast posture, security-headers middleware, per-IP auth rate limiting, SSRF-guarded image fetches (TryOn reads owned garments via `storage.read`), build-time CSP meta, 401 token-expiry interceptor, **Alembic wired** (baseline + email_verified grandfathering), **psycopg3** Postgres support, **S3/R2 storage backend** (config-selected, local default).
+5. **Design elevation (de-slop redesign)** — research-driven (sources in `docs/superpowers/` plan + this session's commits): Figtree body font paired with Ramaraja, favicon/meta/OG, `::selection`/`:focus-visible`/scrollbar detail layer; landing rebuilt without AI-tells (no badge-over-H1, no stat banner, no numbered steps, no identical card grids — editorial alternating rows, connected flow, de-twinned pricing, concrete copy); app pages all relaid on a `PageHeader`/`EmptyState` system (Wardrobe rail layout, Today look card, DresserAI chat surface with starter prompts, Buy Next editorial rows, TryOn two-panel, Calendar two-pane with formality tints, Upgrade live allowance meters, split-panel Login). Palette/Ramaraja/all motion kept.
+6. TryOn fixes: camera video-ref race fixed (preview works); Buy Next picks loadable from TryOn (explicit button, quota-aware); 503 copy is "TryOn isn't available right now".
 
-**Email confirmation WORKS end-to-end** (register → email → click → verified → login), verified live today including the DB flip. Transport is **Gmail SMTP with an App Password** from the dedicated account `BetterDresserConfirmation@gmail.com` (values in `backend/.env`, git-ignored). History: Brevo was tried first and abandoned — its free tier accepts SMTP sends then rejects them internally ("sender not valid") unless the From is a validated sender, its sender-confirmation email never arrived, and Gmail throttles its shared pool (421) anyway. **The Brevo SMTP key + API key were pasted in chat and should be revoked in the Brevo dashboard; they're no longer used.**
+## Next steps (in rough priority)
 
-**Since the motion-system handoff, also landed on `feature/landing-motion`:** TryOn camera fix (video ref race) + Buy Next picks loadable from TryOn; on-brand `ErrorNote` at all 15 error sites; buy-next quota now **5/day** (per-kind window in `quota.py`; `remaining_today`/`daily_limit` in BillingStatus); nav tabs renamed (My Wardrobe / Today's Recommendations / What To Buy Next); **email confirmation working end-to-end via Gmail SMTP** (app password on `BetterDresserConfirmation@gmail.com`; Brevo abandoned — its keys passed through chat and should be revoked); and a full **security-hardening + production data layer pass** (see `docs/deploy.md` and CLAUDE.md "Security posture"): env-driven production posture with fail-fast validation, security-headers middleware, auth rate limiting, SSRF-guarded image fetches (TryOn reads owned garments from storage directly), build-time CSP, 401 token-expiry handling, Alembic wired with baseline migration, managed-Postgres support (psycopg3), and an S3/R2 storage backend. Suite is now **127 tests**, all passing.
+1. **Visual pass in a real browser.** The whole design elevation was verified by build + structural checks only — the harness browser pane is a hidden page (no paint/rAF/IO → no screenshots, no motion). Eyeball localhost:5173 logged out AND logged in; tweak taste items.
+2. **Swap the landing showcase mock for real screenshots** — marked `TODO(D10)` in `frontend/src/pages/Landing.tsx`. Capture the redesigned My Wardrobe / Today's Recommendations / DresserAI tabs into `frontend/public/screens/` (Chrome extension session or manual), then replace the mock inside the existing clay window frame.
+3. **Revoke the Brevo keys** (dashboard → SMTP & API): both the SMTP key and an xkeysib API key passed through chat and are unused. Optionally rotate the Gmail app password (also passed through chat; scoped to the dedicated account only).
+4. **TryOn generation:** blocked by Google — image models have **no free tier** (`limit: 0` verified by probing every model the key exposes). Enabling billing on the Google account (~$0.03–0.04/image) activates it with zero code changes; consider re-probing and switching `GOOGLE_IMAGE_MODEL` to a cheaper 3.1-lite model then. The app 503s gracefully and never charges quota for failures.
+5. **When ready for real persistence:** create a Neon/Supabase Postgres (`DATABASE_URL` per `.env.example`, then `alembic upgrade head`) and/or a Cloudflare R2 bucket (`STORAGE_BACKEND=s3` + `S3_*`). Code is done; only credentials are missing.
+6. **When ready to deploy:** work through `docs/deploy.md` (TLS at the platform, env checklist, alembic as release phase, move CSP meta to a real header with `frame-ancestors`).
 
-## Known issues / limitations
+## Known issues / environment gotchas
 
-1. **TryOn generation is paid-only at Google.** Probed every image model the key exposes (2.5-flash-image, 3.1-flash/-lite, 3-pro): all return free-tier `RESOURCE_EXHAUSTED` with `limit: 0` — image generation has NO free tier, on any account. Enabling billing (~$0.03–0.04/image) unlocks it with zero code changes; consider switching `GOOGLE_IMAGE_MODEL` to a cheaper 3.1-lite model then (re-probe first). User chose to leave it; the app 503s gracefully and doesn't burn weekly quota on failures.
-2. **Landing motion not eyeballed.** Structure/geometry/logic verified programmatically; the harness browser pane is a hidden page (no rAF/IO/paint → no screenshots), so actual animation playback needs a human look at http://localhost:5173 logged out.
-3. Stat-card blobs may still read as ellipses (subjective; dial to `.blob-card-*` if disliked).
-4. Pre-existing: no Alembic (prod migration must backfill `email_verified=true` for existing users — see CLAUDE.md); Python 3.9 EOL warnings; benign passlib/bcrypt `__about__` traceback in logs; Windows+Anaconda `_ssl` PATH gotcha.
-
-## Next steps
-
-1. **Eyeball the landing motion** in a real browser (marquee loop, count-up, hero field, split headline, parallax) and tweak taste items.
-2. **Merge `feature/landing-motion`** (or PR it) once the visuals pass, then **push `main`**.
-3. **Revoke the Brevo keys** (dashboard → SMTP & API) — exposed in chat, unused now.
-4. Optional: enable Google billing for TryOn; soften stat blobs; real product photos in the hero.
+- **Harness quirks seen today:** the in-app browser pane cannot paint (hidden page) — verify geometry via injected JS or the user's real browser; transient "classifier unavailable" outages block Bash/MCP for minutes (file Read/Write/Edit keep working — keep editing, batch the builds/commits for when it recovers).
+- Windows/Anaconda: prepend Anaconda dirs to PATH before venv python or `_ssl` fails (see below). A transient "paging file too small" DLL error can hit python one-shots; retry.
+- Pre-existing noise: benign passlib/bcrypt `__about__` traceback in logs; Python 3.9 EOL warnings (an upgrade is a worthwhile future task).
+- Dev servers are session-bound background tasks — they die with the session; restart per below.
+- `backend/.env` holds real secrets (JWT, API keys, Gmail SMTP) — git-ignored, never commit it.
 
 ## Running it locally
 
-Two terminals (both must run together). Windows/Anaconda: prepend Anaconda's `Library\bin` to PATH first or the venv fails with an `_ssl` DLL error.
+Two terminals (both must run together):
 
 ```bash
 # Backend (from backend/)
@@ -52,4 +49,4 @@ export PATH="/c/Users/<you>/anaconda3:/c/Users/<you>/anaconda3/Library/bin:/c/Us
 npm run dev                                              # :5173, proxies /api -> :8000
 ```
 
-Open http://localhost:5173. Dev DB has 3 real accounts (all verified). With SMTP configured in `.env` (it is), new signups require email confirmation; wiping the SMTP_* values reverts to auto-verify. See `CLAUDE.md` for architecture and conventions.
+Open http://localhost:5173. Dev DB (`backend/wardrobe.db`) has 3 verified accounts. With SMTP configured in `.env` (it is), new signups require a real email confirmation; blank the `SMTP_*` values to revert to auto-verify for throwaway testing. Tests: `pytest -q` from `backend/` (127; conftest blanks all keys + disables the rate limiter). See `CLAUDE.md` for architecture, the quota/security patterns, and conventions.
