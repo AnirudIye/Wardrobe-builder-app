@@ -1,6 +1,6 @@
 # BetterDresser — Handoff
 
-_Last updated: 2026-07-16, end of session (motion system → email fix → security hardening → full design elevation, all merged and pushed)._
+_Last updated: 2026-07-16, second session (forgot-password flow added on top of the motion system → email fix → security hardening → design elevation work; all merged and pushed)._
 
 ## Goal
 
@@ -10,7 +10,9 @@ BetterDresser is a portfolio-grade web app for managing a digital wardrobe and g
 
 ## Current state
 
-**`main` = `a887e52`, pushed, tree clean, in sync with origin.** Backend: **127 tests pass** (`pytest -q`). Frontend `npm run build` clean. Everything below is merged:
+**`main` pushed, tree clean, in sync with origin.** Backend: **138 tests pass** (`pytest -q`). Frontend `npm run build` clean. Everything below is merged:
+
+0. **Forgot-password flow** (spec: `docs/superpowers/specs/2026-07-16-forgot-password-design.md`): login page gains "Forgot password?" → email form → generic check-your-email card; the emailed `/?reset_token=` link opens a set-a-new-password view that signs the user straight in. Token is a stateless JWT pinned to a fingerprint of the current password hash, so it is single-use with no DB migration; redeeming it also marks the email verified. `POST /auth/forgot-password` (5/hr, anti-enumeration) + `POST /auth/reset-password` (400 on any bad/dead token). Verified live end-to-end (reset, single-use rejection, dead-token UI path).
 
 1. **Landing motion system** — seamless `Marquee` (measures + duplicates, provably no seam), `useReveal` scroll reveals, `CountUp`, `HeroField` canvas particles, `SplitText` headline, cursor parallax. All reduced-motion-gated and fail-open.
 2. **Email confirmation WORKS end-to-end** (register → email → click → verified → login, verified live incl. DB flip). Transport: **Gmail SMTP app password** on the dedicated `BetterDresserConfirmation@gmail.com` account (values in git-ignored `backend/.env`). Brevo was tried and abandoned: its free tier accepts SMTP sends then rejects internally ("sender not valid"), and Gmail throttles its shared pool.

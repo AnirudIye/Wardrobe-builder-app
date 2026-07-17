@@ -57,6 +57,28 @@ def send(to: str, subject: str, html: str, text: str) -> bool:
         return False
 
 
+def send_password_reset_email(to: str, link: str) -> bool:
+    subject = "Reset your BetterDresser password"
+    text = (
+        "Someone asked to reset the password for your BetterDresser account.\n\n"
+        f"Set a new password here (the link expires in an hour):\n{link}\n\n"
+        "If this wasn't you, ignore this email and your password stays the same."
+    )
+    html = (
+        '<div style="font-family:sans-serif;line-height:1.5;color:#0B1957">'
+        "<h2>Reset your password</h2>"
+        "<p>Someone asked to reset the password for your BetterDresser account. "
+        "The link expires in an hour.</p>"
+        f'<p><a href="{link}" style="background:#0B1957;color:#fff;padding:10px 18px;'
+        'border-radius:12px;text-decoration:none">Set a new password</a></p>'
+        f'<p style="color:#666;font-size:12px">Or paste this link into your browser:<br>{link}</p>'
+        '<p style="color:#666;font-size:12px">If this wasn\'t you, ignore this email and '
+        "your password stays the same.</p>"
+        "</div>"
+    )
+    return send(to, subject, html, text)
+
+
 def send_verification_email(to: str, link: str) -> bool:
     subject = "Confirm your BetterDresser account"
     text = (

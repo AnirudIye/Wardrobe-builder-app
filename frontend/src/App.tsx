@@ -31,10 +31,16 @@ export default function App() {
   const { user, loading, verifyEmail } = useAuth();
   const [tab, setTab] = useState<Tab>("wardrobe");
   const [verifyMsg, setVerifyMsg] = useState<string | null>(null);
-  // Logged-out visitors see the marketing landing first; verify-link visitors
-  // jump straight to the auth view.
-  const [authView, setAuthView] = useState<"landing" | "login">(() =>
-    new URLSearchParams(window.location.search).has("verify_token") ? "login" : "landing"
+  // Logged-out visitors see the marketing landing first; verify-link and
+  // reset-link visitors jump straight to the auth view.
+  const [authView, setAuthView] = useState<"landing" | "login">(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.has("verify_token") || params.has("reset_token") ? "login" : "landing";
+  });
+  // Password reset landing: the reset email links to `/?reset_token=...`.
+  // Capture it once (Login renders its set-a-new-password view), then strip it.
+  const [resetToken] = useState<string | null>(() =>
+    new URLSearchParams(window.location.search).get("reset_token")
   );
   const brandRef = useRef<HTMLSpanElement>(null);
   const mainRef = useRef<HTMLElement>(null);
@@ -75,6 +81,15 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Strip the reset token from the URL once captured (it's held in state).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("reset_token")) return;
+    params.delete("reset_token");
+    const q = params.toString();
+    window.history.replaceState({}, "", window.location.pathname + (q ? `?${q}` : ""));
+  }, []);
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-navy/40">Loading…</div>;
   }
@@ -94,7 +109,7 @@ export default function App() {
         ) : (
           <div className="min-h-screen flex flex-col">
             <div className="flex-1">
-              <Login onBack={() => setAuthView("landing")} />
+              <Login onBack={() => setAuthView("landing")} resetToken={resetToken} />
             </div>
             <LegalFooter />
           </div>

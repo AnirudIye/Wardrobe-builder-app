@@ -5,16 +5,33 @@ import { api, ApiError } from "../api";
 import ErrorNote from "../components/ErrorNote";
 import { Coat, Sneaker, SunCloud, Tee } from "../components/illustrations";
 
-export default function Login({ onBack }: { onBack?: () => void }) {
+type Mode = "login" | "register" | "forgot" | "reset";
+
+export default function Login({
+  onBack,
+  resetToken,
+}: {
+  onBack?: () => void;
+  resetToken?: string | null;
+}) {
   const cardRef = useFadeRise<HTMLDivElement>();
-  const { login, register } = useAuth();
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const { login, register, resetPassword } = useAuth();
+  // Arriving via an emailed `/?reset_token=...` link opens straight on the
+  // set-a-new-password view.
+  const [mode, setMode] = useState<Mode>(resetToken ? "reset" : "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [needsConfirm, setNeedsConfirm] = useState(false);
   const [resendMsg, setResendMsg] = useState<string | null>(null);
+  const [forgotSent, setForgotSent] = useState(false);
+
+  const switchMode = (next: Mode) => {
+    setMode(next);
+    setError(null);
+    setPassword("");
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,14 +40,20 @@ export default function Login({ onBack }: { onBack?: () => void }) {
     try {
       if (mode === "login") {
         await login(email, password);
-      } else {
+      } else if (mode === "register") {
         const created = await register(email, password);
         if (!created.email_verified) {
           setNeedsConfirm(true);
         }
+      } else if (mode === "forgot") {
+        await api.forgotPassword(email);
+        setForgotSent(true);
+      } else {
+        // On success the auth context refreshes and the app renders signed in.
+        await resetPassword(resetToken ?? "", password);
       }
     } catch (err) {
-      if (err instanceof ApiError && err.status === 403) {
+      if (err instanceof ApiError && err.status === 403 && mode === "login") {
         setNeedsConfirm(true); // unverified email on login
       } else {
         setError((err as Error).message ?? "Something went wrong");
@@ -85,6 +108,37 @@ export default function Login({ onBack }: { onBack?: () => void }) {
     );
   }
 
+  if (forgotSent) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center px-4 pt-16">
+        <div className="w-full max-w-sm clay-card blob-card-b p-8 space-y-4 text-center">
+          <h1 className="font-brand text-4xl tracking-tight">Check your email</h1>
+          <p className="text-sm text-navy/60">
+            If an account exists for <span className="font-medium">{email}</span>, a password
+            reset link is on its way. The link works for one hour.
+          </p>
+          <button
+            onClick={() => {
+              setForgotSent(false);
+              switchMode("login");
+            }}
+            className="text-sm text-navy underline decoration-blush decoration-2 underline-offset-4 hover:text-blush-deep"
+          >
+            Back to sign in
+          </button>
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="block w-full text-xs text-navy/40 hover:text-navy transition-colors"
+            >
+              ← Back to home
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-16">
       <div
@@ -98,50 +152,102 @@ export default function Login({ onBack }: { onBack?: () => void }) {
               Better<span className="text-blush-deep">Dresser</span>
             </h1>
             <p className="text-sm text-navy/50 mt-1.5">
-              {mode === "login" ? "Sign in to your wardrobe" : "Create your account"}
+              {mode === "login" && "Sign in to your wardrobe"}
+              {mode === "register" && "Create your account"}
+              {mode === "forgot" && "We'll email you a reset link"}
+              {mode === "reset" && "Choose a new password"}
             </p>
           </div>
 
-          <label className="block">
-            <span className="text-xs font-medium text-navy/50">Email</span>
-            <input
-              type="email"
-              required
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full clay-input mt-1.5"
-            />
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium text-navy/50">Password</span>
-            <input
-              type="password"
-              required
-              minLength={8}
-              placeholder="Minimum 8 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full clay-input mt-1.5"
-            />
-          </label>
+          {mode !== "reset" && (
+            <label className="block">
+              <span className="text-xs font-medium text-navy/50">Email</span>
+              <input
+                type="email"
+                required
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full clay-input mt-1.5"
+              />
+            </label>
+          )}
+          {mode !== "forgot" && (
+            <label className="block">
+              <span className="text-xs font-medium text-navy/50">
+                {mode === "reset" ? "New password" : "Password"}
+              </span>
+              <input
+                type="password"
+                required
+                minLength={8}
+                placeholder="Minimum 8 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full clay-input mt-1.5"
+              />
+            </label>
+          )}
+          {mode === "login" && (
+            <p className="text-right -mt-2">
+              <button
+                type="button"
+                onClick={() => switchMode("forgot")}
+                className="text-xs text-navy/50 hover:text-navy underline decoration-blush decoration-2 underline-offset-4 transition-colors"
+              >
+                Forgot password?
+              </button>
+            </p>
+          )}
 
           <ErrorNote message={error} />
+          {mode === "reset" && error && (
+            <p className="text-center text-sm text-navy/50">
+              Reset links work once and expire after an hour.{" "}
+              <button
+                type="button"
+                onClick={() => switchMode("forgot")}
+                className="text-navy underline decoration-blush decoration-2 underline-offset-4 hover:text-blush-deep transition-colors"
+              >
+                Request a new one
+              </button>
+            </p>
+          )}
 
           <button type="submit" disabled={busy} className="w-full clay-btn py-2.5">
-            {busy ? "…" : mode === "login" ? "Sign in" : "Create account"}
+            {busy
+              ? "…"
+              : mode === "login"
+                ? "Sign in"
+                : mode === "register"
+                  ? "Create account"
+                  : mode === "forgot"
+                    ? "Email me a reset link"
+                    : "Set new password"}
           </button>
 
-          <p className="text-center text-sm text-navy/50">
-            {mode === "login" ? "No account?" : "Already have one?"}{" "}
-            <button
-              type="button"
-              onClick={() => setMode(mode === "login" ? "register" : "login")}
-              className="text-navy underline decoration-blush decoration-2 underline-offset-4 hover:text-blush-deep transition-colors"
-            >
-              {mode === "login" ? "Register" : "Sign in"}
-            </button>
-          </p>
+          {mode === "login" || mode === "register" ? (
+            <p className="text-center text-sm text-navy/50">
+              {mode === "login" ? "No account?" : "Already have one?"}{" "}
+              <button
+                type="button"
+                onClick={() => switchMode(mode === "login" ? "register" : "login")}
+                className="text-navy underline decoration-blush decoration-2 underline-offset-4 hover:text-blush-deep transition-colors"
+              >
+                {mode === "login" ? "Register" : "Sign in"}
+              </button>
+            </p>
+          ) : (
+            <p className="text-center text-sm text-navy/50">
+              <button
+                type="button"
+                onClick={() => switchMode("login")}
+                className="text-navy underline decoration-blush decoration-2 underline-offset-4 hover:text-blush-deep transition-colors"
+              >
+                Back to sign in
+              </button>
+            </p>
+          )}
 
           {onBack && (
             <button

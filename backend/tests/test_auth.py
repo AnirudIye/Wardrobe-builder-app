@@ -1,12 +1,21 @@
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from app.core.security import (
     create_access_token,
     create_email_token,
+    create_reset_token,
     decode_email_token,
+    decode_reset_token,
+    password_fingerprint,
 )
+from app.models.user import User
+
+
+def _get_user(db_session, email: str = "a@example.com") -> User:
+    return db_session.execute(select(User).where(User.email == email)).scalar_one()
 
 
 def _register(client: TestClient, email: str = "a@example.com", password: str = "supersecret1"):
@@ -146,3 +155,117 @@ def test_resend_always_returns_200(client: TestClient, monkeypatch):
     monkeypatch.setattr(email, "send_verification_email", lambda to, link: True)
     r = client.post("/auth/resend-verification", json={"email": "nobody@example.com"})
     assert r.status_code == 200
+
+
+# --- Password reset ---
+
+
+def test_reset_token_roundtrips():
+    token = create_reset_token(42, "someHash")
+    assert decode_reset_token(token) == (42, password_fingerprint("someHash"))
+
+
+def test_reset_token_rejects_other_token_kinds():
+    # Wrong purposes must never unlock a password reset...
+    assert decode_reset_token(create_access_token(subject=42)) is None
+    assert decode_reset_token(create_email_token(42)) is None
+    # ...and a reset token must never verify an email.
+    assert decode_email_token(create_reset_token(42, "h")) is None
+
+
+def test_reset_token_rejects_garbage():
+    assert decode_reset_token("not-a-token") is None
+
+
+def test_forgot_password_is_generic_and_sends_only_for_real_accounts(
+    client: TestClient, monkeypatch
+):
+    from app.services import email
+
+    sent = []
+    monkeypatch.setattr(email, "available", lambda: True)
+    monkeypatch.setattr(
+        email, "send_password_reset_email", lambda to, link: sent.append((to, link)) or True
+    )
+
+    _register(client)
+    known = client.post("/auth/forgot-password", json={"email": "a@example.com"})
+    unknown = client.post("/auth/forgot-password", json={"email": "nobody@example.com"})
+
+    # Anti-enumeration: identical response either way.
+    assert known.status_code == 200 and unknown.status_code == 200
+    assert known.json() == unknown.json()
+
+    # But only the real account got an email, with a reset link in it.
+    assert len(sent) == 1
+    to, link = sent[0]
+    assert to == "a@example.com"
+    assert "reset_token=" in link
+
+
+def test_reset_password_full_flow(client: TestClient, db_session):
+    _register(client)
+    user = _get_user(db_session)
+    token = create_reset_token(user.id, user.hashed_password)
+
+    r = client.post("/auth/reset-password", json={"token": token, "password": "brandnewpass1"})
+    assert r.status_code == 200, r.text
+    assert r.json()["access_token"]  # signed straight in
+
+    # Old password is dead, the new one works.
+    assert _login(client).status_code == 401
+    assert _login(client, password="brandnewpass1").status_code == 200
+
+
+def test_reset_token_is_single_use(client: TestClient, db_session):
+    _register(client)
+    user = _get_user(db_session)
+    token = create_reset_token(user.id, user.hashed_password)
+
+    first = client.post("/auth/reset-password", json={"token": token, "password": "brandnewpass1"})
+    assert first.status_code == 200
+    # Same token again: the fingerprint no longer matches the new hash.
+    again = client.post("/auth/reset-password", json={"token": token, "password": "anotherpass12"})
+    assert again.status_code == 400
+
+
+def test_reset_password_rejects_garbage_token(client: TestClient):
+    r = client.post("/auth/reset-password", json={"token": "junk", "password": "longenough12"})
+    assert r.status_code == 400
+
+
+def test_reset_password_rejects_wrong_purpose_token(client: TestClient, db_session):
+    _register(client)
+    user = _get_user(db_session)
+    r = client.post(
+        "/auth/reset-password",
+        json={"token": create_email_token(user.id), "password": "longenough12"},
+    )
+    assert r.status_code == 400
+
+
+def test_reset_password_rejects_short_password(client: TestClient, db_session):
+    _register(client)
+    user = _get_user(db_session)
+    token = create_reset_token(user.id, user.hashed_password)
+    r = client.post("/auth/reset-password", json={"token": token, "password": "short"})
+    assert r.status_code == 422
+
+
+def test_reset_password_verifies_unverified_user(client: TestClient, db_session, monkeypatch):
+    from app.services import email
+
+    monkeypatch.setattr(email, "available", lambda: True)
+    monkeypatch.setattr(email, "send_verification_email", lambda to, link: True)
+
+    r = _register(client, email="locked@example.com")
+    assert r.json()["email_verified"] is False
+
+    user = _get_user(db_session, email="locked@example.com")
+    token = create_reset_token(user.id, user.hashed_password)
+    reset = client.post("/auth/reset-password", json={"token": token, "password": "freshpass123"})
+    assert reset.status_code == 200
+
+    # Redeeming a link mailed to the address proves inbox ownership, so the
+    # account is now verified and login works.
+    assert _login(client, email="locked@example.com", password="freshpass123").status_code == 200
