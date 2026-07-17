@@ -26,6 +26,7 @@ export default function Login({
   const [needsConfirm, setNeedsConfirm] = useState(false);
   const [resendMsg, setResendMsg] = useState<string | null>(null);
   const [forgotSent, setForgotSent] = useState(false);
+  const [agreedTos, setAgreedTos] = useState(false);
 
   const switchMode = (next: Mode) => {
     setMode(next);
@@ -200,6 +201,21 @@ export default function Login({
             </p>
           )}
 
+          {mode === "register" && (
+            <label className="flex items-start gap-2.5 text-xs text-navy/60 cursor-pointer">
+              <input
+                type="checkbox"
+                required
+                checked={agreedTos}
+                onChange={(e) => setAgreedTos(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-blush-deep shrink-0"
+              />
+              <span>
+                I have read and agree to the terms of service and privacy policy.
+              </span>
+            </label>
+          )}
+
           <ErrorNote message={error} />
           {mode === "reset" && error && (
             <p className="text-center text-sm text-navy/50">
@@ -214,7 +230,11 @@ export default function Login({
             </p>
           )}
 
-          <button type="submit" disabled={busy} className="w-full clay-btn py-2.5">
+          <button
+            type="submit"
+            disabled={busy || (mode === "register" && !agreedTos)}
+            className="w-full clay-btn py-2.5"
+          >
             {busy
               ? "…"
               : mode === "login"
