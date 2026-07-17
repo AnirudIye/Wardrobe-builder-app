@@ -4,10 +4,23 @@ import { useFadeRise, useStaggerReveal } from "../animations";
 import { ListSkeleton } from "../components/Skeleton";
 import ConfirmDialog from "../components/ConfirmDialog";
 import ErrorNote from "../components/ErrorNote";
+import PageHeader from "../components/PageHeader";
+import EmptyState from "../components/EmptyState";
+import { Calendar as CalendarIll } from "../components/illustrations";
 import { localISODate } from "../date";
 import { eventsCache } from "../store";
 
 const EVENT_TYPES = ["athletic", "casual", "smart-casual", "business", "formal"];
+
+// Meaningful color coding: the tint follows the formality scale the
+// recommendation engine itself uses (light and playful -> dark and formal).
+const TYPE_TINT: Record<string, string> = {
+  athletic: "bg-cream-deep text-navy/70",
+  casual: "bg-blush-soft/70 text-navy/80",
+  "smart-casual": "bg-blush/60 text-navy",
+  business: "bg-navy/10 text-navy",
+  formal: "bg-navy text-cream",
+};
 
 export default function Calendar() {
   const pageRef = useFadeRise<HTMLDivElement>();
@@ -82,82 +95,120 @@ export default function Calendar() {
 
   return (
     <div ref={pageRef}>
-      <h2 className="text-xl font-semibold mb-4">Your calendar</h2>
-      <p className="text-sm text-navy/50 mb-4">
-        Add the events you're attending, and outfit suggestions for that day will match the dress code.
-      </p>
+      <PageHeader
+        title="Your Calendar"
+        context="Outfit recommendations match the dress code of whatever the day holds."
+      />
 
-      <form onSubmit={submit} className="clay-card p-6 mb-6 grid gap-4 sm:grid-cols-2">
-        <input
-          required
-          placeholder="Event title (e.g. Job interview)"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="clay-input sm:col-span-2"
-        />
-        <input
-          type="date"
-          required
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="clay-input"
-        />
-        <select
-          value={eventType}
-          onChange={(e) => setEventType(e.target.value)}
-          className="clay-input"
-        >
-          {EVENT_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-        <input
-          placeholder="Notes (optional)"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="clay-input sm:col-span-2"
-        />
-        <ErrorNote message={error} className="sm:col-span-2" />
-        <button type="submit" className="clay-btn py-2.5 sm:col-span-2">
-          Add event
-        </button>
-      </form>
-
-      {loading ? (
-        <ListSkeleton count={3} />
-      ) : events.length === 0 ? (
-        <p className="text-navy/50">No events yet.</p>
-      ) : (
-        <ul ref={listRef} className="space-y-3">
-          {events.map((ev) => (
-            <li
-              key={ev.id}
-              className={`clay-card clay-card-hover px-5 py-4 flex items-center justify-between ${
-                ev.date === today ? "ring-4 ring-blush/60" : ""
-              } ${ev.id < 0 ? "opacity-70" : ""}`}
-            >
-              <div>
-                <p className="font-medium">
-                  {ev.title}
-                  {ev.date === today && <span className="clay-chip ml-2">today</span>}
-                </p>
-                <p className="text-sm text-navy/50">
-                  {ev.date} · {ev.event_type}
-                  {ev.notes ? ` · ${ev.notes}` : ""}
-                </p>
-              </div>
-              <button
-                onClick={() => setConfirmId(ev.id)}
-                className="text-blush-deep text-xs font-medium hover:underline"
+      <div className="grid lg:grid-cols-3 gap-6 items-start">
+        {/* Rail: add-event form with labelled fields */}
+        <form onSubmit={submit} className="clay-card blob-card-a p-6 space-y-4 lg:order-2">
+          <h3 className="font-semibold">Add an event</h3>
+          <label className="block">
+            <span className="text-xs font-medium text-navy/50">Title</span>
+            <input
+              required
+              placeholder="Job interview"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="clay-input w-full mt-1.5"
+            />
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className="text-xs font-medium text-navy/50">Date</span>
+              <input
+                type="date"
+                required
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="clay-input w-full mt-1.5"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-navy/50">Dress code</span>
+              <select
+                value={eventType}
+                onChange={(e) => setEventType(e.target.value)}
+                className="clay-input w-full mt-1.5"
               >
-                Delete
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+                {EVENT_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <label className="block">
+            <span className="text-xs font-medium text-navy/50">Notes (optional)</span>
+            <input
+              placeholder="Rooftop venue, might be windy"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="clay-input w-full mt-1.5"
+            />
+          </label>
+          <ErrorNote message={error} />
+          <button type="submit" className="clay-btn py-2.5 w-full">
+            Add event
+          </button>
+        </form>
+
+        {/* Main: the schedule */}
+        <div className="lg:col-span-2 lg:order-1">
+          {loading ? (
+            <ListSkeleton count={3} />
+          ) : events.length === 0 ? (
+            <EmptyState
+              Ill={CalendarIll}
+              title="Nothing on the calendar"
+              body="Add interviews, weddings or gym days and every outfit recommendation dresses you for the occasion."
+            />
+          ) : (
+            <ul ref={listRef} className="space-y-3">
+              {events.map((ev) => {
+                const d = new Date(`${ev.date}T00:00:00`);
+                return (
+                  <li
+                    key={ev.id}
+                    className={`clay-card clay-card-hover px-5 py-4 flex items-center gap-4 ${
+                      ev.date === today ? "ring-4 ring-blush/60" : ""
+                    } ${ev.id < 0 ? "opacity-70" : ""}`}
+                  >
+                    {/* Date block */}
+                    <div className="w-14 shrink-0 text-center">
+                      <p className="font-brand text-2xl leading-none">{d.getDate()}</p>
+                      <p className="text-[11px] uppercase tracking-wide text-navy/40 mt-0.5">
+                        {d.toLocaleDateString(undefined, { month: "short" })}
+                      </p>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium leading-snug">
+                        {ev.title}
+                        {ev.date === today && <span className="clay-chip ml-2">today</span>}
+                      </p>
+                      <p className="text-sm text-navy/50 mt-0.5 truncate">
+                        {d.toLocaleDateString(undefined, { weekday: "long" })}
+                        {ev.notes ? ` · ${ev.notes}` : ""}
+                      </p>
+                    </div>
+                    <span className={`shrink-0 text-xs font-medium px-3 py-1 rounded-full ${TYPE_TINT[ev.event_type] ?? "bg-cream-deep"}`}>
+                      {ev.event_type}
+                    </span>
+                    <button
+                      onClick={() => setConfirmId(ev.id)}
+                      className="shrink-0 text-blush-deep text-xs font-medium hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </div>
 
       <ConfirmDialog
         open={confirmId !== null}
