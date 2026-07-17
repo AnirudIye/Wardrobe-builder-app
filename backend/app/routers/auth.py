@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
+from app.core import lockout
 from app.core.deps import get_current_user
 from app.core.ratelimit import rate_limit
 from app.core.security import (
@@ -88,21 +89,25 @@ def login(
 ) -> Token:
     # OAuth2 spec uses `username`; we treat it as the email.
     user = _get_user_by_email(db, form_data.username)
-    if user is None:
-        # Product decision: name the failure instead of a generic message.
-        # Register's 409 already reveals account existence, so this leaks
-        # nothing new; the per-IP rate limit caps bulk probing.
+    if user is not None:
+        retry = lockout.retry_after(user.id)
+        if retry:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Too many failed attempts. Please try again shortly.",
+                headers={"Retry-After": str(retry)},
+            )
+    if user is None or not verify_password(form_data.password, user.hashed_password):
+        if user is not None:
+            lockout.record_failure(user.id)
+        # One generic message for both halves — login never reveals whether
+        # an account exists (anti-enumeration).
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Couldn't find an account with that email",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    if not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    lockout.clear(user.id)
     if not user.email_verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -178,9 +183,11 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
         )
     user.hashed_password = hash_password(payload.password)
     # Redeeming a link mailed to the address proves inbox ownership — the same
-    # property email verification certifies.
+    # property email verification certifies. It is also the recovery path out
+    # of a login lockout.
     user.email_verified = True
     db.commit()
+    lockout.clear(user.id)
     return Token(access_token=create_access_token(subject=user.id))
 
 

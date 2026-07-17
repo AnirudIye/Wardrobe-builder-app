@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     # fields from env vars, which is a footgun for simple comma values.
     cors_origins: str = ""
     rate_limit_enabled: bool = True
+    # Per-account login lockout (core/lockout.py); shares the switch above.
+    login_lockout_attempts: int = 8
+    login_lockout_minutes: int = 15
 
     # AI (Anthropic Claude)
     anthropic_api_key: str = ""
