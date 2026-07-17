@@ -35,8 +35,9 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("wardrobe");
   const [verifyMsg, setVerifyMsg] = useState<string | null>(null);
   // Logged-out visitors see the marketing landing first; verify-link and
-  // reset-link visitors jump straight to the auth view.
-  const [authView, setAuthView] = useState<"landing" | "login">(() => {
+  // reset-link visitors jump straight to the auth view. "register" opens the
+  // same auth screen on the sign-up form (landing CTAs lead there).
+  const [authView, setAuthView] = useState<"landing" | "login" | "register">(() => {
     const params = new URLSearchParams(window.location.search);
     return params.has("verify_token") || params.has("reset_token") ? "login" : "landing";
   });
@@ -148,11 +149,18 @@ export default function App() {
       )}
       {!user ? (
         authView === "landing" ? (
-          <Landing onGetStarted={() => setAuthView("login")} />
+          <Landing
+            onGetStarted={() => setAuthView("register")}
+            onSignIn={() => setAuthView("login")}
+          />
         ) : (
           <div className="min-h-screen flex flex-col">
             <div className="flex-1">
-              <Login onBack={() => setAuthView("landing")} resetToken={resetToken} />
+              <Login
+                onBack={() => setAuthView("landing")}
+                resetToken={resetToken}
+                initialMode={authView === "register" ? "register" : "login"}
+              />
             </div>
             <LegalFooter />
           </div>

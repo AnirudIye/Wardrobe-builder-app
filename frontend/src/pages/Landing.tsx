@@ -108,7 +108,13 @@ function Thumb({ Ill, label, blob = "blob-b" }: { Ill: Ill; label: string; blob?
 }
 
 /* ---------------------------------------------------------------- LANDING */
-export default function Landing({ onGetStarted }: { onGetStarted: () => void }) {
+export default function Landing({
+  onGetStarted,
+  onSignIn,
+}: {
+  onGetStarted: () => void; // opens the auth screen on the register form
+  onSignIn: () => void; // opens it on the sign-in form
+}) {
   const heroText = useFadeRise<HTMLDivElement>();
   const heroArt = useFadeRise<HTMLDivElement>(150);
   const featuresHead = useReveal<HTMLDivElement>();
@@ -161,7 +167,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
             <a href="#pricing" className="hover:text-navy transition-colors">Pricing</a>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={onGetStarted} className="hidden sm:inline text-sm px-4 py-2 text-navy/70 hover:text-navy transition-colors">
+            <button onClick={onSignIn} className="hidden sm:inline text-sm px-4 py-2 text-navy/70 hover:text-navy transition-colors">
               Sign in
             </button>
             <button onClick={onGetStarted} className="clay-btn blob-pill text-sm px-5 py-2">Get started</button>
@@ -553,7 +559,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
             <p className="text-xs uppercase tracking-wide text-navy/40 mb-3">Get started</p>
             <ul className="space-y-2 text-sm text-navy/60">
               <li><button onClick={onGetStarted} className="hover:text-navy">Create an account</button></li>
-              <li><button onClick={onGetStarted} className="hover:text-navy">Sign in</button></li>
+              <li><button onClick={onSignIn} className="hover:text-navy">Sign in</button></li>
             </ul>
           </div>
           <div>
