@@ -10,7 +10,9 @@ BetterDresser is a portfolio-grade web app for managing a digital wardrobe and g
 
 ## Current state
 
-**`main` pushed, tree clean, in sync with origin.** Backend: **138 tests pass** (`pytest -q`). Frontend `npm run build` clean. Everything below is merged:
+**`main` pushed, tree clean, in sync with origin.** Backend: **139 tests pass** (`pytest -q`). Frontend `npm run build` clean. Everything below is merged:
+
+**2026-07-17 session:** login errors are now distinct (unknown email: "Couldn't find an account with that email"; wrong password: "Incorrect password" — deliberate product call, register's 409 already revealed existence); skeleton loaders added for the app boot shell, the TryOn render wait, and the DresserAI thinking bubble. **An NVIDIA API key was investigated for TryOn and stored in `backend/.env` (`NVIDIA_API_KEY`, git-ignored): it cannot power TryOn** — the hosted FLUX Kontext NIM is preview-locked to 3 example images (`Expected: example_id` on any real image; Kontext pro/max 404), and text-to-image models can't preserve the user's face. Google billing (item 4 below) remains the real unblock; the NVIDIA key does offer free hosted text LLMs if a third text provider is ever wanted.
 
 0. **Forgot-password flow** (spec: `docs/superpowers/specs/2026-07-16-forgot-password-design.md`): login page gains "Forgot password?" → email form → generic check-your-email card; the emailed `/?reset_token=` link opens a set-a-new-password view that signs the user straight in. Token is a stateless JWT pinned to a fingerprint of the current password hash, so it is single-use with no DB migration; redeeming it also marks the email verified. `POST /auth/forgot-password` (5/hr, anti-enumeration) + `POST /auth/reset-password` (400 on any bad/dead token). Verified live end-to-end (reset, single-use rejection, dead-token UI path).
 

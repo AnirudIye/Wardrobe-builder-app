@@ -5,6 +5,7 @@ import { garmentsCache } from "../store";
 import { fetchBuyNext, getCachedBuyNext } from "./BuyNext";
 import ErrorNote from "../components/ErrorNote";
 import PageHeader from "../components/PageHeader";
+import { Skeleton } from "../components/Skeleton";
 import { Mirror } from "../components/illustrations";
 
 type Target =
@@ -308,6 +309,16 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
 
       <ErrorNote message={error} className="mt-4" />
 
+      {busy && !resultUrl && (
+        <div className="clay-card blob-card-b p-6 mt-8 max-w-md">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="w-10 h-10 shrink-0"><Mirror className="w-full h-full" /></span>
+            <h3 className="font-brand text-2xl tracking-tight">Your try-on</h3>
+          </div>
+          <Skeleton className="w-full aspect-[3/4] rounded-2xl" />
+          <p className="text-xs text-navy/40 mt-3">This usually takes under a minute.</p>
+        </div>
+      )}
       {resultUrl && (
         <div className="clay-card blob-card-b p-6 mt-8 max-w-md">
           <div className="flex items-center gap-3 mb-4">

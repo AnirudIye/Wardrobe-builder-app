@@ -88,10 +88,19 @@ def login(
 ) -> Token:
     # OAuth2 spec uses `username`; we treat it as the email.
     user = _get_user_by_email(db, form_data.username)
-    if user is None or not verify_password(form_data.password, user.hashed_password):
+    if user is None:
+        # Product decision: name the failure instead of a generic message.
+        # Register's 409 already reveals account existence, so this leaks
+        # nothing new; the per-IP rate limit caps bulk probing.
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="Couldn't find an account with that email",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     if not user.email_verified:
