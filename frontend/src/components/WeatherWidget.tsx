@@ -93,25 +93,26 @@ export default function WeatherWidget() {
 
   if (loading) {
     return (
-      <div ref={cardRef} className="clay-card p-5 mb-6 flex flex-col sm:flex-row gap-5">
-        <div className="flex-1 space-y-3">
-          <Skeleton className="h-5 w-28" />
-          <Skeleton className="h-8 w-48" />
-          <div className="flex gap-2">
-            <Skeleton className="h-6 w-14" />
-            <Skeleton className="h-6 w-24" />
-            <Skeleton className="h-6 w-20" />
-          </div>
+      <div ref={cardRef} className="clay-card p-5 mb-6 space-y-4">
+        <Skeleton className="h-5 w-28" />
+        <Skeleton className="h-8 w-48" />
+        <div className="flex gap-2">
+          <Skeleton className="h-6 w-14" />
+          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-6 w-20" />
         </div>
-        <Skeleton className="sm:w-64 h-36 shrink-0" />
+        <Skeleton className="w-full h-36" />
       </div>
     );
   }
 
   return (
     <div ref={cardRef} className="clay-card p-5 mb-6">
-      <div className="flex flex-col sm:flex-row gap-5">
-        <div className="flex-1 min-w-0">
+      {/* Always stacked: this widget lives in the ~300px wardrobe rail, where
+          a viewport-keyed sm:flex-row squeezed the text to nothing beside a
+          fixed-width map. The map sits full-width below the text instead. */}
+      <div className="flex flex-col gap-4">
+        <div className="min-w-0">
           <div className="flex items-center justify-between gap-2">
             <h3 className="font-semibold">Your weather</h3>
             <button
@@ -193,7 +194,7 @@ export default function WeatherWidget() {
         </div>
 
         {hasLocation && (
-          <div className="sm:w-64 h-36 rounded-2xl overflow-hidden shadow-clay-sm shrink-0">
+          <div className="w-full h-36 rounded-2xl overflow-hidden shadow-clay-sm">
             <iframe
               title="Location map"
               className="w-full h-full border-0"
