@@ -11,6 +11,7 @@ import DresserAI from "./pages/DresserAI";
 import TryOn from "./pages/TryOn";
 import Upgrade from "./pages/Upgrade";
 import ClickSpark from "./components/ClickSpark";
+import { CardGridSkeleton, Skeleton } from "./components/Skeleton";
 import BlobCursor from "./components/BlobCursor";
 import LegalFooter from "./components/LegalFooter";
 import AccountMenu from "./components/AccountMenu";
@@ -91,7 +92,27 @@ export default function App() {
   }, []);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-navy/40">Loading…</div>;
+    // Session check in flight: sketch the app shell with skeletons. Tokenless
+    // visitors resolve instantly, so only signed-in users ever see this.
+    return (
+      <div className="min-h-screen max-w-5xl mx-auto px-4 pt-4">
+        <div className="clay-card px-5 sm:px-6 py-3.5">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-8 w-44" />
+            <Skeleton className="h-9 w-9 rounded-full" />
+          </div>
+          <div className="flex gap-1.5 mt-3">
+            {["w-24", "w-40", "w-32", "w-20", "w-24"].map((w, i) => (
+              <Skeleton key={i} className={`h-8 ${w} rounded-full`} />
+            ))}
+          </div>
+        </div>
+        <div className="mt-10 space-y-5">
+          <Skeleton className="h-9 w-56" />
+          <CardGridSkeleton count={6} cols="grid-cols-2 sm:grid-cols-3" />
+        </div>
+      </div>
+    );
   }
 
   return (

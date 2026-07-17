@@ -3,6 +3,7 @@ import { api, ApiError, ChatMessage } from "../api";
 import { useFadeRise, useStaggerReveal } from "../animations";
 import ErrorNote from "../components/ErrorNote";
 import PageHeader from "../components/PageHeader";
+import { Skeleton } from "../components/Skeleton";
 import { Chat as ChatIll } from "../components/illustrations";
 
 // Session-only chat: kept in memory so it survives tab switches, but is never
@@ -109,7 +110,13 @@ export default function DresserAI({ onQuotaBlocked }: { onQuotaBlocked: () => vo
             </div>
           )}
           {busy && (
-            <p className="self-start text-xs text-navy/40 italic animate-pulse">DresserAI is thinking…</p>
+            <div
+              className="self-start w-56 max-w-[85%] px-4 py-3 rounded-2xl rounded-bl-md bg-cream-deep/60 shadow-clay-sm space-y-2"
+              aria-label="DresserAI is thinking"
+            >
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-2/3" />
+            </div>
           )}
           <div ref={bottomRef} />
         </div>
