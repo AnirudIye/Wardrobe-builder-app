@@ -4,6 +4,41 @@
 
 body {
   @apply bg-cream text-navy antialiased;
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+/* --- Detail layer: the small things that read as intentional ------------ */
+
+/* Brand text selection. */
+::selection {
+  background: #fdc9da; /* blush-soft */
+  color: #0b1957;
+}
+
+/* Visible, on-brand keyboard focus (only for keyboard navigation). */
+:focus-visible {
+  outline: 2px solid #f2769f; /* blush-deep */
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Slim branded scrollbar (WebKit + Firefox). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1b2c77 #f7e9d4;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #f7e9d4; /* cream-deep */
+}
+::-webkit-scrollbar-thumb {
+  background: #1b2c77; /* navy-soft */
+  border-radius: 8px;
+  border: 2px solid #f7e9d4;
 }
 
 @layer components {

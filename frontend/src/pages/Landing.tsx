@@ -10,8 +10,8 @@ import HeroField from "../components/HeroField";
 import SplitText from "../components/SplitText";
 import {
   Tee, Coat, Jeans, Sneaker, Derby, SunCloud,
-  Wardrobe, Bag, Chat, Mirror, Calendar,
-  Camera, Pin, Sparkles, Bags, Avatar,
+  Wardrobe, Chat, Mirror, Calendar,
+  Camera, Pin, Sparkles, Bags,
 } from "../components/illustrations";
 
 type Ill = (props: { className?: string }) => React.ReactElement;
@@ -19,30 +19,59 @@ const BLOBS = ["blob-a", "blob-b", "blob-c", "blob-d"];
 const CARD_BLOBS = ["blob-card-a", "blob-card-b", "blob-card-c", "blob-card-d"];
 
 /* --------------------------------------------------------------- content */
-const FEATURES: { Ill: Ill; title: string; body: string }[] = [
-  { Ill: Wardrobe, title: "Smart Wardrobe", body: "Snap a photo and AI tags category, colour, warmth, formality and season, automatically." },
-  { Ill: SunCloud, title: "Today's Outfit", body: "A full look assembled from what you already own, matched to the forecast and your calendar." },
-  { Ill: Bag, title: "Buy Next", body: "Gap analysis with real, shoppable links, so you only buy what your closet is actually missing." },
-  { Ill: Chat, title: "DresserAI", body: "Chat with a stylist that genuinely knows your closet, the weather and your week ahead." },
-  { Ill: Mirror, title: "Virtual TryOn", body: "See a garment rendered onto your own photo before you commit to buying it." },
-  { Ill: Calendar, title: "Occasion-Aware", body: "Add interviews, weddings or gym days and every outfit matches the dress code for you." },
+// The three core capabilities get editorial rows; the rest a varied trio.
+const CORE_FEATURES: {
+  kicker: string;
+  title: string;
+  body: string;
+  points: string[];
+}[] = [
+  {
+    kicker: "Today's Recommendations",
+    title: "Open the app already dressed for the day",
+    body: "Each morning BetterDresser reads the forecast for your city and the events on your calendar, then assembles a full outfit from your own wardrobe: outerwear to shoes, casual Friday to interview.",
+    points: [
+      "Weather-aware picks for your exact city",
+      "Dress codes matched to calendar events",
+      "Free and unlimited, on every plan",
+    ],
+  },
+  {
+    kicker: "Smart Wardrobe",
+    title: "Photograph it once. It's catalogued forever.",
+    body: "Upload a photo and the AI fills in category, colour, warmth, formality and season on its own. Add real products from web search and they file themselves alongside your closet.",
+    points: [
+      "Automatic tagging, no forms to fill",
+      "Warmth estimated for real winters",
+      "Add pieces straight from web search",
+    ],
+  },
+  {
+    kicker: "What To Buy Next",
+    title: "Buy the piece your closet is actually missing",
+    body: "Gap analysis looks at what you own and how it combines, then suggests specific pieces with real, shoppable links. Five runs a day on the free plan.",
+    points: [
+      "Real products with live links",
+      "A written reason for every suggestion",
+      "Five runs a day, free",
+    ],
+  },
 ];
 
-const STEPS: { n: string; Ill: Ill; title: string; body: string }[] = [
-  { n: "01", Ill: Camera, title: "Build your closet", body: "Upload photos or add real products from the web. AI tags each piece as it lands." },
-  { n: "02", Ill: Pin, title: "Tell us your day", body: "Set your city for weather and add the events on your calendar." },
-  { n: "03", Ill: Sparkles, title: "Get dressed", body: "Open Today for a weather- and occasion-ready outfit, head to toe." },
-  { n: "04", Ill: Bags, title: "Shop the gaps", body: "Buy Next shows exactly what's missing, with links to buy it." },
+const MORE_FEATURES: { Ill: Ill; title: string; body: string; wide?: boolean }[] = [
+  { Ill: Chat, title: "DresserAI", body: "A stylist chat that genuinely knows your closet, the weather and your week ahead. Ask for packing lists, date-night looks, or what goes with the green coat.", wide: true },
+  { Ill: Mirror, title: "Virtual TryOn", body: "See a garment rendered onto your own photo before you buy it." },
+  { Ill: Calendar, title: "Occasion-aware", body: "Interviews, weddings and gym days each get the right dress code." },
 ];
 
-const STATS = [
-  { v: "1 tap", l: "to add a garment" },
-  { v: "7-day", l: "outfit planning" },
-  { v: "$5/mo", l: "for unlimited" },
-  { v: "$0", l: "card to start" },
+const STEPS: { Ill: Ill; title: string; body: string }[] = [
+  { Ill: Camera, title: "Build your closet", body: "Upload photos or add real products from the web. AI tags each piece as it lands." },
+  { Ill: Pin, title: "Tell us your day", body: "Set your city for weather and add the events on your calendar." },
+  { Ill: Sparkles, title: "Get dressed", body: "Open Today's Recommendations for a weather-ready outfit, head to toe." },
+  { Ill: Bags, title: "Shop the gaps", body: "What To Buy Next shows exactly what's missing, with links to buy it." },
 ];
 
-const MARQUEE = ["MINIMAL", "STREETWEAR", "SMART CASUAL", "WEATHER-AWARE", "CALENDAR-SYNCED", "AI TRY-ON", "SHOP THE GAPS", "OWN YOUR STYLE"];
+const MARQUEE = ["DRESSED FOR THE FORECAST", "KNOWS YOUR CALENDAR", "AI AUTO-TAGGING", "VIRTUAL TRY-ON", "SHOP ONLY THE GAPS", "YOUR CLOSET, DIGITISED"];
 
 /* ----------------------------------------------------------- decorations */
 function Glow({ className, style }: { className?: string; style?: React.CSSProperties }) {
@@ -82,9 +111,11 @@ function Thumb({ Ill, label, blob = "blob-b" }: { Ill: Ill; label: string; blob?
 export default function Landing({ onGetStarted }: { onGetStarted: () => void }) {
   const heroText = useFadeRise<HTMLDivElement>();
   const heroArt = useFadeRise<HTMLDivElement>(150);
-  const statsGrid = useReveal<HTMLDivElement>({ stagger: true });
   const featuresHead = useReveal<HTMLDivElement>();
-  const featureGrid = useReveal<HTMLDivElement>({ stagger: true });
+  const coreRowA = useReveal<HTMLDivElement>();
+  const coreRowB = useReveal<HTMLDivElement>();
+  const coreRowC = useReveal<HTMLDivElement>();
+  const trioGrid = useReveal<HTMLDivElement>({ stagger: true });
   const howHead = useReveal<HTMLDivElement>();
   const stepGrid = useReveal<HTMLDivElement>({ stagger: true });
   const showcase = useReveal<HTMLDivElement>();
@@ -147,28 +178,21 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
 
         <div className="relative max-w-6xl mx-auto px-4 pt-16 pb-20 md:pt-24 md:pb-28 grid md:grid-cols-2 gap-12 items-center">
           <div ref={heroText}>
-            <span className="clay-chip blob-pill inline-flex items-center gap-1.5"><Sparkles className="w-4 h-4" /> Your AI-powered personal stylist</span>
-            <h1 className="font-brand text-5xl sm:text-6xl lg:text-7xl leading-[1.05] mt-5">
+            <h1 className="font-brand text-5xl sm:text-6xl lg:text-7xl leading-[1.05] tracking-tight">
               <SplitText text={"Your wardrobe,\nstyled by AI."} accentFrom={2} accentClass="text-gradient-pan" />
             </h1>
-            <p className="text-lg text-navy/60 mt-5 max-w-md">
-              BetterDresser catalogues every piece you own, then dresses you for the weather, your
-              calendar and your taste, and tells you exactly what's worth buying next.
+            <p className="text-lg text-navy/60 mt-6 max-w-md">
+              Photograph your clothes once. BetterDresser tags every piece, checks the forecast
+              and your calendar each morning, and hands you a full outfit from what you already own.
             </p>
             <div className="flex flex-wrap items-center gap-3 mt-8">
               <button onClick={onGetStarted} className="clay-btn blob-pill px-7 py-3 text-base">Get started free</button>
               <a href="#how" className="clay-btn-blush blob-pill px-7 py-3 text-base">See how it works</a>
             </div>
-            <div className="flex items-center gap-4 mt-6 text-sm text-navy/50">
-              <div className="flex -space-x-2">
-                {[0, 1, 2, 3].map((n) => (
-                  <span key={n} className="w-8 h-8 rounded-full overflow-hidden shadow-clay-sm ring-2 ring-cream-soft">
-                    <Avatar i={n} />
-                  </span>
-                ))}
-              </div>
-              <span>Free outfits forever, no card required</span>
-            </div>
+            <p className="flex items-center gap-2 mt-6 text-sm text-navy/50">
+              <span className="text-blush-deep"><Check /></span>
+              Outfit recommendations are free and unlimited. No card required.
+            </p>
           </div>
 
           {/* Hero art: a floating "Today" card + satellites */}
@@ -222,34 +246,120 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
         </div>
       </section>
 
-      {/* ========================================================== STATS */}
-      <section className="max-w-6xl mx-auto px-4 -mt-8 relative z-10">
-        <div ref={statsGrid} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {STATS.map((s, i) => (
-            <div key={s.l} className={`clay-card ${BLOBS[i % 4]} px-5 py-6 text-center`}>
-              <p className="font-brand text-3xl text-navy"><CountUp value={s.v} /></p>
-              <p className="text-xs text-navy/50 mt-1">{s.l}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* ======================================================= FEATURES */}
-      <section id="features" className="max-w-6xl mx-auto px-4 pt-24 pb-8">
-        <div ref={featuresHead} className="text-center max-w-2xl mx-auto">
-          <span className="clay-chip blob-pill">Everything, in one closet</span>
-          <h2 className="font-brand text-4xl sm:text-5xl mt-4">Six ways to dress smarter</h2>
-          <p className="text-navy/60 mt-3">From the moment a garment enters your wardrobe to the day you wear it, and the next thing you buy.</p>
+      {/* Three core capabilities as editorial rows (alternating direction,
+          each with its own visual composition), then a varied-scale trio.
+          Deliberately NOT a grid of identical icon cards. */}
+      <section id="features" className="max-w-6xl mx-auto px-4 pt-28 pb-8">
+        <div ref={featuresHead} className="max-w-2xl">
+          <h2 className="font-brand text-4xl sm:text-5xl tracking-tight">Everything your closet knows, working for you</h2>
+          <p className="text-navy/60 mt-4 text-lg">From the moment a garment is photographed to the day you wear it, and the next piece worth buying.</p>
         </div>
 
-        <div ref={featureGrid} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-          {FEATURES.map((f, i) => (
-            <div key={f.title} className={`group clay-card clay-card-hover ${CARD_BLOBS[i % 4]} p-7`}>
-              <div className={`w-16 h-16 ${BLOBS[(i + 1) % 4]} bg-cream grid place-items-center p-3 shadow-clay-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}>
+        {/* Row A: Today's Recommendations, visual = mini outfit strip */}
+        <div ref={coreRowA} className="grid md:grid-cols-2 gap-10 md:gap-16 items-center mt-20">
+          <div>
+            <p className="text-blush-deep font-semibold text-sm">{CORE_FEATURES[0].kicker}</p>
+            <h3 className="font-brand text-3xl sm:text-4xl mt-2 tracking-tight">{CORE_FEATURES[0].title}</h3>
+            <p className="text-navy/60 mt-4">{CORE_FEATURES[0].body}</p>
+            <ul className="mt-5 space-y-2.5 text-sm">
+              {CORE_FEATURES[0].points.map((p) => (
+                <li key={p} className="flex items-start gap-2.5">
+                  <span className="text-blush-deep mt-0.5"><Check /></span>
+                  <span className="text-navy/70">{p}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="relative">
+            <div className="clay-card blob-card-b p-6">
+              <div className="flex items-center justify-between">
+                <p className="font-brand text-xl">Tuesday's look</p>
+                <span className="clay-chip blob-pill inline-flex items-center gap-1.5"><SunCloud className="w-4 h-4" /> 11° · light rain</span>
+              </div>
+              <div className="flex justify-between mt-5">
+                <Thumb Ill={Coat} label="outer" blob="blob-a" />
+                <Thumb Ill={Tee} label="top" blob="blob-d" />
+                <Thumb Ill={Jeans} label="bottom" blob="blob-b" />
+                <Thumb Ill={Derby} label="shoes" blob="blob-c" />
+              </div>
+              <p className="mt-5 text-sm text-navy/60">Rain first thing, then your 3pm review. The trench earns its keep today.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Row B: Smart Wardrobe, reversed, visual = large tile + floating tags */}
+        <div ref={coreRowB} className="grid md:grid-cols-2 gap-10 md:gap-16 items-center mt-24">
+          <div className="relative md:order-1 order-2">
+            <div className="clay-card blob-card-c p-10 grid place-items-center">
+              <Wardrobe className="w-48 h-48" />
+            </div>
+            <div className="absolute -right-2 top-6 clay-card blob-card-d px-4 py-2.5 animate-floaty">
+              <p className="text-xs text-navy/50">auto-tagged</p>
+              <p className="text-sm font-medium">wool coat · warm · formal</p>
+            </div>
+            <div className="absolute -left-2 bottom-6 clay-card blob-card-a px-4 py-2.5 animate-floaty-slow">
+              <p className="text-xs text-navy/50">auto-tagged</p>
+              <p className="text-sm font-medium">white tee · light · casual</p>
+            </div>
+          </div>
+          <div className="md:order-2 order-1">
+            <p className="text-blush-deep font-semibold text-sm">{CORE_FEATURES[1].kicker}</p>
+            <h3 className="font-brand text-3xl sm:text-4xl mt-2 tracking-tight">{CORE_FEATURES[1].title}</h3>
+            <p className="text-navy/60 mt-4">{CORE_FEATURES[1].body}</p>
+            <ul className="mt-5 space-y-2.5 text-sm">
+              {CORE_FEATURES[1].points.map((p) => (
+                <li key={p} className="flex items-start gap-2.5">
+                  <span className="text-blush-deep mt-0.5"><Check /></span>
+                  <span className="text-navy/70">{p}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Row C: What To Buy Next, visual = suggestion + price satellite */}
+        <div ref={coreRowC} className="grid md:grid-cols-2 gap-10 md:gap-16 items-center mt-24">
+          <div>
+            <p className="text-blush-deep font-semibold text-sm">{CORE_FEATURES[2].kicker}</p>
+            <h3 className="font-brand text-3xl sm:text-4xl mt-2 tracking-tight">{CORE_FEATURES[2].title}</h3>
+            <p className="text-navy/60 mt-4">{CORE_FEATURES[2].body}</p>
+            <ul className="mt-5 space-y-2.5 text-sm">
+              {CORE_FEATURES[2].points.map((p) => (
+                <li key={p} className="flex items-start gap-2.5">
+                  <span className="text-blush-deep mt-0.5"><Check /></span>
+                  <span className="text-navy/70">{p}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="relative">
+            <div className="clay-card blob-card-a p-6">
+              <p className="text-xs text-navy/50">the gap in your closet</p>
+              <p className="font-medium mt-1">Brown leather derbies</p>
+              <p className="text-sm text-navy/60 mt-2">Your smart-casual outfits keep landing on the same white sneakers. One dressier shoe unlocks four coats you already own.</p>
+              <div className="flex items-center gap-3 mt-4">
+                <span className="w-14 h-14 blob-c bg-cream grid place-items-center p-2 shadow-clay-sm"><Derby className="w-full h-full" /></span>
+                <span className="clay-chip blob-pill">from $79 · 6 stores</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Varied-scale trio for the remaining capabilities */}
+        <div ref={trioGrid} className="grid md:grid-cols-2 gap-6 mt-24">
+          {MORE_FEATURES.map((f, i) => (
+            <div
+              key={f.title}
+              className={`group clay-card clay-card-hover ${CARD_BLOBS[(i + 1) % 4]} p-7 ${f.wide ? "md:col-span-2 md:flex md:items-center md:gap-8" : ""}`}
+            >
+              <div className={`w-16 h-16 shrink-0 ${BLOBS[(i + 2) % 4]} bg-cream grid place-items-center p-3 shadow-clay-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}>
                 <f.Ill className="w-full h-full" />
               </div>
-              <h3 className="font-brand text-2xl mt-5">{f.title}</h3>
-              <p className="text-sm text-navy/60 mt-2 leading-relaxed">{f.body}</p>
+              <div>
+                <h3 className="font-brand text-2xl mt-5 md:mt-0">{f.title}</h3>
+                <p className="text-sm text-navy/60 mt-2 leading-relaxed max-w-xl">{f.body}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -259,27 +369,51 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
       <section id="how" className="relative overflow-hidden py-24">
         <Glow style={{ width: 380, height: 380, top: 40, left: -140, background: "radial-gradient(circle, rgba(250,158,188,0.35), rgba(250,158,188,0) 70%)" }} />
         <div className="max-w-6xl mx-auto px-4 relative">
-          <div ref={howHead} className="text-center max-w-2xl mx-auto">
-            <span className="clay-chip blob-pill">Four steps</span>
-            <h2 className="font-brand text-4xl sm:text-5xl mt-4">From closet to confident</h2>
+          <div ref={howHead} className="max-w-2xl">
+            <h2 className="font-brand text-4xl sm:text-5xl tracking-tight">From closet to confident</h2>
+            <p className="text-navy/60 mt-4 text-lg">One photo session, then it mostly runs itself.</p>
           </div>
-          <div ref={stepGrid} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
-            {STEPS.map((s, i) => (
-              <div key={s.n} className={`group clay-card clay-card-hover ${CARD_BLOBS[i % 4]} p-6`}>
-                <div className={`w-14 h-14 ${BLOBS[(i + 2) % 4]} bg-cream grid place-items-center p-2.5 shadow-clay-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}>
-                  <s.Ill className="w-full h-full" />
+          {/* A single connected flow, not four numbered cards: a hand-drawn
+              dashed path links the step illustrations on wide screens. */}
+          <div className="relative mt-16">
+            <svg
+              viewBox="0 0 1200 80"
+              preserveAspectRatio="none"
+              className="hidden lg:block absolute inset-x-0 top-10 w-full h-20 text-blush"
+              aria-hidden="true"
+            >
+              <path
+                d="M60 40 C 220 -10, 380 90, 540 40 S 860 -10, 1140 40"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeDasharray="2 10"
+                strokeLinecap="round"
+              />
+            </svg>
+            <div ref={stepGrid} className="relative grid sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+              {STEPS.map((s, i) => (
+                <div key={s.title} className="group">
+                  <div className={`w-20 h-20 ${BLOBS[(i + 2) % 4]} bg-cream-soft grid place-items-center p-3.5 shadow-clay transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}>
+                    <s.Ill className="w-full h-full" />
+                  </div>
+                  <h3 className="font-semibold text-lg mt-5">{s.title}</h3>
+                  <p className="text-sm text-navy/60 mt-2 max-w-[26ch]">{s.body}</p>
                 </div>
-                <p className="font-brand text-blush-deep text-lg mt-4">{s.n}</p>
-                <h3 className="font-semibold text-lg mt-1">{s.title}</h3>
-                <p className="text-sm text-navy/60 mt-2">{s.body}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ======================================================= SHOWCASE */}
-      <section id="showcase" className="max-w-6xl mx-auto px-4 py-16">
+      <section id="showcase" className="max-w-6xl mx-auto px-4 py-20">
+        <div className="max-w-2xl mb-10">
+          <h2 className="font-brand text-4xl sm:text-5xl tracking-tight">This is the actual app</h2>
+          <p className="text-navy/60 mt-4 text-lg">Not a concept render. What you see here is what you sign into.</p>
+        </div>
+        {/* TODO(D10): swap the inner mock for real screenshots at /screens/*.png
+            once the app relayout lands; the frame below stays as-is. */}
         <div ref={showcase} className="clay-card blob-card-a p-3 sm:p-5 overflow-hidden">
           <div className="rounded-[2rem] bg-cream overflow-hidden shadow-[inset_2px_2px_10px_rgba(11,25,87,0.05)]">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-cream-deep">
@@ -288,8 +422,8 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
               <span className="w-3 h-3 rounded-full bg-navy/20" />
               <span className="font-brand text-lg ml-3">Better<span className="text-blush-deep">Dresser</span></span>
               <div className="ml-auto hidden sm:flex gap-2 text-xs text-navy/50">
-                {["Wardrobe", "Today", "Buy Next", "DresserAI", "TryOn"].map((t, i) => (
-                  <span key={t} className={`px-3 py-1 blob-pill ${i === 1 ? "bg-navy text-cream" : "bg-cream-soft shadow-clay-sm"}`}>{t}</span>
+                {["My Wardrobe", "Today's Recommendations", "DresserAI"].map((t, i) => (
+                  <span key={t} className={`px-3 py-1 blob-pill whitespace-nowrap ${i === 1 ? "bg-navy text-cream" : "bg-cream-soft shadow-clay-sm"}`}>{t}</span>
                 ))}
               </div>
             </div>
@@ -336,47 +470,50 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
       </section>
 
       {/* ======================================================== PRICING */}
+      {/* Deliberately asymmetric: Free is a quiet panel, Plus is the hero
+          card. Same information, honest visual weight. */}
       <section id="pricing" className="max-w-5xl mx-auto px-4 py-24">
-        <div ref={pricingHead} className="text-center max-w-2xl mx-auto">
-          <span className="clay-chip blob-pill">Simple pricing</span>
-          <h2 className="font-brand text-4xl sm:text-5xl mt-4">Start free. Upgrade if you love it.</h2>
-          <p className="text-navy/60 mt-3">Outfit recommendations are always free and unlimited. Plus lifts the caps on the extras.</p>
+        <div ref={pricingHead} className="max-w-2xl">
+          <h2 className="font-brand text-4xl sm:text-5xl tracking-tight">Start free. Upgrade if you love it.</h2>
+          <p className="text-navy/60 mt-4 text-lg">Outfit recommendations never cost anything. Plus lifts the caps on the extras.</p>
         </div>
 
-        <div ref={priceGrid} className="grid md:grid-cols-2 gap-6 mt-12 items-start">
-          {/* Free */}
-          <div className="clay-card blob-card-a p-8">
+        <div ref={priceGrid} className="grid md:grid-cols-5 gap-6 mt-12 items-center">
+          {/* Free: compact, quiet */}
+          <div className="md:col-span-2 rounded-3xl border-2 border-cream-deep bg-cream-soft p-7">
             <p className="font-brand text-2xl">Free</p>
-            <p className="mt-2"><span className="font-brand text-5xl">$0</span><span className="text-navy/50"> / forever</span></p>
-            <button onClick={onGetStarted} className="clay-btn-blush rounded-full w-full py-3 mt-6">Get started</button>
-            <ul className="mt-6 space-y-3 text-sm">
-              {["Unlimited outfit recommendations", "Full wardrobe + AI auto-tagging", "Weather & calendar aware", "Daily Buy Next runs, weekly DresserAI & TryOn"].map((t) => (
+            <p className="mt-1"><CountUp value="$0" className="font-brand text-4xl" /><span className="text-navy/50 text-sm"> forever, no card</span></p>
+            <ul className="mt-5 space-y-2.5 text-sm">
+              {["Unlimited outfit recommendations", "Full wardrobe with AI auto-tagging", "Daily Buy Next, weekly DresserAI & TryOn"].map((t) => (
                 <li key={t} className="flex items-start gap-2.5">
                   <span className="text-blush-deep mt-0.5"><Check /></span>
                   <span className="text-navy/70">{t}</span>
                 </li>
               ))}
             </ul>
+            <button onClick={onGetStarted} className="w-full mt-6 py-2.5 rounded-full border-2 border-navy/15 text-navy font-medium hover:border-navy/40 transition-colors">
+              Get started
+            </button>
           </div>
 
-          {/* Plus */}
-          <div className="clay-card blob-card-d p-8 relative bg-navy text-cream shadow-clay-navy overflow-hidden">
+          {/* Plus: the hero card */}
+          <div className="md:col-span-3 clay-card blob-card-d p-8 sm:p-10 relative bg-navy text-cream shadow-clay-navy overflow-hidden">
             <Glow style={{ width: 260, height: 260, top: -100, right: -80, background: "radial-gradient(circle, rgba(250,158,188,0.5), rgba(250,158,188,0) 70%)" }} />
             <div className="relative">
               <div className="flex items-center justify-between">
-                <p className="font-brand text-2xl">Plus</p>
+                <p className="font-brand text-3xl">Plus</p>
                 <span className="blob-pill bg-blush text-navy text-xs font-semibold px-3 py-1">Most popular</span>
               </div>
-              <p className="mt-2"><span className="font-brand text-5xl">$5</span><span className="text-cream/60"> / month</span></p>
-              <button onClick={onGetStarted} className="clay-btn-blush rounded-full w-full py-3 mt-6">Go Plus</button>
-              <ul className="mt-6 space-y-3 text-sm">
+              <p className="mt-2"><CountUp value="$5" className="font-brand text-6xl" /><span className="text-cream/60"> / month</span></p>
+              <ul className="mt-6 space-y-3 text-sm sm:columns-2 sm:gap-8">
                 {["Everything in Free", "Unlimited Buy Next suggestions", "Unlimited DresserAI chat", "Unlimited Virtual TryOn renders", "Cancel anytime, keep access to term-end"].map((t) => (
-                  <li key={t} className="flex items-start gap-2.5">
+                  <li key={t} className="flex items-start gap-2.5 break-inside-avoid mb-3">
                     <span className="text-blush mt-0.5"><Check /></span>
                     <span className="text-cream/85">{t}</span>
                   </li>
                 ))}
               </ul>
+              <button onClick={onGetStarted} className="clay-btn-blush rounded-full w-full sm:w-auto sm:px-10 py-3 mt-4">Go Plus</button>
             </div>
           </div>
         </div>

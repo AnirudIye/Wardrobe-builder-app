@@ -1,6 +1,8 @@
 # BetterDresser — Handoff
 
-_Last updated: 2026-07-16 (security hardening pass)_
+_Last updated: 2026-07-16 (design elevation pass)_
+
+**Design elevation (`feature/design-elevation`, merged):** research-driven de-slop redesign. Landing: no badge-over-H1, no stat banner, no numbered steps, no identical card grids — editorial alternating feature rows, connected how-it-works flow, de-twinned pricing, concrete copy. Global: Figtree body font paired with Ramaraja, favicon + meta/OG, ::selection/:focus-visible/scrollbar detail layer. App: PageHeader/EmptyState system, Wardrobe rail layout, Today look card, DresserAI chat surface with starter prompts, Buy Next editorial rows, TryOn two-panel, Calendar two-pane with formality tints, Upgrade live meters, split-panel Login. **Outstanding: swap the landing showcase mock for real app screenshots** (marked TODO in Landing.tsx; needs a real browser session — the harness pane can't screenshot and no Chrome extension was connected). Research sources in `docs/superpowers/` plan file.
 
 ## Goal
 

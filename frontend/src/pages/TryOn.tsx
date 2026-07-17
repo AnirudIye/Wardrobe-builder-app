@@ -4,6 +4,8 @@ import { useFadeRise } from "../animations";
 import { garmentsCache } from "../store";
 import { fetchBuyNext, getCachedBuyNext } from "./BuyNext";
 import ErrorNote from "../components/ErrorNote";
+import PageHeader from "../components/PageHeader";
+import { Mirror } from "../components/illustrations";
 
 type Target =
   | { kind: "garment"; garment_id: number; thumb: string; label: string }
@@ -29,6 +31,16 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
   const [buyNextBusy, setBuyNextBusy] = useState(false);
   const [buyNextError, setBuyNextError] = useState<string | null>(null);
 
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [resultUrl, setResultUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    garmentsCache.get().then(setGarments).catch(() => {});
+    return () => stopCamera();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const loadBuyNext = async () => {
     setBuyNextBusy(true);
     setBuyNextError(null);
@@ -45,16 +57,6 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
       setBuyNextBusy(false);
     }
   };
-
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [resultUrl, setResultUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    garmentsCache.get().then(setGarments).catch(() => {});
-    return () => stopCamera();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const startCamera = async () => {
     setCameraError(null);
@@ -144,155 +146,174 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
     }
   };
 
+  const photoReady = photoPreview !== null;
+
   return (
     <div ref={pageRef}>
-      <h2 className="text-xl font-semibold mb-1">TryOn</h2>
-      <p className="text-sm text-navy/50 mb-4">
-        Snap a photo and see yourself in a piece from your wardrobe or a Buy Next pick. Your
-        photo is sent to Google's AI to generate the try-on image and isn't stored by
-        BetterDresser.
-      </p>
+      <PageHeader
+        title="TryOn"
+        context="See a piece on you before you buy it. Your photo goes to Google's AI for the render and is never stored."
+      />
 
-      {/* Step 1: photo */}
-      <div className="clay-card p-5 mb-6">
-        <h3 className="font-semibold mb-3">1. Your photo</h3>
-        {photoPreview ? (
-          <div className="flex items-center gap-4">
-            <img src={photoPreview} alt="Captured" className="w-32 h-32 object-cover rounded-2xl shadow-clay-sm" />
-            <button onClick={retake} className="clay-btn-blush px-4 py-1.5 text-sm">
-              Retake
-            </button>
+      <div className="grid md:grid-cols-2 gap-6 items-start">
+        {/* Panel: your photo */}
+        <section className="clay-card blob-card-a p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Your photo</h3>
+            {photoReady && <span className="clay-chip">ready</span>}
           </div>
-        ) : (
-          <div className="flex flex-col items-start gap-3">
-            {/* Keep the <video> mounted even before the camera starts: startCamera
-                needs videoRef to exist to attach the stream (conditionally mounting
-                it left the ref null and the preview permanently blank). */}
-            <video
-              ref={videoRef}
-              className={`w-full max-w-sm rounded-2xl shadow-clay-sm bg-navy/10 ${streamActive ? "" : "hidden"}`}
-              playsInline
-              muted
-            />
-            {streamActive ? (
-              <button onClick={capture} className="clay-btn px-5 py-2 text-sm">
-                Capture
+          {photoPreview ? (
+            <div className="flex items-center gap-4">
+              <img src={photoPreview} alt="Captured" className="w-36 h-36 object-cover rounded-2xl shadow-clay-sm" />
+              <button onClick={retake} className="clay-btn-blush px-4 py-1.5 text-sm">
+                Retake
               </button>
-            ) : (
-              <button onClick={startCamera} className="clay-btn px-5 py-2 text-sm">
-                Enable camera
-              </button>
-            )}
-            <ErrorNote message={cameraError} className="mt-2" />
-          </div>
-        )}
-        <canvas ref={canvasRef} hidden />
-      </div>
-
-      {/* Step 2: garment */}
-      <div className="clay-card p-5 mb-6">
-        <h3 className="font-semibold mb-3">2. Pick something to try on</h3>
-        {garments.length === 0 && (
-          <p className="text-sm text-navy/40 mb-4">
-            Your wardrobe is empty. Add items to try them on, or load Buy Next picks below.
-          </p>
-        )}
-        {garments.length > 0 && (
-          <>
-            <p className="text-xs text-navy/40 mb-2">From your wardrobe</p>
-            <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 mb-4">
-              {garments.map((g) => {
-                const isSelected =
-                  selected?.kind === "garment" && selected.garment_id === g.id;
-                return (
-                  <button
-                    key={g.id}
-                    onClick={() =>
-                      setSelected({
-                        kind: "garment",
-                        garment_id: g.id,
-                        thumb: g.thumbnail_url,
-                        label: g.subcategory ?? g.category ?? "item",
-                      })
-                    }
-                    className={`rounded-2xl overflow-hidden shadow-clay-sm transition-all ${
-                      isSelected ? "ring-4 ring-blush" : "hover:-translate-y-0.5"
-                    }`}
-                  >
-                    <img src={g.thumbnail_url} alt="" className="w-full aspect-square object-cover" />
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        )}
-        {/* Buy Next picks: grid when loaded this session, otherwise an explicit
-            load button (a fresh run is quota-metered, so it's never automatic). */}
-        <p className="text-xs text-navy/40 mb-2">From Buy Next</p>
-        {buyNext ? (
-          buyNext.suggestions.some((s) => s.products.length > 0) ? (
-            <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-              {buyNext.suggestions.flatMap((s) =>
-                s.products
-                  .filter((p) => p.thumbnail)
-                  .map((p, j) => {
-                    const isSelected =
-                      selected?.kind === "product" && selected.image_url === p.thumbnail;
-                    return (
-                      <button
-                        key={`${s.description}-${j}`}
-                        onClick={() =>
-                          setSelected({
-                            kind: "product",
-                            image_url: p.thumbnail!,
-                            thumb: p.thumbnail!,
-                            label: p.title,
-                          })
-                        }
-                        className={`rounded-2xl overflow-hidden shadow-clay-sm transition-all ${
-                          isSelected ? "ring-4 ring-blush" : "hover:-translate-y-0.5"
-                        }`}
-                      >
-                        <img src={p.thumbnail ?? undefined} alt="" className="w-full aspect-square object-contain bg-white" />
-                      </button>
-                    );
-                  })
-              )}
             </div>
           ) : (
-            <p className="text-sm text-navy/40">No shoppable Buy Next picks right now.</p>
-          )
-        ) : (
-          <div>
-            <button
-              onClick={loadBuyNext}
-              disabled={buyNextBusy}
-              className="clay-btn-blush px-4 py-2 text-sm"
-            >
-              {buyNextBusy ? "Finding picks…" : "Load Buy Next picks"}
-            </button>
-            <p className="text-[11px] text-navy/40 mt-1.5">
-              Runs a Buy Next analysis (uses one daily credit on the free plan).
-            </p>
-            <ErrorNote message={buyNextError} className="mt-2" />
+            <div className="flex flex-col items-start gap-3">
+              {/* Keep the <video> mounted even before the camera starts: startCamera
+                  needs videoRef to exist to attach the stream (conditionally mounting
+                  it left the ref null and the preview permanently blank). */}
+              <video
+                ref={videoRef}
+                className={`w-full rounded-2xl shadow-clay-sm bg-navy/10 ${streamActive ? "" : "hidden"}`}
+                playsInline
+                muted
+              />
+              {streamActive ? (
+                <button onClick={capture} className="clay-btn px-5 py-2 text-sm">
+                  Capture
+                </button>
+              ) : (
+                <button onClick={startCamera} className="clay-btn px-5 py-2 text-sm">
+                  Enable camera
+                </button>
+              )}
+              <ErrorNote message={cameraError} className="mt-1" />
+            </div>
+          )}
+          <canvas ref={canvasRef} hidden />
+        </section>
+
+        {/* Panel: the piece */}
+        <section className="clay-card blob-card-d p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">The piece</h3>
+            {selected && <span className="clay-chip line-clamp-1 max-w-[12rem]">{selected.label}</span>}
           </div>
-        )}
+
+          {garments.length === 0 ? (
+            <p className="text-sm text-navy/40 mb-4">
+              Your wardrobe is empty. Add items to try them on, or load Buy Next picks below.
+            </p>
+          ) : (
+            <>
+              <p className="text-xs text-navy/40 mb-2">From your wardrobe</p>
+              <div className="grid grid-cols-4 gap-3 mb-5">
+                {garments.map((g) => {
+                  const isSelected =
+                    selected?.kind === "garment" && selected.garment_id === g.id;
+                  return (
+                    <button
+                      key={g.id}
+                      onClick={() =>
+                        setSelected({
+                          kind: "garment",
+                          garment_id: g.id,
+                          thumb: g.thumbnail_url,
+                          label: g.subcategory ?? g.category ?? "item",
+                        })
+                      }
+                      className={`rounded-2xl overflow-hidden shadow-clay-sm transition-all ${
+                        isSelected ? "ring-4 ring-blush" : "hover:-translate-y-0.5"
+                      }`}
+                    >
+                      <img src={g.thumbnail_url} alt="" className="w-full aspect-square object-cover" />
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {/* Buy Next picks: grid when loaded this session, otherwise an explicit
+              load button (a fresh run is quota-metered, so it's never automatic). */}
+          <p className="text-xs text-navy/40 mb-2">From Buy Next</p>
+          {buyNext ? (
+            buyNext.suggestions.some((s) => s.products.length > 0) ? (
+              <div className="grid grid-cols-4 gap-3">
+                {buyNext.suggestions.flatMap((s) =>
+                  s.products
+                    .filter((p) => p.thumbnail)
+                    .map((p, j) => {
+                      const isSelected =
+                        selected?.kind === "product" && selected.image_url === p.thumbnail;
+                      return (
+                        <button
+                          key={`${s.description}-${j}`}
+                          onClick={() =>
+                            setSelected({
+                              kind: "product",
+                              image_url: p.thumbnail!,
+                              thumb: p.thumbnail!,
+                              label: p.title,
+                            })
+                          }
+                          className={`rounded-2xl overflow-hidden shadow-clay-sm transition-all ${
+                            isSelected ? "ring-4 ring-blush" : "hover:-translate-y-0.5"
+                          }`}
+                        >
+                          <img src={p.thumbnail ?? undefined} alt="" className="w-full aspect-square object-contain bg-white" />
+                        </button>
+                      );
+                    })
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-navy/40">No shoppable Buy Next picks right now.</p>
+            )
+          ) : (
+            <div>
+              <button
+                onClick={loadBuyNext}
+                disabled={buyNextBusy}
+                className="clay-btn-blush px-4 py-2 text-sm"
+              >
+                {buyNextBusy ? "Finding picks…" : "Load Buy Next picks"}
+              </button>
+              <p className="text-[11px] text-navy/40 mt-1.5">
+                Runs a Buy Next analysis (uses one daily credit on the free plan).
+              </p>
+              <ErrorNote message={buyNextError} className="mt-2" />
+            </div>
+          )}
+        </section>
       </div>
 
-      {/* Step 3: generate */}
-      <button
-        onClick={generate}
-        disabled={!photoBlob || !selected || busy}
-        className="clay-btn px-6 py-3 w-full sm:w-auto"
-      >
-        {busy ? "Generating your look…" : "Try it on"}
-      </button>
+      {/* Render */}
+      <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4">
+        <button
+          onClick={generate}
+          disabled={!photoBlob || !selected || busy}
+          className="clay-btn px-8 py-3"
+        >
+          {busy ? "Generating your look…" : "Try it on"}
+        </button>
+        {!photoBlob || !selected ? (
+          <p className="text-sm text-navy/40">
+            {photoBlob ? "Pick a piece to wear." : selected ? "Take your photo first." : "Take a photo and pick a piece."}
+          </p>
+        ) : null}
+      </div>
 
-      <ErrorNote message={error} className="mt-3" />
+      <ErrorNote message={error} className="mt-4" />
 
       {resultUrl && (
-        <div className="clay-card p-5 mt-6 max-w-sm">
-          <h3 className="font-semibold mb-3">Your try-on</h3>
+        <div className="clay-card blob-card-b p-6 mt-8 max-w-md">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="w-10 h-10 shrink-0"><Mirror className="w-full h-full" /></span>
+            <h3 className="font-brand text-2xl tracking-tight">Your try-on</h3>
+          </div>
           <img src={resultUrl} alt="Try-on result" className="w-full rounded-2xl shadow-clay-sm" />
         </div>
       )}

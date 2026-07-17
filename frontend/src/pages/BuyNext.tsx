@@ -3,6 +3,9 @@ import { api, ApiError, BuyNext as BuyNextData } from "../api";
 import { useFadeRise, useStaggerReveal } from "../animations";
 import { ListSkeleton } from "../components/Skeleton";
 import ErrorNote from "../components/ErrorNote";
+import PageHeader from "../components/PageHeader";
+import EmptyState from "../components/EmptyState";
+import { Bag } from "../components/illustrations";
 
 // Session cache: switching tabs shows the last result instantly instead of
 // burning another quota-counted request. "Refresh" forces a new one.
@@ -70,36 +73,50 @@ export default function BuyNext({ onQuotaBlocked }: { onQuotaBlocked: () => void
 
   return (
     <div ref={pageRef}>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">What to buy next</h2>
-        <button onClick={generate} disabled={busy} className="clay-btn px-5 py-2 text-sm">
-          {busy ? "Finding…" : data ? "Refresh" : "Get suggestions"}
-        </button>
-      </div>
+      <PageHeader
+        title="What To Buy Next"
+        context="Gap analysis of your closet, with real products. Five runs a day on the free plan."
+        action={
+          <button onClick={generate} disabled={busy} className="clay-btn px-5 py-2 text-sm">
+            {busy ? "Finding…" : data ? "Refresh" : "Get suggestions"}
+          </button>
+        }
+      />
 
       {busy && !data && <ListSkeleton count={3} height="h-32" />}
       <ErrorNote message={error} className="mb-4" />
 
-      <div ref={listRef} className="space-y-5">
+      {data && data.suggestions.length === 0 && !busy && (
+        <EmptyState
+          Ill={Bag}
+          title="Nothing missing yet"
+          body="Your closet is either brand new or remarkably complete. Add more pieces to My Wardrobe and the gap analysis gets sharper."
+        />
+      )}
+
+      <div ref={listRef} className="space-y-8">
         {data?.suggestions.map((s, i) => (
-          <div key={i} className="clay-card p-6">
-            <h3 className="font-semibold capitalize">{s.description}</h3>
-            <p className="text-sm text-navy/50 mt-1">{s.rationale}</p>
+          <article key={i} className="clay-card blob-card-b p-6 sm:p-8">
+            {/* The reasoning is the product: give it editorial weight. */}
+            <div className="max-w-2xl">
+              <h3 className="font-brand text-2xl sm:text-3xl tracking-tight capitalize">{s.description}</h3>
+              <p className="text-navy/60 mt-2 leading-relaxed">{s.rationale}</p>
+            </div>
             {s.products.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
+              <div className="flex gap-4 mt-6 overflow-x-auto pb-2 -mx-1 px-1">
                 {s.products.map((p, j) => (
                   <a
                     key={j}
                     href={p.link ?? s.search_url ?? "#"}
                     target="_blank"
                     rel="noreferrer"
-                    className="clay-card clay-card-hover p-3"
+                    className="clay-card clay-card-hover p-3 w-40 shrink-0"
                   >
                     {p.thumbnail && (
                       <img
                         src={p.thumbnail}
                         alt=""
-                        className="w-full aspect-square object-contain rounded-xl"
+                        className="w-full aspect-square object-contain rounded-xl bg-white"
                       />
                     )}
                     <p className="text-xs mt-2 line-clamp-2">{p.title}</p>
@@ -119,7 +136,7 @@ export default function BuyNext({ onQuotaBlocked }: { onQuotaBlocked: () => void
                 Shop more like this on Google Shopping →
               </a>
             )}
-          </div>
+          </article>
         ))}
       </div>
     </div>
