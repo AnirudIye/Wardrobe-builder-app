@@ -14,6 +14,7 @@ import ClickSpark from "./components/ClickSpark";
 import { CardGridSkeleton, Skeleton } from "./components/Skeleton";
 import StyleSurvey from "./components/StyleSurvey";
 import { profileCache } from "./store";
+import { prefetchTab } from "./prefetch";
 import BlobCursor from "./components/BlobCursor";
 import LegalFooter from "./components/LegalFooter";
 import AccountMenu from "./components/AccountMenu";
@@ -184,6 +185,10 @@ export default function App() {
                     <button
                       key={t.id}
                       onClick={() => setTab(t.id)}
+                      // Intent to navigate → warm that tab's images before the click.
+                      // pointerEnter covers mouse hover; focus covers keyboard.
+                      onPointerEnter={() => prefetchTab(t.id)}
+                      onFocus={() => prefetchTab(t.id)}
                       className={`px-4 py-1.5 text-sm rounded-full whitespace-nowrap transition duration-200 ease-out-strong hover:-translate-y-0.5 ${
                         tab === t.id
                           ? "bg-navy text-cream font-medium shadow-clay-navy"
