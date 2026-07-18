@@ -182,7 +182,7 @@ export default function Landing({
         <Glow className="animate-floaty" style={{ width: 420, height: 420, top: 180, left: -160, background: "radial-gradient(circle at 50% 50%, rgba(27,44,119,0.28), rgba(27,44,119,0) 70%)" }} />
         <Glow style={{ width: 300, height: 300, bottom: -80, right: 120, background: "radial-gradient(circle at 50% 50%, rgba(247,233,212,0.9), rgba(247,233,212,0) 70%)" }} />
 
-        <div className="relative max-w-6xl mx-auto px-4 pt-16 pb-20 md:pt-24 md:pb-28 grid md:grid-cols-2 gap-12 items-center">
+        <div className="relative max-w-6xl mx-auto px-4 pt-16 pb-20 md:pt-24 md:pb-28 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <div ref={heroText}>
             <h1 className="font-brand text-5xl sm:text-6xl lg:text-7xl leading-[1.05] tracking-tight">
               <SplitText text={"Your wardrobe,\nstyled by AI."} accentFrom={2} accentClass="text-gradient-pan" />
@@ -263,7 +263,7 @@ export default function Landing({
         </div>
 
         {/* Row A: Today's Recommendations, visual = mini outfit strip */}
-        <div ref={coreRowA} className="grid md:grid-cols-2 gap-10 md:gap-16 items-center mt-20">
+        <div ref={coreRowA} className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center mt-20">
           <div>
             <p className="text-blush-deep font-semibold text-sm">{CORE_FEATURES[0].kicker}</p>
             <h3 className="font-brand text-3xl sm:text-4xl mt-2 tracking-tight">{CORE_FEATURES[0].title}</h3>
@@ -295,7 +295,7 @@ export default function Landing({
         </div>
 
         {/* Row B: Smart Wardrobe, reversed, visual = large tile + floating tags */}
-        <div ref={coreRowB} className="grid md:grid-cols-2 gap-10 md:gap-16 items-center mt-24">
+        <div ref={coreRowB} className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center mt-24">
           <div className="relative md:order-1 order-2">
             <div className="clay-card blob-card-c p-10 grid place-items-center">
               <Wardrobe className="w-48 h-48" />
@@ -325,7 +325,7 @@ export default function Landing({
         </div>
 
         {/* Row C: What To Buy Next, visual = suggestion + price satellite */}
-        <div ref={coreRowC} className="grid md:grid-cols-2 gap-10 md:gap-16 items-center mt-24">
+        <div ref={coreRowC} className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center mt-24">
           <div>
             <p className="text-blush-deep font-semibold text-sm">{CORE_FEATURES[2].kicker}</p>
             <h3 className="font-brand text-3xl sm:text-4xl mt-2 tracking-tight">{CORE_FEATURES[2].title}</h3>
@@ -353,7 +353,7 @@ export default function Landing({
         </div>
 
         {/* Varied-scale trio for the remaining capabilities */}
-        <div ref={trioGrid} className="grid md:grid-cols-2 gap-6 mt-24">
+        <div ref={trioGrid} className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-24">
           {MORE_FEATURES.map((f, i) => (
             <div
               key={f.title}
@@ -397,7 +397,7 @@ export default function Landing({
                 strokeLinecap="round"
               />
             </svg>
-            <div ref={stepGrid} className="relative grid sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+            <div ref={stepGrid} className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
               {STEPS.map((s, i) => (
                 <div key={s.title} className="group">
                   <div className={`w-20 h-20 ${BLOBS[(i + 2) % 4]} bg-cream-soft grid place-items-center p-3.5 shadow-clay transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}>
@@ -433,7 +433,7 @@ export default function Landing({
                 ))}
               </div>
             </div>
-            <div className="p-5 sm:p-8 grid md:grid-cols-3 gap-5">
+            <div className="p-5 sm:p-8 grid grid-cols-1 md:grid-cols-3 gap-5">
               <div className="md:col-span-2 clay-card blob-card-c p-6">
                 <div className="flex items-center justify-between">
                   <h3 className="font-brand text-2xl">Your outfit for today</h3>
@@ -484,7 +484,7 @@ export default function Landing({
           <p className="text-navy/60 mt-4 text-lg">Outfit recommendations never cost anything. Plus lifts the caps on the extras.</p>
         </div>
 
-        <div ref={priceGrid} className="grid md:grid-cols-5 gap-6 mt-12 items-center">
+        <div ref={priceGrid} className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-12 items-center">
           {/* Free: compact, quiet */}
           <div className="md:col-span-2 rounded-3xl border-2 border-cream-deep bg-cream-soft p-7">
             <p className="font-brand text-2xl">Free</p>
@@ -541,7 +541,7 @@ export default function Landing({
 
       {/* ========================================================== FOOTER */}
       <footer className="max-w-6xl mx-auto px-4 pt-8">
-        <div className="clay-card blob-card-a p-8 sm:p-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="clay-card blob-card-a p-8 sm:p-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-1">
             <p className="font-brand text-2xl">Better<span className="text-blush-deep">Dresser</span></p>
             <p className="text-sm text-navy/50 mt-2 max-w-[220px]">A digital wardrobe with an AI stylist that dresses you for real life.</p>

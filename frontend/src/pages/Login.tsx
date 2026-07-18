@@ -147,7 +147,7 @@ export default function Login({
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-16">
       <div
         ref={cardRef}
-        className="w-full max-w-3xl clay-card blob-card-a overflow-hidden grid md:grid-cols-2"
+        className="w-full max-w-3xl clay-card blob-card-a overflow-hidden grid grid-cols-1 md:grid-cols-2"
       >
         {/* Form panel */}
         <form onSubmit={submit} className="p-8 sm:p-10 space-y-5">

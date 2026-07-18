@@ -184,7 +184,7 @@ export default function Wardrobe() {
 
       <ErrorNote message={error} className="mb-4" />
 
-      <div className="grid lg:grid-cols-3 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Main column: the closet itself */}
         <div className="lg:col-span-2">
           {loading ? (

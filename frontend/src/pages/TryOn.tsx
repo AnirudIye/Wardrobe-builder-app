@@ -156,7 +156,7 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
         context="See a piece on you before you buy it. Your photo goes to Google's AI for the render and is never stored."
       />
 
-      <div className="grid md:grid-cols-2 gap-6 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Panel: your photo */}
         <section className="clay-card blob-card-a p-6">
           <div className="flex items-center justify-between mb-4">

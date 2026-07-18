@@ -14,6 +14,7 @@ import ClickSpark from "./components/ClickSpark";
 import { CardGridSkeleton, Skeleton } from "./components/Skeleton";
 import StyleSurvey from "./components/StyleSurvey";
 import { profileCache } from "./store";
+import { prefetchTab } from "./prefetch";
 import BlobCursor from "./components/BlobCursor";
 import LegalFooter from "./components/LegalFooter";
 import AccountMenu from "./components/AccountMenu";
@@ -154,7 +155,7 @@ export default function App() {
             onSignIn={() => setAuthView("login")}
           />
         ) : (
-          <div className="min-h-screen flex flex-col">
+          <div className="min-h-screen flex flex-col overflow-x-clip">
             <div className="flex-1">
               <Login
                 onBack={() => setAuthView("landing")}
@@ -166,7 +167,9 @@ export default function App() {
           </div>
         )
       ) : (
-        <div className="min-h-screen flex flex-col">
+        // overflow-x-clip is a mobile safety net against stray wide content; it
+        // does NOT create a scroll container, so the sticky header still works.
+        <div className="min-h-screen flex flex-col overflow-x-clip">
           {showSurvey && <StyleSurvey onDone={() => setShowSurvey(false)} />}
           <header className="sticky top-0 z-40 pt-4 pb-2 bg-cream/85 backdrop-blur-md">
             <div className="max-w-5xl mx-auto px-4">
@@ -182,6 +185,10 @@ export default function App() {
                     <button
                       key={t.id}
                       onClick={() => setTab(t.id)}
+                      // Intent to navigate → warm that tab's images before the click.
+                      // pointerEnter covers mouse hover; focus covers keyboard.
+                      onPointerEnter={() => prefetchTab(t.id)}
+                      onFocus={() => prefetchTab(t.id)}
                       className={`px-4 py-1.5 text-sm rounded-full whitespace-nowrap transition duration-200 ease-out-strong hover:-translate-y-0.5 ${
                         tab === t.id
                           ? "bg-navy text-cream font-medium shadow-clay-navy"
