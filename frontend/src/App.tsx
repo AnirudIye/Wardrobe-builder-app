@@ -154,7 +154,7 @@ export default function App() {
             onSignIn={() => setAuthView("login")}
           />
         ) : (
-          <div className="min-h-screen flex flex-col">
+          <div className="min-h-screen flex flex-col overflow-x-clip">
             <div className="flex-1">
               <Login
                 onBack={() => setAuthView("landing")}
@@ -166,7 +166,9 @@ export default function App() {
           </div>
         )
       ) : (
-        <div className="min-h-screen flex flex-col">
+        // overflow-x-clip is a mobile safety net against stray wide content; it
+        // does NOT create a scroll container, so the sticky header still works.
+        <div className="min-h-screen flex flex-col overflow-x-clip">
           {showSurvey && <StyleSurvey onDone={() => setShowSurvey(false)} />}
           <header className="sticky top-0 z-40 pt-4 pb-2 bg-cream/85 backdrop-blur-md">
             <div className="max-w-5xl mx-auto px-4">

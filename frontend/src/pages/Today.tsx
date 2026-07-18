@@ -87,7 +87,7 @@ export default function Today() {
 
       {rec && rec.items.length > 0 && (
         <div className="clay-card blob-card-b overflow-hidden">
-          <div className="p-6 sm:p-9 grid lg:grid-cols-5 gap-8 lg:gap-10 items-center">
+          <div className="p-6 sm:p-9 grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-10 items-center">
             {/* The reasoning reads like a stylist's note, not metadata. */}
             <div className="lg:col-span-2">
               <p className="text-lg text-navy/80 leading-relaxed">{rec.rationale}</p>

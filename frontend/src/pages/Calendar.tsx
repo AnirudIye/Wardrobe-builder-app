@@ -104,7 +104,7 @@ export default function Calendar() {
         })}. Outfit recommendations match the dress code of whatever the day holds.`}
       />
 
-      <div className="grid lg:grid-cols-3 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Rail: add-event form with labelled fields */}
         <form onSubmit={submit} className="clay-card blob-card-a p-6 space-y-4 lg:order-2">
           <h3 className="font-semibold">Add an event</h3>

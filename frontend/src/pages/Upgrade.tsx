@@ -78,7 +78,7 @@ export default function Upgrade() {
     return (
       <div>
         <PageHeader title="Your Plan" />
-        <div className="grid md:grid-cols-2 gap-6 max-w-3xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
           <div className="clay-card p-7 space-y-4">
             <Skeleton className="h-9 w-1/2" />
             <Skeleton className="h-4 w-3/4" />
@@ -103,7 +103,7 @@ export default function Upgrade() {
         context="Outfit recommendations are always free and unlimited, whatever the plan."
       />
 
-      <div className="grid md:grid-cols-2 gap-6 max-w-3xl items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl items-start">
         {/* Plan card */}
         <div
           className={`clay-card blob-card-a p-7 ${
