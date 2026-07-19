@@ -1,4 +1,4 @@
-# Forgot Password — Design
+# Forgot Password - Design
 
 _Date: 2026-07-16. Status: implemented this session._
 
@@ -28,7 +28,7 @@ die the moment either is used).
 
 1. **DB-stored one-time token** (column or table): real revocability, but needs an
    Alembic migration and more moving parts for no practical gain at this scale.
-2. **Reuse `create_email_token`**: purpose confusion — any stale confirmation email
+2. **Reuse `create_email_token`**: purpose confusion - any stale confirmation email
    would double as a password-reset key, and it lives 24h.
 
 ## Backend
@@ -43,16 +43,16 @@ die the moment either is used).
   `ResetPasswordRequest { token, password }` (password rules identical to `UserCreate`:
   min 8, max 128).
 - `routers/auth.py`:
-  - `POST /auth/forgot-password` — always the same generic 200 whether or not the
+  - `POST /auth/forgot-password` - always the same generic 200 whether or not the
     account exists (anti-enumeration, mirrors `/auth/resend-verification`). When the
     user exists and `email.available()`, queues `send_password_reset_email` as a
     background task with link `{frontend_base_url}/?reset_token=...`. Rate limit
     5/hour per IP (tightest tier: it sends real email).
-  - `POST /auth/reset-password` — decodes the token, requires `purpose` match, live
+  - `POST /auth/reset-password` - decodes the token, requires `purpose` match, live
     user, and fingerprint match; any failure is a single undifferentiated
     400 "Invalid or expired reset link". On success: re-hash the new password, set
     `email_verified = True` (redeeming a link mailed to the address proves inbox
-    ownership — the exact property verification certifies; also prevents a locked-out
+    ownership - the exact property verification certifies; also prevents a locked-out
     unverified user from being stuck), commit, and return a `Token` so the SPA signs
     the user straight in (mirrors `/auth/verify`). Rate limit 10/min per IP.
 

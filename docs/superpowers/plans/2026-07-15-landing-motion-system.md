@@ -1,6 +1,6 @@
 # Landing Motion System Implementation Plan
 
-> **For agentic workers:** Execute inline with superpowers:executing-plans, task-by-task. Steps use checkbox (`- [ ]`) syntax. No frontend test runner exists — verification is `tsc` build + in-browser behavioral checks (value sampling / DOM measurement via the browser JS tool), plus inline assertions for pure functions.
+> **For agentic workers:** Execute inline with superpowers:executing-plans, task-by-task. Steps use checkbox (`- [ ]`) syntax. No frontend test runner exists - verification is `tsc` build + in-browser behavioral checks (value sampling / DOM measurement via the browser JS tool), plus inline assertions for pure functions.
 
 **Goal:** Make the logged-out landing page look markedly more polished with a cohesive, on-brand motion system, and remove testimonials + stray emoji.
 
@@ -20,7 +20,7 @@
 
 ---
 
-### Task 1: Cleanup — remove testimonials + wind emoji
+### Task 1: Cleanup - remove testimonials + wind emoji
 
 **Files:**
 - Modify: `frontend/src/pages/Landing.tsx` (delete `TESTIMONIALS` array ~41–45; delete testimonials `<section>` ~350–368)
@@ -45,7 +45,7 @@
 **Interfaces:**
 - Produces:
   - `prefersReducedMotion(): boolean`
-  - `useReveal<T extends HTMLElement>(opts?: { stagger?: boolean; threshold?: number; y?: number; delay?: number }): React.RefObject<T>` — attaches an IntersectionObserver; on first intersection ≥ threshold (default 0.15), runs anime.js fade+rise on the element (or `staggerChildren` on its children when `stagger`), then disconnects. Reduced-motion → sets elements visible immediately, no animation.
+  - `useReveal<T extends HTMLElement>(opts?: { stagger?: boolean; threshold?: number; y?: number; delay?: number }): React.RefObject<T>` - attaches an IntersectionObserver; on first intersection ≥ threshold (default 0.15), runs anime.js fade+rise on the element (or `staggerChildren` on its children when `stagger`), then disconnects. Reduced-motion → sets elements visible immediately, no animation.
 
 - [ ] **Step 1:** Add `prefersReducedMotion()` reading `window.matchMedia('(prefers-reduced-motion: reduce)').matches`.
 - [ ] **Step 2:** Implement `useReveal`. Initial styles: set `opacity:0` (and children opacity:0 when stagger) synchronously in a layout effect so nothing flashes; on reveal call existing `fadeRise`/`staggerChildren`. Under reduced-motion, set opacity:1 and return.
@@ -64,7 +64,7 @@
 - Modify: `frontend/src/index.css` (remove now-unused `@keyframes marquee` / `.animate-marquee` if nothing else uses them)
 
 **Interfaces:**
-- Produces: `export default function Marquee({ children, speed=40, gap=40, pauseOnHover=true, className }: { children: React.ReactNode; speed?: number; gap?: number; pauseOnHover?: boolean; className?: string })` — `speed` = px/sec.
+- Produces: `export default function Marquee({ children, speed=40, gap=40, pauseOnHover=true, className }: { children: React.ReactNode; speed?: number; gap?: number; pauseOnHover?: boolean; className?: string })` - `speed` = px/sec.
 
 **Algorithm (seamless):** render one measured "set" (ref), compute `setW` (offsetWidth incl. trailing gap). Copies = `Math.ceil(containerW / setW) + 1`. Track width = `copies * setW`. Animate `translateX` from `0` to `-setW` linearly over `setW / speed` seconds, `infinite`. Because offset == exactly one set and sets are identical, the wrap is seamless. Re-measure on `ResizeObserver`. Reduced-motion → one static set, no animation. Implement the loop with a CSS custom property + keyframe (`--marquee-shift: -<setW>px`) or anime.js; CSS transform keyframe preferred (GPU, no JS per frame).
 
@@ -86,8 +86,8 @@
 
 **Interfaces:**
 - Produces:
-  - `export function parseStat(v: string): { prefix: string; num: number | null; suffix: string }` — splits e.g. `"$5/mo"`→`{prefix:"$",num:5,suffix:"/mo"}`, `"7-day"`→`{prefix:"",num:7,suffix:"-day"}`, `"1 tap"`→`{prefix:"",num:1,suffix:" tap"}`, `"$0"`→`{prefix:"$",num:0,suffix:""}`. No digit → `num:null`.
-  - `export default function CountUp({ value, className }: { value: string; className?: string })` — renders prefix + animated number + suffix; animates `0→num` with anime.js on first reveal (IO). `num===null` → render `value` verbatim. Reduced-motion → final immediately.
+  - `export function parseStat(v: string): { prefix: string; num: number | null; suffix: string }` - splits e.g. `"$5/mo"`→`{prefix:"$",num:5,suffix:"/mo"}`, `"7-day"`→`{prefix:"",num:7,suffix:"-day"}`, `"1 tap"`→`{prefix:"",num:1,suffix:" tap"}`, `"$0"`→`{prefix:"$",num:0,suffix:""}`. No digit → `num:null`.
+  - `export default function CountUp({ value, className }: { value: string; className?: string })` - renders prefix + animated number + suffix; animates `0→num` with anime.js on first reveal (IO). `num===null` → render `value` verbatim. Reduced-motion → final immediately.
 
 - [ ] **Step 1 (failing assertion):** inline check `parseStat("$5/mo")` deep-equals `{prefix:"$",num:5,suffix:"/mo"}`; `parseStat("7-day").num===7`; `parseStat("1 tap").suffix===" tap"`; `parseStat("$0").num===0`. Regex: `/^(\D*)(\d[\d,]*)(.*)$/` (strip commas before `Number`).
 - [ ] **Step 2:** Implement `parseStat` + `CountUp` (IO threshold 0.4, once; anime.js `{ innerHTML:[0,num] }` with `round:1`, or animate a proxy and write `textContent`). Preserve integer formatting.
@@ -104,7 +104,7 @@
 - Modify: `frontend/src/pages/Landing.tsx` (mount `<HeroField/>` absolutely behind hero content, under the `Glow`s)
 
 **Interfaces:**
-- Produces: `export default function HeroField({ className }: { className?: string })` — fills its positioned parent with a `<canvas>` (absolute inset-0, `pointer-events-none`, `aria-hidden`).
+- Produces: `export default function HeroField({ className }: { className?: string })` - fills its positioned parent with a `<canvas>` (absolute inset-0, `pointer-events-none`, `aria-hidden`).
 
 **Behavior:** N≈`min(70, area/16000)` particles drifting slowly; draw faint lines between particles closer than ~120px; colors blush/navy at 0.10–0.25 alpha; DPR scale; resize via ResizeObserver; rAF loop; pause when offscreen (IO) and when `document.hidden`. Reduced-motion → paint one frame, no loop.
 
@@ -123,7 +123,7 @@
 - Modify: `frontend/src/pages/Landing.tsx` (hero `<h1>` uses `<SplitText>`)
 
 **Interfaces:**
-- Produces: `export default function SplitText({ text, className, accentFrom, delay=0 }: { text: string; className?: string; accentFrom?: number; delay?: number })` — splits on words into inline-block spans; words at index ≥ `accentFrom` get the blush accent class; reveals words staggered with blur(6px→0) + translateY(16→0) + opacity on mount via anime.js. Reduced-motion → plain visible text.
+- Produces: `export default function SplitText({ text, className, accentFrom, delay=0 }: { text: string; className?: string; accentFrom?: number; delay?: number })` - splits on words into inline-block spans; words at index ≥ `accentFrom` get the blush accent class; reveals words staggered with blur(6px→0) + translateY(16→0) + opacity on mount via anime.js. Reduced-motion → plain visible text.
 
 - [ ] **Step 1:** Implement `SplitText.tsx` (preserve spaces; `will-change:filter,transform` during anim; clear after).
 - [ ] **Step 2:** Replace hero `<h1>` inner text with `<SplitText text="Your wardrobe, styled by AI." accentFrom={2} .../>` producing the same two-line/accent look (accent on "styled by AI.").
@@ -132,7 +132,7 @@
 
 ---
 
-### Task 7: Extra polish — parallax, gradient accent, richer hover, illustration pop
+### Task 7: Extra polish - parallax, gradient accent, richer hover, illustration pop
 
 **Files:**
 - Modify: `frontend/src/pages/Landing.tsx` (pointer parallax on hero art cards; gradient accent class on accent word; illustration entrance)
@@ -161,6 +161,6 @@
 ## Self-Review
 
 - **Spec coverage:** cleanup (T1), emoji `💨` (T1) + `✦` (T3), seamless marquee (T3), scroll-reveals (T2), count-up (T4), hero canvas (T5), split-text headline (T6), parallax/gradient/hover/illustration polish (T7), reduced-motion + verification (T8). All spec sections mapped.
-- **Placeholder scan:** none — each task has concrete files, interfaces, algorithm, and verification.
+- **Placeholder scan:** none - each task has concrete files, interfaces, algorithm, and verification.
 - **Type consistency:** `useReveal` (T2) reused by CountUp/HeroField patterns; `parseStat` signature stable T4; `Marquee`/`SplitText`/`HeroField`/`CountUp` default-export prop shapes fixed at definition.
 - **Adaptation noted:** no test runner → tsc + in-browser assertions substitute for runner-based TDD (Global Constraints / header).

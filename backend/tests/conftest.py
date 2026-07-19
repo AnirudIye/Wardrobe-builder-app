@@ -7,7 +7,7 @@ import tempfile
 os.environ["DATABASE_URL"] = "sqlite://"  # module-level engine is unused (get_db is overridden)
 os.environ["MEDIA_DIR"] = tempfile.mkdtemp(prefix="wardrobe_test_media_")
 os.environ["PUBLIC_BASE_URL"] = "http://testserver"
-# Every test shares one client IP ("testclient") — auth throttling would 429
+# Every test shares one client IP ("testclient") - auth throttling would 429
 # the whole suite. The limiter is unit-tested directly in test_ratelimit.py.
 os.environ["RATE_LIMIT_ENABLED"] = "false"
 # Blank out all external API keys so tests NEVER hit (or spend) real services,

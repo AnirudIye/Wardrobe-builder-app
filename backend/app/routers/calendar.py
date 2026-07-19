@@ -40,15 +40,22 @@ def create_event(
 def list_events(
     from_date: Optional[date_type] = Query(default=None, alias="from"),
     to_date: Optional[date_type] = Query(default=None, alias="to"),
+    limit: Optional[int] = Query(default=None, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> List[CalendarEvent]:
+    # No params returns everything (the SPA caches the full list); limit/offset
+    # page through the same date order for API consumers at scale.
     query = select(CalendarEvent).where(CalendarEvent.user_id == current_user.id)
     if from_date is not None:
         query = query.where(CalendarEvent.date >= from_date)
     if to_date is not None:
         query = query.where(CalendarEvent.date <= to_date)
-    return list(db.execute(query.order_by(CalendarEvent.date)).scalars().all())
+    query = query.order_by(CalendarEvent.date, CalendarEvent.id).offset(offset)
+    if limit is not None:
+        query = query.limit(limit)
+    return list(db.execute(query).scalars().all())
 
 
 @router.patch("/events/{event_id}", response_model=EventOut)

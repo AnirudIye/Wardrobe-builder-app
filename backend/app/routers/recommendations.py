@@ -70,9 +70,9 @@ def today(
     if not garments:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Your wardrobe is empty — add some items first.",
+            detail="Your wardrobe is empty - add some items first.",
         )
-    # Today's outfit is free and unlimited — only buy-next is quota-metered.
+    # Today's outfit is free and unlimited - only buy-next is quota-metered.
     snapshot = _best_effort_weather(current_user, lat, lon)
     target_date = date if date is not None else date_type.today()
     todays_events = list(

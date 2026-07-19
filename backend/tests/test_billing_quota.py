@@ -66,7 +66,7 @@ def test_old_events_do_not_count(client: TestClient, db_session: Session):
     headers = auth_headers(client)
     _setup_wardrobe(client, headers)
     user = _get_user(db_session)
-    # Five events from 25 hours ago — just outside buy-next's 1-day window.
+    # Five events from 25 hours ago - just outside buy-next's 1-day window.
     old = datetime.now(timezone.utc) - timedelta(hours=25)
     for _ in range(5):
         db_session.add(RecommendationEvent(user_id=user.id, kind="buy-next", created_at=old))
@@ -80,7 +80,7 @@ def test_today_events_do_not_count_against_quota(client: TestClient, db_session:
     headers = auth_headers(client)
     _setup_wardrobe(client, headers)
     user = _get_user(db_session)
-    # Plenty of recent "today" usage — must not affect the buy-next allowance.
+    # Plenty of recent "today" usage - must not affect the buy-next allowance.
     for _ in range(10):
         db_session.add(RecommendationEvent(user_id=user.id, kind="today"))
     db_session.commit()

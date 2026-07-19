@@ -35,7 +35,7 @@ def _assert_public_http_url(url: str) -> None:
     """SSRF guard: only http(s) URLs whose host resolves to public addresses.
 
     Rejects anything resolving to loopback, RFC1918, link-local (incl. the
-    169.254.169.254 cloud metadata endpoint), CGNAT, or ULA ranges — one
+    169.254.169.254 cloud metadata endpoint), CGNAT, or ULA ranges - one
     `is_global` check covers them all. Every address returned by DNS is
     checked, so a host with one public and one private record is rejected.
     Residual risk (accepted): a DNS-rebind between this check and httpx's own
@@ -65,7 +65,7 @@ def download_image_bytes(url: str, max_bytes: int = MAX_DOWNLOAD_BYTES) -> bytes
     Redirects are followed manually (max MAX_REDIRECTS), re-validating each
     hop against the SSRF guard. Raises ImageDownloadError on a bad/private
     URL, network failure, or oversize response. Does not validate the bytes
-    are a real image — pass the result to `process_upload` for that.
+    are a real image - pass the result to `process_upload` for that.
     """
     for _ in range(MAX_REDIRECTS + 1):
         _assert_public_http_url(url)

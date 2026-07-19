@@ -51,7 +51,7 @@ async def try_on(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
     if garment_id is not None:
-        # Read the owned garment's bytes straight from storage — no HTTP
+        # Read the owned garment's bytes straight from storage - no HTTP
         # round-trip to our own /media (which the SSRF guard now rejects as a
         # private address anyway), and it works identically on S3.
         garment = _get_owned_garment(db, current_user, garment_id)
@@ -69,7 +69,7 @@ async def try_on(
 
     result = tryon.generate_tryon(processed_photo.image_bytes, garment_bytes)
     if result is None:
-        # Generation failed / no key — don't charge the user's quota for nothing.
+        # Generation failed / no key - don't charge the user's quota for nothing.
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="TryOn isn't available right now",

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import JSON
 
@@ -16,6 +16,9 @@ def _utcnow() -> datetime:
 
 class Garment(Base):
     __tablename__ = "garments"
+    # The wardrobe listing runs `WHERE user_id = ? ORDER BY created_at DESC`
+    # on every visit; the composite serves it index-ordered, no sort step.
+    __table_args__ = (Index("ix_garments_user_created", "user_id", "created_at"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(

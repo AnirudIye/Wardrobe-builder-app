@@ -183,7 +183,7 @@ def _ai_outfit(
             return None
         rationale = str(data.get("rationale", "")).strip() or "A stylist-picked outfit for today."
         return OutfitResult(garment_ids=ids, rationale=rationale, source="ai", weather=weather)
-    except Exception as exc:  # network/parse/SDK errors — caller falls back
+    except Exception as exc:  # network/parse/SDK errors - caller falls back
         logger.warning("AI outfit recommendation failed: %s", exc)
         return None
 
@@ -229,7 +229,7 @@ def heuristic_purchases(garments: List[Garment]) -> List[PurchaseSuggestion]:
             suggestions.append(
                 PurchaseSuggestion(
                     description=description,
-                    rationale=f"You have no {category} yet — a staple would round out your wardrobe.",
+                    rationale=f"You have no {category} yet, so a staple would round out your wardrobe.",
                     query=query,
                 )
             )
@@ -237,7 +237,7 @@ def heuristic_purchases(garments: List[Garment]) -> List[PurchaseSuggestion]:
         suggestions.append(
             PurchaseSuggestion(
                 description="a trend-forward accessory",
-                rationale="Your basics are covered — an accessory can refresh your looks.",
+                rationale="Your basics are covered, so an accessory can refresh your looks.",
                 query="minimal leather belt",
             )
         )

@@ -42,7 +42,7 @@ def test_scopes_are_independent():
     a = ratelimit.rate_limit("a", times=1, seconds=60)
     b = ratelimit.rate_limit("b", times=1, seconds=60)
     a(_StubRequest())
-    b(_StubRequest())  # different scope, same IP — allowed
+    b(_StubRequest())  # different scope, same IP - allowed
     with pytest.raises(HTTPException):
         a(_StubRequest())
 

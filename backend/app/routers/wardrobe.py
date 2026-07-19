@@ -171,14 +171,22 @@ def retag_item(
 
 @router.get("/items", response_model=list[GarmentOut])
 def list_items(
+    limit: Optional[int] = Query(default=None, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> list[GarmentOut]:
-    rows = db.execute(
+    # No params returns the full closet (the SPA caches it whole); limit/offset
+    # page through the same newest-first order for API consumers at scale.
+    query = (
         select(Garment)
         .where(Garment.user_id == current_user.id)
-        .order_by(Garment.created_at.desc())
-    ).scalars().all()
+        .order_by(Garment.created_at.desc(), Garment.id.desc())
+        .offset(offset)
+    )
+    if limit is not None:
+        query = query.limit(limit)
+    rows = db.execute(query).scalars().all()
     return [_serialize(g) for g in rows]
 
 

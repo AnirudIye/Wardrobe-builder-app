@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 _PROMPT = (
     "Show the person from the first image wearing the exact clothing item from the "
-    "second image. Keep their face, body shape, pose, and background unchanged — only "
+    "second image. Keep their face, body shape, pose, and background unchanged - only "
     "replace the relevant garment. Photorealistic, natural lighting, high quality."
 )
 

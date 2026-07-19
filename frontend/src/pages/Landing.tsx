@@ -1,7 +1,7 @@
 // Marketing landing page shown to logged-out visitors. Built entirely in the
 // app's claymorphic language (navy / blush / cream, Ramaraja display font,
 // clay shadows) with organic blob shapes and flat vector illustrations (see
-// components/illustrations) — nothing is fetched from the network.
+// components/illustrations) - nothing is fetched from the network.
 import { useFadeRise, useReveal, prefersReducedMotion } from "../animations";
 import LegalFooter from "../components/LegalFooter";
 import Marquee from "../components/Marquee";

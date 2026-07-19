@@ -13,11 +13,11 @@ def _utcnow() -> datetime:
 
 
 class RecommendationEvent(Base):
-    """One row per served recommendation — the source of truth for weekly usage."""
+    """One row per served recommendation - the source of truth for weekly usage."""
 
     __tablename__ = "recommendation_events"
     # Quota counting runs `WHERE user_id = ? AND kind = ? AND created_at > ?`
-    # on every metered request (and three times per billing-status call) — the
+    # on every metered request (and three times per billing-status call) - the
     # composite index serves it without scanning a user's whole history.
     __table_args__ = (
         Index("ix_recommendation_events_user_kind_created", "user_id", "kind", "created_at"),

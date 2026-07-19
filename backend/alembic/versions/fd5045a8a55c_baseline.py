@@ -4,7 +4,7 @@ Full schema as of the first Alembic revision: users, garments,
 calendar_events, recommendation_events.
 
 Adopting a PRE-Alembic database instead of a fresh one? Run
-`alembic stamp head` (the tables already exist) — and if that database
+`alembic stamp head` (the tables already exist) - and if that database
 predates email confirmation, first run
 `UPDATE users SET email_verified = true` manually: login hard-blocks
 unverified users, so a plain default-false column would lock out every

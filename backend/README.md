@@ -1,4 +1,4 @@
-# Wardrobe Builder — Backend (FastAPI)
+# Wardrobe Builder - Backend (FastAPI)
 
 Python API for the Wardrobe Builder app: auth, wardrobe (photo upload + AI tagging),
 weather-aware outfit recommendations, buy-next shopping suggestions, and Stripe billing.
@@ -6,7 +6,7 @@ weather-aware outfit recommendations, buy-next shopping suggestions, and Stripe 
 ## Requirements
 
 - Python 3.9+ (developed on 3.9)
-- No native compiler needed — all deps install from prebuilt wheels.
+- No native compiler needed - all deps install from prebuilt wheels.
 
 > **Windows + Anaconda note:** if `pip`/SSL fails inside the venv, prepend Anaconda's
 > `Library\bin` to `PATH` before running pip/python:
@@ -42,7 +42,7 @@ pytest -q
 ## Database
 
 - **Dev:** SQLite (`DATABASE_URL=sqlite:///./wardrobe.db`). Tables are auto-created on
-  startup via `Base.metadata.create_all` — no migration step needed to get going.
+  startup via `Base.metadata.create_all` - no migration step needed to get going.
 - **Production (Postgres):** switch `DATABASE_URL` and introduce **Alembic** migrations
   (planned; not yet wired). The ORM models are already Postgres-compatible.
 

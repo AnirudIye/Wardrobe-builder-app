@@ -93,7 +93,7 @@ export function useReveal<T extends HTMLElement>(
     const revealNow = () => targets.forEach((t) => (t.style.opacity = "1"));
 
     // Fail open: if the user minimises motion, or IntersectionObserver is
-    // unavailable, just show the content — never leave it stuck hidden.
+    // unavailable, just show the content - never leave it stuck hidden.
     if (prefersReducedMotion() || typeof IntersectionObserver === "undefined") {
       revealNow();
       return;

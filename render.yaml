@@ -2,7 +2,7 @@
 # Deploy: push this repo, then in the Render dashboard "New +" -> "Blueprint"
 # and point it at the repo. Render reads this file and provisions the service.
 #
-# Secrets marked `sync: false` are NOT stored here (never commit secrets) — set
+# Secrets marked `sync: false` are NOT stored here (never commit secrets) - set
 # them once in the service's Environment tab. The values you'll need are in
 # backend/.env.example and docs/deploy.md.
 services:

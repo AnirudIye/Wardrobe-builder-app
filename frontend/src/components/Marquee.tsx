@@ -1,7 +1,7 @@
 // Seamless infinite horizontal scroller (reactbits-style, self-contained).
 // Renders `children` as one measured "set", duplicates the set enough times to
 // always overflow its container, then translates the track by exactly one set
-// width on an infinite linear loop — so the wrap is seamless with no gap or
+// width on an infinite linear loop - so the wrap is seamless with no gap or
 // jump regardless of viewport width. Re-measures on resize, pauses on hover,
 // and stays static under prefers-reduced-motion.
 import { useLayoutEffect, useRef, useState } from "react";

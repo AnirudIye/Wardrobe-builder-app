@@ -12,7 +12,7 @@ def test_security_headers_present(client: TestClient):
     assert resp.headers["X-Content-Type-Options"] == "nosniff"
     assert resp.headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
     assert resp.headers["X-Frame-Options"] == "DENY"
-    # Camera stays allowed for same-origin — TryOn uses getUserMedia.
+    # Camera stays allowed for same-origin - TryOn uses getUserMedia.
     assert "camera=(self)" in resp.headers["Permissions-Policy"]
 
 

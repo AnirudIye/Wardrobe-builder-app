@@ -74,7 +74,7 @@ def update_profile(
 class LocationIn(BaseModel):
     city: str = Field(min_length=2, max_length=120)
     # When set (a candidate picked from /profile/location/search), the city is
-    # stored as-is with these coordinates — no second geocoding round-trip.
+    # stored as-is with these coordinates - no second geocoding round-trip.
     lat: Optional[float] = Field(default=None, ge=-90, le=90)
     lon: Optional[float] = Field(default=None, ge=-180, le=180)
 
@@ -258,12 +258,16 @@ def delete_account(
 ) -> Response:
     """Permanently delete the account and all of its data."""
     storage = get_storage()
-    garments = db.execute(
-        select(Garment).where(Garment.user_id == current_user.id)
-    ).scalars().all()
-    for g in garments:
-        storage.delete(g.image_path)
-        storage.delete(g.thumbnail_path)
+    # Project just the two storage-key columns; loading full Garment entities
+    # here would drag every tag/JSON column across the wire for no reason.
+    keys = db.execute(
+        select(Garment.image_path, Garment.thumbnail_path).where(
+            Garment.user_id == current_user.id
+        )
+    ).all()
+    for image_path, thumbnail_path in keys:
+        storage.delete(image_path)
+        storage.delete(thumbnail_path)
     if current_user.avatar_key:
         storage.delete(current_user.avatar_key)
 

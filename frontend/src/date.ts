@@ -1,5 +1,5 @@
 // Local-date formatting. `Date.toISOString()` renders in UTC, which silently
-// shifts the calendar day for anyone west of UTC during evening/night hours —
+// shifts the calendar day for anyone west of UTC during evening/night hours -
 // use this instead anywhere a "what day is it for the user" string is needed.
 export function localISODate(d: Date = new Date()): string {
   const year = d.getFullYear();

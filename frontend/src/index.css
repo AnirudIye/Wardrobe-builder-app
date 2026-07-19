@@ -90,7 +90,7 @@ body {
   }
 }
 
-/* The blob cursor is the only pointer on mouse (fine-pointer) devices — hide
+/* The blob cursor is the only pointer on mouse (fine-pointer) devices - hide
    the OS cursor everywhere. Touch devices (coarse pointer) are unaffected. */
 @media (pointer: fine) {
   *,
@@ -170,7 +170,7 @@ html {
   }
 }
 
-/* Organic "blob" shapes — override the rounded-rect radii on the landing so
+/* Organic "blob" shapes - override the rounded-rect radii on the landing so
    every card, tile and thumbnail reads as a soft blob. Four variants keep the
    grid from looking mechanical. Declared after the utilities so they win over
    Tailwind's rounded-* on the same element. */

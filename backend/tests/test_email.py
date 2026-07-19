@@ -22,7 +22,7 @@ def test_send_password_reset_email_noops_without_config():
 
 def test_send_swallows_malformed_headers(monkeypatch):
     # Even when SMTP is "configured", a header with an embedded newline must not
-    # escape send() — best-effort contract: log and return False, never raise.
+    # escape send() - best-effort contract: log and return False, never raise.
     configured = Settings(smtp_host="smtp.example.com", smtp_from="a@example.com")
     monkeypatch.setattr(email, "get_settings", lambda: configured)
     assert email.send("x@example.com", "Hi\nInjected: yes", "<b>hi</b>", "hi") is False

@@ -1,4 +1,4 @@
-# Landing page — cleanup + layered motion system
+# Landing page - cleanup + layered motion system
 
 _Design spec · 2026-07-15 · branch `feature/landing-motion`_
 
@@ -54,24 +54,24 @@ replacing.
 
 ## 3. The four animations
 
-1. **Scroll-reveals** — extend `animations.ts` with `useReveal<T>(opts)`: an
+1. **Scroll-reveals** - extend `animations.ts` with `useReveal<T>(opts)`: an
    IntersectionObserver hook that runs a one-shot anime.js fade + rise (and
    optional stagger of children) when the element first enters the viewport
    (~15% visible). Replaces the current mount-only `useFadeRise` /
    `useStaggerReveal` usage on the landing so sections animate as you scroll to
    them. Reduced-motion → elements start visible, no animation.
-2. **Count-up stats** — `components/CountUp.tsx`: parses a stat string into
+2. **Count-up stats** - `components/CountUp.tsx`: parses a stat string into
    `prefix + number + suffix` (e.g. `$5/mo` → `$` / `5` / `/mo`; `7-day` → `` /
    `7` / `-day`), and on first reveal animates the number `0 → target` with
    anime.js. Non-numeric stats render as-is. Reduced-motion → final value
    immediately.
-3. **Animated hero background** — `components/HeroField.tsx`: a `<canvas>` behind
+3. **Animated hero background** - `components/HeroField.tsx`: a `<canvas>` behind
    the hero content rendering a slow drift of soft particles with faint
    connecting lines in blush/navy at low opacity. `requestAnimationFrame` loop,
    DPR-aware, sized to its container; **paused when offscreen** via
    IntersectionObserver and on `visibilitychange`. Reduced-motion → paints one
    static frame, no loop. Sits under the existing radial `Glow`s.
-4. **Animated headline** — `components/SplitText.tsx`: splits text into word
+4. **Animated headline** - `components/SplitText.tsx`: splits text into word
    spans and reveals them staggered with a blur + rise via anime.js on mount /
    reveal. Applied to the hero `<h1>` ("Your wardrobe, styled by AI."). Preserves
    the existing blush accent on "styled by AI." Reduced-motion → plain text.
@@ -79,7 +79,7 @@ replacing.
 ## 4. Extra polish ("more complex, better designed")
 
 - **Illustration entrances:** garment/feature/step illustrations pop-scale in as
-  part of their card's reveal (filled SVGs, so scale — not line-draw). Hero art
+  part of their card's reveal (filled SVGs, so scale - not line-draw). Hero art
   tiles get a subtle idle drift layered on the existing `floaty`.
 - **Cursor parallax** on the hero's floating cards: pointer position nudges each
   card a few px (depth-tiered). Disabled on touch and reduced-motion.
@@ -112,7 +112,7 @@ Each new component is self-contained, prop-driven, and independently testable.
 ## Testing / verification
 
 - Unit: `CountUp` parse logic (prefix/number/suffix split) and the marquee
-  copy-count math are pure functions — cover with a lightweight test or an
+  copy-count math are pure functions - cover with a lightweight test or an
   in-browser assertion.
 - Build: `npm run build` (tsc) stays clean.
 - In-browser (dev server): marquee seam absence (sample track `transform` over

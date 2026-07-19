@@ -13,7 +13,7 @@ from app.services.weather import WeatherSnapshot
 logger = logging.getLogger(__name__)
 
 FALLBACK_REPLY = (
-    "I can't reach my styling brain right now — try again in a moment. "
+    "I can't reach my styling brain right now. Try again in a moment. "
     "In the meantime, check the Today tab for a quick outfit pick."
 )
 
@@ -34,7 +34,7 @@ def _system_prompt(
     return (
         "You are DresserAI, a friendly personal stylist embedded in the BetterDresser app. "
         "Answer the user's styling questions and give specific, actionable recommendations "
-        "drawn from their actual wardrobe below whenever relevant — reference items by "
+        "drawn from their actual wardrobe below whenever relevant - reference items by "
         "category/color/subcategory rather than by numeric id. Keep replies conversational "
         "and concise (a few sentences, occasionally a short list).\n"
         f"Today's weather: {weather_text}\n"
@@ -64,6 +64,6 @@ def chat_reply(
             system=_system_prompt(garments, weather, events, prefs),
             max_tokens=600,
         )
-    except Exception as exc:  # network/SDK errors — caller falls back
+    except Exception as exc:  # network/SDK errors - caller falls back
         logger.warning("DresserAI chat failed: %s", exc)
         return None
