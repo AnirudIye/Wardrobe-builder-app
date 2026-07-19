@@ -15,6 +15,13 @@ MAX_IMAGE_SIZE = (1280, 1280)
 THUMBNAIL_SIZE = (400, 400)
 JPEG_QUALITY = 85
 
+# Avatars render at most ~40px (2x DPR -> 80px), so a 96px square with
+# moderate quality stays a few KB on disk and over the wire while remaining
+# clearly recognizable. Center-cropped to a square because the UI masks it
+# into a circle - fitting the whole frame in would letterbox the face.
+AVATAR_SIZE = (96, 96)
+AVATAR_QUALITY = 72
+
 # Default cap on bytes downloaded from a remote image URL.
 MAX_DOWNLOAD_BYTES = 10 * 1024 * 1024
 
@@ -109,10 +116,19 @@ def _to_rgb(img: Image.Image) -> Image.Image:
     return img.convert("RGB")
 
 
-def _encode_jpeg(img: Image.Image) -> bytes:
+def _encode_jpeg(img: Image.Image, quality: int = JPEG_QUALITY) -> bytes:
     buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=JPEG_QUALITY, optimize=True)
+    img.save(buf, format="JPEG", quality=quality, optimize=True)
     return buf.getvalue()
+
+
+def _center_square(img: Image.Image) -> Image.Image:
+    """Crop the largest centered square, so a non-square photo isn't squashed."""
+    width, height = img.size
+    side = min(width, height)
+    left = (width - side) // 2
+    top = (height - side) // 2
+    return img.crop((left, top, left + side, top + side))
 
 
 def process_upload(raw: bytes) -> ProcessedImage:
@@ -139,3 +155,24 @@ def process_upload(raw: bytes) -> ProcessedImage:
         image_bytes=_encode_jpeg(full),
         thumbnail_bytes=_encode_jpeg(thumb),
     )
+
+
+def process_avatar(raw: bytes) -> bytes:
+    """Validate and shrink an uploaded avatar to tiny, square JPEG bytes.
+
+    Center-cropped to a square and downscaled to AVATAR_SIZE at AVATAR_QUALITY:
+    a few KB that still reads clearly at the ~40px the UI renders it. Raises
+    InvalidImageError if the bytes are not a valid image.
+    """
+    try:
+        img = Image.open(io.BytesIO(raw))
+        img.load()
+    except (UnidentifiedImageError, OSError) as exc:
+        raise InvalidImageError("Uploaded file is not a valid image") from exc
+
+    img = _to_rgb(img)
+    img = _center_square(img)
+    # Always exactly AVATAR_SIZE: the source is already square after the crop,
+    # so a single resize gives a uniform tiny avatar with no letterboxing.
+    img = img.resize(AVATAR_SIZE, Image.LANCZOS)
+    return _encode_jpeg(img, quality=AVATAR_QUALITY)

@@ -19,7 +19,7 @@ from app.models.recommendation_event import RecommendationEvent
 from app.models.user import User
 from app.schemas.profile import ProfileOut, ProfileUpdate
 from app.services import trends, weather
-from app.services.images import InvalidImageError, process_upload
+from app.services.images import InvalidImageError, process_avatar
 from app.storage import get_storage
 from app.services.weather import WeatherServiceError, WeatherSnapshot
 
@@ -129,13 +129,13 @@ async def upload_avatar(
     if not raw:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Empty upload")
     try:
-        processed = process_upload(raw)
+        avatar_bytes = process_avatar(raw)
     except InvalidImageError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
     storage = get_storage()
     old_key = current_user.avatar_key
-    key = storage.save(processed.thumbnail_bytes, f"avatar_{uuid.uuid4().hex}.jpg")
+    key = storage.save(avatar_bytes, f"avatar_{uuid.uuid4().hex}.jpg")
     current_user.avatar_key = key
     db.commit()
     db.refresh(current_user)
