@@ -76,6 +76,28 @@ def test_google_sign_in_links_existing_password_account(client: TestClient, monk
     assert pw.status_code == 200
 
 
+def test_google_sign_in_links_case_variant_email_to_existing_account(
+    client: TestClient, monkeypatch
+):
+    # Same case-insensitivity rule as register: a Google identity whose email
+    # differs only in capitalization must link, not mint a second account.
+    client.post(
+        "/auth/register", json={"email": "cased@gmail.com", "password": "supersecret1"}
+    )
+    monkeypatch.setattr(google_oauth, "available", lambda: True)
+    monkeypatch.setattr(
+        google_oauth,
+        "verify",
+        lambda cred: GoogleIdentity(email="CaSed@gmail.com", email_verified=True),
+    )
+    resp = _sign_in(client)
+    assert resp.status_code == 200
+    me = client.get(
+        "/auth/me", headers={"Authorization": f"Bearer {resp.json()['access_token']}"}
+    )
+    assert me.json()["email"] == "cased@gmail.com"
+
+
 def test_google_sign_in_rejects_bad_credential(client: TestClient, monkeypatch):
     monkeypatch.setattr(google_oauth, "available", lambda: True)
     monkeypatch.setattr(google_oauth, "verify", lambda cred: None)

@@ -47,6 +47,22 @@ def test_register_duplicate_email_conflicts(client: TestClient):
     assert resp.status_code == 409
 
 
+def test_register_duplicate_email_conflicts_case_insensitively(client: TestClient):
+    # User-reported hole: changing the email's capitalization minted a second
+    # account on the same inbox (mailboxes are case-insensitive in practice).
+    _register(client, email="case@example.com")
+    resp = _register(client, email="CaSe@example.com")
+    assert resp.status_code == 409
+
+
+def test_register_stores_email_lowercased_and_login_ignores_case(client: TestClient):
+    resp = _register(client, email="MiXeD@Example.com")
+    assert resp.status_code == 201
+    assert resp.json()["email"] == "mixed@example.com"
+    assert _login(client, email="mixed@example.com").status_code == 200
+    assert _login(client, email="MIXED@EXAMPLE.COM").status_code == 200
+
+
 def test_register_rejects_short_password(client: TestClient):
     resp = _register(client, password="short")
     assert resp.status_code == 422

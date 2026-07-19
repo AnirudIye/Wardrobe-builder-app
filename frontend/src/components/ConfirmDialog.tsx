@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -40,7 +41,11 @@ export default function ConfirmDialog({
   if (!open) return null;
   const confirmDisabled = requireText ? typed !== requireText : false;
 
-  return (
+  // Portaled to <body>: an ancestor with backdrop-filter (the sticky app
+  // header, when opened from the account menu) becomes the containing block
+  // for fixed descendants, which would pin this overlay to the header
+  // instead of centering it in the viewport.
+  return createPortal(
     <div
       className="fixed inset-0 z-[9990] flex items-center justify-center bg-navy/40 backdrop-blur-sm px-4"
       onClick={onCancel}
@@ -75,6 +80,7 @@ export default function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

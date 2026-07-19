@@ -38,8 +38,18 @@ from app.services import email, google_oauth
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+def _canonical_email(address: str) -> str:
+    # Mailboxes are case-insensitive in practice, so emails are stored and
+    # compared lowercase - otherwise Foo@x.com could open a second account
+    # alongside foo@x.com. Every lookup and every account creation must go
+    # through this.
+    return address.strip().lower()
+
+
 def _get_user_by_email(db: Session, address: str) -> User | None:
-    return db.execute(select(User).where(User.email == address)).scalar_one_or_none()
+    return db.execute(
+        select(User).where(User.email == _canonical_email(address))
+    ).scalar_one_or_none()
 
 
 def _verification_link(token: str) -> str:
@@ -72,7 +82,7 @@ def register(
     # works with zero secrets (mirrors every other best-effort integration).
     verified = not email.available()
     user = User(
-        email=payload.email,
+        email=_canonical_email(payload.email),
         hashed_password=hash_password(payload.password),
         email_verified=verified,
     )
@@ -232,7 +242,7 @@ def google_sign_in(payload: GoogleSignInRequest, db: Session = Depends(get_db)) 
         # password is unguessable; setting a real one later works through the
         # normal forgot-password flow.
         user = User(
-            email=identity.email,
+            email=_canonical_email(identity.email),
             hashed_password=hash_password(secrets.token_urlsafe(32)),
             email_verified=True,
         )

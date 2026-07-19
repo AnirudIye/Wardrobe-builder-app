@@ -1,4 +1,5 @@
 import { ReactNode, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface ModalProps {
   open: boolean;
@@ -18,7 +19,10 @@ export default function Modal({ open, title, onClose, children }: ModalProps) {
   }, [open, onClose]);
 
   if (!open) return null;
-  return (
+  // Portaled to <body>: same containing-block trap as ConfirmDialog - the
+  // sticky header's backdrop-filter would otherwise pin this to the header
+  // when opened from the account menu.
+  return createPortal(
     <div
       className="fixed inset-0 z-[9990] flex items-center justify-center bg-navy/40 backdrop-blur-sm px-4"
       onClick={onClose}
@@ -37,6 +41,7 @@ export default function Modal({ open, title, onClose, children }: ModalProps) {
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
