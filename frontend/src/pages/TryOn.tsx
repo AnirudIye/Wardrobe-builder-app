@@ -92,7 +92,7 @@ export default function TryOn({ onQuotaBlocked }: { onQuotaBlocked: () => void }
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
     if (!video.videoWidth || !video.videoHeight) {
-      // No frames yet — capturing now would produce an empty image.
+      // No frames yet - capturing now would produce an empty image.
       setCameraError("The camera preview isn't ready yet. Give it a second and try again.");
       return;
     }

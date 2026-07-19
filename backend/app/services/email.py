@@ -52,7 +52,7 @@ def send(to: str, subject: str, html: str, text: str) -> bool:
                 server.login(s.smtp_user, s.smtp_password)
             server.send_message(msg)
         return True
-    except Exception as exc:  # best-effort — never propagate (see llm.py)
+    except Exception as exc:  # best-effort - never propagate (see llm.py)
         logger.warning("SMTP send to %s failed: %s", to, exc)
         return False
 

@@ -7,9 +7,9 @@ class S3Storage(StorageBackend):
     """S3-compatible object storage (AWS S3, Cloudflare R2, MinIO, ...).
 
     Objects are served via a public base URL (R2's pub-xxxx.r2.dev / a CDN
-    domain / an S3 bucket policy) — media here is public-by-design with
+    domain / an S3 bucket policy) - media here is public-by-design with
     unguessable uuid4 keys, same as the /media mount. If the bucket ever needs
-    to be private, swap `url()` for presigned URLs — but note the frontend
+    to be private, swap `url()` for presigned URLs - but note the frontend
     caches URL strings across the session, so presigned links would expire in
     users' hands.
     """
@@ -55,6 +55,6 @@ class S3Storage(StorageBackend):
             raise FileNotFoundError(key) from exc
 
     def delete(self, key: str) -> None:
-        # S3 DeleteObject is idempotent — missing keys are silently fine,
+        # S3 DeleteObject is idempotent - missing keys are silently fine,
         # matching the ABC contract.
         self._client.delete_object(Bucket=self.bucket, Key=key)

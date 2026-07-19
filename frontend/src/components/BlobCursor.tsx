@@ -1,7 +1,7 @@
 // Blob Cursor (reactbits.dev-style): gooey blobs that trail the pointer.
 // SVG "goo" filter + requestAnimationFrame lerp; no dependencies.
 // Pointer-events: none, so it never interferes with the UI. Mouse devices
-// only — on touch (coarse pointer) it renders nothing and the OS cursor is
+// only - on touch (coarse pointer) it renders nothing and the OS cursor is
 // left alone (see the `(pointer: fine)` rule in index.css).
 import { useEffect, useRef, useState } from "react";
 

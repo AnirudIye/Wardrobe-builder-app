@@ -103,7 +103,7 @@ def login(
     if user is None or not verify_password(form_data.password, user.hashed_password):
         if user is not None:
             lockout.record_failure(user.id)
-        # One generic message for both halves — login never reveals whether
+        # One generic message for both halves - login never reveals whether
         # an account exists (anti-enumeration).
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -147,7 +147,7 @@ def resend_verification(
     if user is not None and not user.email_verified and email.available():
         link = _verification_link(create_email_token(user.id))
         background.add_task(email.send_verification_email, user.email, link)
-    # Always generic — never reveal whether an account exists.
+    # Always generic - never reveal whether an account exists.
     return {"detail": "If that account exists and is unverified, a confirmation email has been sent."}
 
 
@@ -165,7 +165,7 @@ def forgot_password(
     if user is not None and email.available():
         link = _reset_link(create_reset_token(user.id, user.hashed_password))
         background.add_task(email.send_password_reset_email, user.email, link)
-    # Always generic — never reveal whether an account exists.
+    # Always generic - never reveal whether an account exists.
     return {"detail": "If that account exists, a password reset email has been sent."}
 
 
@@ -185,7 +185,7 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
             detail="Invalid or expired reset link",
         )
     user.hashed_password = hash_password(payload.password)
-    # Redeeming a link mailed to the address proves inbox ownership — the same
+    # Redeeming a link mailed to the address proves inbox ownership - the same
     # property email verification certifies. It is also the recovery path out
     # of a login lockout.
     user.email_verified = True

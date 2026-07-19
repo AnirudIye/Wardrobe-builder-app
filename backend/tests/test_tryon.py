@@ -84,7 +84,7 @@ def test_tryon_generation_failure_is_503_and_does_not_consume_quota(client: Test
     assert resp.status_code == 503
 
     status_resp = client.get("/billing/status", headers=headers).json()
-    assert status_resp["tryon_remaining_this_week"] == 5  # unchanged — nothing charged
+    assert status_resp["tryon_remaining_this_week"] == 5  # unchanged - nothing charged
 
 
 def test_tryon_has_its_own_weekly_quota(client: TestClient):

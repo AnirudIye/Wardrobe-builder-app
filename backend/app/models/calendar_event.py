@@ -18,7 +18,7 @@ class CalendarEvent(Base):
 
     __tablename__ = "calendar_events"
     # Today's-events lookup runs `WHERE user_id = ? AND date = ?` on every
-    # recommendation and chat request — serve it with one composite index.
+    # recommendation and chat request - serve it with one composite index.
     __table_args__ = (Index("ix_calendar_events_user_date", "user_id", "date"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

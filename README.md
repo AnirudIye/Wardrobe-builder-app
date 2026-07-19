@@ -7,7 +7,7 @@ to your **calendar** (interview, wedding, gym…) and that day's outfit matches 
 dress code. Ask **DresserAI** free-form styling questions, or use **TryOn** to see
 yourself wearing a piece via your camera and AI image generation. Outfit
 recommendations are free and unlimited; buy-next suggestions, DresserAI chat, and
-TryOn each have their own free weekly allowance — a $5/month plan unlocks unlimited
+TryOn each have their own free weekly allowance - a $5/month plan unlocks unlimited
 access to all three (Stripe).
 
 - **Backend:** Python / FastAPI + SQLAlchemy (SQLite dev, Postgres-ready). See [backend/README.md](backend/README.md).
@@ -22,15 +22,15 @@ React SPA  ──/api (Vite proxy)──▶  FastAPI
                                      ├─ wardrobe    photo upload → AI tags → CRUD
                                      ├─ calendar    events with dress codes → outfit matching
                                      ├─ recommendations  /today (free), /buy-next  (quota-guarded)
-                                     ├─ dresser-ai  /chat — stateless multi-turn styling chat (quota-guarded)
-                                     ├─ tryon       /tryon — camera photo + garment → AI try-on image (quota-guarded)
+                                     ├─ dresser-ai  /chat - stateless multi-turn styling chat (quota-guarded)
+                                     ├─ tryon       /tryon - camera photo + garment → AI try-on image (quota-guarded)
                                      ├─ billing     Stripe checkout / portal / webhook, /status
                                      └─ services/   vision, weather, trends, recommendation,
                                                     shopping, quota, billing, dresser_ai, tryon
 ```
 
 Every external service (Claude, OpenWeather, SerpAPI, Stripe, Gemini) is
-**best-effort**: without a key, the app still runs — AI tagging returns empty tags,
+**best-effort**: without a key, the app still runs - AI tagging returns empty tags,
 recommendations fall back to a deterministic heuristic, weather/shopping return
 nothing, DresserAI replies with a friendly fallback message, TryOn returns a 503, and
 billing endpoints return 503. This makes the app demoable with zero secrets.
@@ -66,15 +66,15 @@ All secrets live in `backend/.env` (git-ignored; see `backend/.env.example`):
 
 ## Plans & quota
 
-- **Today outfits: free and unlimited** — never paywalled.
+- **Today outfits: free and unlimited** - never paywalled.
 - Free tier: **5 buy-next suggestions**, **20 DresserAI messages**, and **5 try-ons**
-  per trailing 7 days — each its own independent allowance. Exceeding one returns
+  per trailing 7 days - each its own independent allowance. Exceeding one returns
   **HTTP 402** and the UI routes to the upgrade screen; the quota is checked **before**
   any paid API call, and a failed TryOn generation doesn't consume the allowance.
 - Paid ($5/mo): unlimited on all three. Plan state is driven by **Stripe webhooks**,
   which flip the user between `free` and `paid` on subscribe / renew / cancel.
 - Usage is tracked per `RecommendationEvent` row, keyed by `kind`
-  (`"buy-next"` / `"dresser-ai"` / `"tryon"`) — `"today"` rows are logged but never
+  (`"buy-next"` / `"dresser-ai"` / `"tryon"`) - `"today"` rows are logged but never
   counted. DresserAI chat history itself is **not persisted**; only the fact that a
   message was sent is recorded, for quota purposes.
 
@@ -95,4 +95,4 @@ cd backend && pytest -q      # 74 tests: auth, wardrobe, vision, weather, recs, 
   deployed `/billing/webhook` URL and copy its signing secret into `STRIPE_WEBHOOK_SECRET`.
 
 > Account/key setup in the Stripe, OpenWeather, SerpAPI, and Anthropic dashboards is a
-> manual step you perform yourself — the code is wired to consume those keys once present.
+> manual step you perform yourself - the code is wired to consume those keys once present.

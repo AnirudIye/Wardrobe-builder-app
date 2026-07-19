@@ -1,11 +1,11 @@
-# Wardrobe Builder — Frontend (React + Vite + TS + Tailwind)
+# Wardrobe Builder - Frontend (React + Vite + TS + Tailwind)
 
 Single-page app for the Wardrobe Builder: auth, wardrobe grid + photo upload,
 today's outfit, buy-next suggestions, and plan/upgrade.
 
 ## Requirements
 
-- **Node.js 18+** and npm (not installed in the original dev environment — install
+- **Node.js 18+** and npm (not installed in the original dev environment - install
   from https://nodejs.org before running).
 
 ## Setup & run

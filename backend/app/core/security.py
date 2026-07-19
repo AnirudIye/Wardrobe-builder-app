@@ -87,7 +87,7 @@ def decode_reset_token(token: str) -> Optional[Tuple[int, str]]:
     """Return (user id, password fingerprint) from a valid reset token, else None.
 
     The caller must still compare the fingerprint against the user's current
-    hash — a mismatch means the password already changed and the token is dead.
+    hash - a mismatch means the password already changed and the token is dead.
     """
     try:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])

@@ -1,5 +1,5 @@
 // Flat vector illustrations used across the landing page in place of emoji and
-// line icons — each one actually depicts the thing it stands for (a t-shirt, a
+// line icons - each one actually depicts the thing it stands for (a t-shirt, a
 // sneaker, a sun behind a cloud, a wardrobe, and so on). Self-contained SVG, so
 // nothing is fetched from the network. Palette: navy #0B1957 / blush #FA9EBC /
 // cream #FFF6EA with a couple of literal accents (gold sun, brown leather).

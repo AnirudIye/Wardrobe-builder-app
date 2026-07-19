@@ -10,7 +10,7 @@ from starlette.datastructures import MutableHeaders
 class SecurityHeadersMiddleware:
     """Attach standard security headers to every HTTP response.
 
-    HSTS is opt-in (production only) — sending it from a plain-HTTP dev server
+    HSTS is opt-in (production only) - sending it from a plain-HTTP dev server
     would poison localhost for every other project on this machine.
     """
 

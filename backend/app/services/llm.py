@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 # Provider-agnostic text completion used by every text-AI feature (vision
 # tagging, outfit/buy-next reasoning, trends, DresserAI chat). Prefers
-# Anthropic when its key is configured, otherwise Google Gemini — so either
+# Anthropic when its key is configured, otherwise Google Gemini - so either
 # key alone lights up all AI features. Best-effort like every other external
 # service: returns None on no keys / any failure, never raises.
 

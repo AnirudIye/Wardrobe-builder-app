@@ -91,7 +91,7 @@ def test_delete_account_removes_user_and_data(client: TestClient, db_session: Se
     # Token now resolves to a deleted user → 401.
     assert client.get("/auth/me", headers=headers).status_code == 401
 
-    # All of the user's data is actually gone — not just the account row.
+    # All of the user's data is actually gone - not just the account row.
     assert db_session.execute(
         select(Garment).where(Garment.user_id == uid)
     ).scalars().all() == []

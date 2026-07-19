@@ -52,7 +52,7 @@ export default function CameraCapture({
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas || !video.videoWidth || !video.videoHeight) {
-      // No frames yet — capturing now would produce an empty image.
+      // No frames yet - capturing now would produce an empty image.
       setError("The camera preview isn't ready yet. Give it a second and try again.");
       return;
     }

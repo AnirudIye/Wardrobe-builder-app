@@ -71,7 +71,7 @@ def auto_tag(image_bytes: bytes) -> GarmentTags:
     except ValidationError as exc:
         logger.warning("Vision tagging failed schema validation: %s", exc)
         return GarmentTags()
-    except Exception as exc:  # network/auth/SDK errors — degrade gracefully
+    except Exception as exc:  # network/auth/SDK errors - degrade gracefully
         logger.warning("Vision tagging call failed: %s", exc)
         return GarmentTags()
 

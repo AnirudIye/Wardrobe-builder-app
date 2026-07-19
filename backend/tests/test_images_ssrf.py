@@ -62,7 +62,7 @@ def _stub_stream(location: str):
 
 
 def test_redirect_to_private_address_rejected(monkeypatch):
-    # Public first hop 302s to the metadata endpoint — the per-hop
+    # Public first hop 302s to the metadata endpoint - the per-hop
     # revalidation must catch it.
     monkeypatch.setattr(
         "app.services.images.httpx.stream",

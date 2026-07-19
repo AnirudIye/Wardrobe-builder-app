@@ -2,12 +2,12 @@ import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 
 // Content-Security-Policy for the built SPA, injected as a <meta> tag at
-// BUILD TIME ONLY — the React plugin injects an inline preamble in dev, which
+// BUILD TIME ONLY - the React plugin injects an inline preamble in dev, which
 // a committed CSP would break. script-src 'self' with zero inline scripts is
 // the load-bearing part (blocks XSS token exfiltration); img-src stays broad
 // deliberately (Buy Next retailer thumbnails, TryOn data: results, camera
 // blobs); frame-src covers the WeatherWidget OpenStreetMap embed.
-// NOTE for deploy time: meta CSP cannot express frame-ancestors — when a
+// NOTE for deploy time: meta CSP cannot express frame-ancestors - when a
 // static host exists, move this same policy to a real response header and add
 // frame-ancestors 'none'.
 // The accounts.google.com/gsi/ entries are Google's documented CSP for the

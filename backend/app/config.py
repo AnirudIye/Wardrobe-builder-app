@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     )
 
     # Core
-    environment: str = "dev"  # "dev" | "production" — gates docs, HSTS, create_all
+    environment: str = "dev"  # "dev" | "production" - gates docs, HSTS, create_all
     database_url: str = "sqlite:///./wardrobe.db"
     jwt_secret: str = "dev-insecure-secret-change-me"
     jwt_expire_minutes: int = 10080  # 7 days
@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     s3_public_base_url: str = ""  # e.g. https://pub-xxxx.r2.dev or a CDN domain
 
     # Security
-    # Comma-separated string, NOT a list — pydantic-settings JSON-parses list
+    # Comma-separated string, NOT a list - pydantic-settings JSON-parses list
     # fields from env vars, which is a footgun for simple comma values.
     cors_origins: str = ""
     rate_limit_enabled: bool = True
@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     # Credentials -> OAuth client ID, type Web). Unset = button hidden.
     google_oauth_client_id: str = ""
 
-    # AI (Google Gemini — TryOn image generation, and all text AI when no
+    # AI (Google Gemini - TryOn image generation, and all text AI when no
     # Anthropic key is configured)
     google_api_key: str = ""
     google_image_model: str = "gemini-2.5-flash-image"
@@ -80,7 +80,7 @@ class Settings(BaseSettings):
     free_weekly_chat_limit: int = 20
     free_weekly_tryon_limit: int = 5
 
-    # Email (SMTP — signup confirmation). All optional; when unset, email
+    # Email (SMTP - signup confirmation). All optional; when unset, email
     # verification is skipped and new users are auto-verified (best-effort,
     # like every other integration).
     smtp_host: str = ""

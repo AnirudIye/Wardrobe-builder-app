@@ -1,6 +1,6 @@
 // Intent-driven image prefetch: warm the browser's image cache for pictures the
 // user is *about to* see, using navigation intent as the signal (hovering or
-// keyboard-focusing a nav tab — the same heuristic Next.js/instant.page use for
+// keyboard-focusing a nav tab - the same heuristic Next.js/instant.page use for
 // links). By the time the click lands, the bytes are already cached and the
 // destination renders its images instantly instead of popping in.
 //

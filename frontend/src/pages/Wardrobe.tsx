@@ -14,7 +14,7 @@ import { Wardrobe as WardrobeIll } from "../components/illustrations";
 
 const CATEGORIES = ["top", "bottom", "outerwear", "dress", "footwear", "accessory", "other"];
 
-// Items we've already sent for AI estimation this session — never re-fire for
+// Items we've already sent for AI estimation this session - never re-fire for
 // the same item (even on failure), so a missing AI key can't cause retry loops.
 const retagAttempted = new Set<number>();
 

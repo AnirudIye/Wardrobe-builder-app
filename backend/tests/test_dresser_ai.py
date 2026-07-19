@@ -27,7 +27,7 @@ def test_chat_rejects_empty_messages(client: TestClient):
 
 
 def test_chat_without_key_returns_friendly_fallback(client: TestClient):
-    # No ANTHROPIC_API_KEY configured in the test environment (conftest blanks it) —
+    # No ANTHROPIC_API_KEY configured in the test environment (conftest blanks it) -
     # the endpoint must still succeed with a friendly message, never a hard failure.
     headers = auth_headers(client)
     resp = _chat(client, headers)

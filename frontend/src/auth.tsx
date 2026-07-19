@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // The API client clears the token and fires this on any 401 (expired or
-  // revoked session) — route the user back to the login screen.
+  // revoked session) - route the user back to the login screen.
   useEffect(() => {
     const onUnauthorized = () => setUser(null);
     window.addEventListener("wb:unauthorized", onUnauthorized);

@@ -90,7 +90,7 @@ def _find_user(db: Session, customer_id: Optional[str], user_id: Optional[str]) 
 def apply_subscription_event(db: Session, event: dict) -> Optional[User]:
     """Update a user's plan from a Stripe event object. Returns the affected user.
 
-    This is the testable core of webhook handling — it takes a parsed Stripe
+    This is the testable core of webhook handling - it takes a parsed Stripe
     event dict and is independent of signature verification / transport.
     """
     event_type = event.get("type", "")

@@ -6,7 +6,7 @@ import { billingCache } from "../store";
 import ErrorNote from "../components/ErrorNote";
 import PageHeader from "../components/PageHeader";
 
-// A labelled usage meter bound to real quota state — never decorative.
+// A labelled usage meter bound to real quota state - never decorative.
 function Meter({
   label,
   remaining,
@@ -18,7 +18,7 @@ function Meter({
   limit: number;
   period: string;
 }) {
-  if (remaining === null) return null; // unlimited (paid) — no meter to show
+  if (remaining === null) return null; // unlimited (paid) - no meter to show
   const pct = limit > 0 ? Math.max(0, Math.min(100, (remaining / limit) * 100)) : 0;
   return (
     <div>
@@ -45,8 +45,8 @@ export default function Upgrade() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    // Refresh in the background even when cached — quotas change as other
-    // tabs consume them — but render the cached value immediately.
+    // Refresh in the background even when cached - quotas change as other
+    // tabs consume them - but render the cached value immediately.
     billingCache.get(true).then(setStatus);
   }, []);
 

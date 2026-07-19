@@ -1,4 +1,4 @@
-# Account, Email Confirmation, Cursor & Delete-Confirmation — Implementation Plan
+# Account, Email Confirmation, Cursor & Delete-Confirmation - Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -10,20 +10,20 @@
 
 ## Global Constraints
 
-- **Python 3.9** — every new module starts with `from __future__ import annotations`; no PEP-604 runtime unions outside annotations.
-- **No new backend dependencies** — email uses stdlib `smtplib` / `email.message`. `alembic` is already vendored but stays unused (no migrations in this plan).
-- **Best-effort external services** — `services/email.py` must catch, log, and return a falsy value on any failure or misconfiguration; it must never raise to the HTTP layer (CLAUDE.md pattern #1).
-- **`backend/.env.example` gets placeholders only** — never a real secret (handoff known-issue #4).
-- **Zero-keys demo must keep working** — when SMTP is unconfigured, new users are auto-verified.
+- **Python 3.9** - every new module starts with `from __future__ import annotations`; no PEP-604 runtime unions outside annotations.
+- **No new backend dependencies** - email uses stdlib `smtplib` / `email.message`. `alembic` is already vendored but stays unused (no migrations in this plan).
+- **Best-effort external services** - `services/email.py` must catch, log, and return a falsy value on any failure or misconfiguration; it must never raise to the HTTP layer (CLAUDE.md pattern #1).
+- **`backend/.env.example` gets placeholders only** - never a real secret (handoff known-issue #4).
+- **Zero-keys demo must keep working** - when SMTP is unconfigured, new users are auto-verified.
 - **Keep `pytest -q` green** (start: 80 passing) after every backend task, and **`npm run build` clean** (tsc + vite; it is the frontend typecheck) after every frontend task.
-- **No frontend test harness** — frontend tasks verify via `npm run build` + a manual run of both servers. Do not add Vitest/Jest.
-- **Claymorphic design tokens** — classes: `clay-card`, `clay-card-hover`, `clay-btn`, `clay-btn-blush`, `clay-input`, `clay-chip`, `skeleton`. Colors: `navy` (#0B1957), `navy-soft`, `blush` (#FA9EBC), `blush-deep`, `blush-soft`, `cream`, `cream-soft`, `cream-deep`.
+- **No frontend test harness** - frontend tasks verify via `npm run build` + a manual run of both servers. Do not add Vitest/Jest.
+- **Claymorphic design tokens** - classes: `clay-card`, `clay-card-hover`, `clay-btn`, `clay-btn-blush`, `clay-input`, `clay-chip`, `skeleton`. Colors: `navy` (#0B1957), `navy-soft`, `blush` (#FA9EBC), `blush-deep`, `blush-soft`, `cream`, `cream-soft`, `cream-deep`.
 - **DB reset (dev only):** two new columns are added with no Alembic, so before running the dev server the developer must delete `backend/wardrobe.db` (it auto-recreates). Tests are unaffected (in-memory DB rebuilt per test).
 - **Repo root is `Wardrobe builder app/`.** All paths below are relative to it. Backend commands run from `backend/`, frontend from `frontend/`.
 
 ---
 
-## Task 1: User schema — `email_verified` + `avatar_key` columns and serialization
+## Task 1: User schema - `email_verified` + `avatar_key` columns and serialization
 
 **Files:**
 - Modify: `backend/app/models/user.py`
@@ -56,7 +56,7 @@ def test_new_user_exposes_verification_and_avatar_fields(client: TestClient):
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `pytest tests/test_auth.py::test_new_user_exposes_verification_and_avatar_fields -v`
-Expected: FAIL — `me` has no `email_verified` key (KeyError/assert) or profile has no `avatar_url`.
+Expected: FAIL - `me` has no `email_verified` key (KeyError/assert) or profile has no `avatar_url`.
 
 - [ ] **Step 3: Add the model columns**
 
@@ -136,7 +136,7 @@ git commit -m "feat(account): add email_verified + avatar_key to User and expose
 
 ---
 
-## Task 2: `services/email.py` — best-effort SMTP gateway + config + env template
+## Task 2: `services/email.py` - best-effort SMTP gateway + config + env template
 
 **Files:**
 - Create: `backend/app/services/email.py`
@@ -154,7 +154,7 @@ git commit -m "feat(account): add email_verified + avatar_key to User and expose
 In `backend/app/config.py`, add after the Quota block (before the closing of `Settings`):
 
 ```python
-    # Email (SMTP — signup confirmation). All optional; when unset, email
+    # Email (SMTP - signup confirmation). All optional; when unset, email
     # verification is skipped and new users are auto-verified (best-effort,
     # like every other integration).
     smtp_host: str = ""
@@ -212,7 +212,7 @@ def test_send_verification_email_noops_without_config():
 - [ ] **Step 4: Run test to verify it fails**
 
 Run: `pytest tests/test_email.py -v`
-Expected: FAIL — `ModuleNotFoundError: app.services.email`.
+Expected: FAIL - `ModuleNotFoundError: app.services.email`.
 
 - [ ] **Step 5: Implement the gateway**
 
@@ -273,7 +273,7 @@ def send(to: str, subject: str, html: str, text: str) -> bool:
                 server.login(s.smtp_user, s.smtp_password)
             server.send_message(msg)
         return True
-    except Exception as exc:  # best-effort — never propagate (see llm.py)
+    except Exception as exc:  # best-effort - never propagate (see llm.py)
         logger.warning("SMTP send to %s failed: %s", to, exc)
         return False
 
@@ -304,7 +304,7 @@ Expected: PASS (all three).
 
 - [ ] **Step 7: Add placeholders to the env template**
 
-In `backend/.env.example`, add this section after the Quota block (placeholders only — no real values):
+In `backend/.env.example`, add this section after the Quota block (placeholders only - no real values):
 
 ```bash
 # --- Email (SMTP for signup confirmation) ---
@@ -373,7 +373,7 @@ def test_email_token_rejects_garbage():
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `pytest tests/test_auth.py::test_email_token_roundtrips -v`
-Expected: FAIL — `ImportError: cannot import name 'create_email_token'`.
+Expected: FAIL - `ImportError: cannot import name 'create_email_token'`.
 
 - [ ] **Step 3: Implement the token helpers**
 
@@ -415,7 +415,7 @@ git commit -m "feat(email): add signed email-verification tokens"
 
 ---
 
-## Task 4: Auth router — verify-before-use gate, verify + resend endpoints
+## Task 4: Auth router - verify-before-use gate, verify + resend endpoints
 
 **Files:**
 - Modify: `backend/app/routers/auth.py`
@@ -494,7 +494,7 @@ def test_resend_always_returns_200(client: TestClient, monkeypatch):
 - [ ] **Step 3: Run tests to verify they fail**
 
 Run: `pytest tests/test_auth.py::test_email_gate_full_flow -v`
-Expected: FAIL — no `/auth/verify` route (404) / register doesn't gate.
+Expected: FAIL - no `/auth/verify` route (404) / register doesn't gate.
 
 - [ ] **Step 4: Rewrite the auth router**
 
@@ -607,7 +607,7 @@ def resend_verification(
     if user is not None and not user.email_verified and email.available():
         link = _verification_link(create_email_token(user.id))
         background.add_task(email.send_verification_email, user.email, link)
-    # Always generic — never reveal whether an account exists.
+    # Always generic - never reveal whether an account exists.
     return {"detail": "If that account exists and is unverified, a confirmation email has been sent."}
 
 
@@ -635,7 +635,7 @@ git commit -m "feat(email): gate login on verification, add verify + resend endp
 
 ---
 
-## Task 5: Account backend — avatar, password change, hard-delete
+## Task 5: Account backend - avatar, password change, hard-delete
 
 **Files:**
 - Modify: `backend/app/routers/profile.py`
@@ -731,7 +731,7 @@ def test_delete_account_removes_user_and_data(client: TestClient):
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/test_account.py -v`
-Expected: FAIL — routes 404 / 405.
+Expected: FAIL - routes 404 / 405.
 
 - [ ] **Step 3: Implement the endpoints**
 
@@ -750,7 +750,7 @@ from app.models.recommendation_event import RecommendationEvent
 from app.services.images import InvalidImageError, process_upload
 ```
 
-(Keep the existing `from pydantic import BaseModel, Field` and `from app.services import trends, weather` lines. Merge the `fastapi` import so it includes `File`, `Response`, `UploadFile`, `status`, `Query` — they are all listed above.)
+(Keep the existing `from pydantic import BaseModel, Field` and `from app.services import trends, weather` lines. Merge the `fastapi` import so it includes `File`, `Response`, `UploadFile`, `status`, `Query` - they are all listed above.)
 
 Add these endpoints to `backend/app/routers/profile.py` (after `set_location`, before `current_trends`):
 
@@ -837,7 +837,7 @@ def delete_account(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 ```
 
-Note: `select` is already imported in `profile.py`? It is not — add `from sqlalchemy import delete, select` (the file currently imports neither at module top; `delete` and `select` are both used above, so import both).
+Note: `select` is already imported in `profile.py`? It is not - add `from sqlalchemy import delete, select` (the file currently imports neither at module top; `delete` and `select` are both used above, so import both).
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -871,7 +871,7 @@ git commit -m "feat(account): avatar upload/remove, password change, hard accoun
 In `frontend/src/index.css`, append at the very bottom (outside the `@layer`):
 
 ```css
-/* The blob cursor is the only pointer on mouse (fine-pointer) devices — hide
+/* The blob cursor is the only pointer on mouse (fine-pointer) devices - hide
    the OS cursor everywhere. Touch devices (coarse pointer) are unaffected. */
 @media (pointer: fine) {
   *,
@@ -890,7 +890,7 @@ Replace `frontend/src/components/BlobCursor.tsx` with:
 // Blob Cursor (reactbits.dev-style): gooey blobs that trail the pointer.
 // SVG "goo" filter + requestAnimationFrame lerp; no dependencies.
 // Pointer-events: none, so it never interferes with the UI. Mouse devices
-// only — on touch (coarse pointer) it renders nothing and the OS cursor is
+// only - on touch (coarse pointer) it renders nothing and the OS cursor is
 // left alone (see the `(pointer: fine)` rule in index.css).
 import { useEffect, useRef, useState } from "react";
 
@@ -987,7 +987,7 @@ Expected: clean (no tsc errors).
 
 - [ ] **Step 4: Manual verification**
 
-Run both servers (`uvicorn app.main:app --reload` in `backend/`, `npm run dev` in `frontend/`). Open http://localhost:5173 on a desktop browser: the OS arrow is gone and only the blush blob follows the mouse, including over buttons and inputs. Resize narrow — the blob still shows. (On a touch device / dev-tools mobile emulation the normal behavior returns.)
+Run both servers (`uvicorn app.main:app --reload` in `backend/`, `npm run dev` in `frontend/`). Open http://localhost:5173 on a desktop browser: the OS arrow is gone and only the blush blob follows the mouse, including over buttons and inputs. Resize narrow - the blob still shows. (On a touch device / dev-tools mobile emulation the normal behavior returns.)
 
 - [ ] **Step 5: Commit**
 
@@ -1318,7 +1318,7 @@ Add this effect (near the other `useEffect`s):
     const token = params.get("verify_token");
     if (!token) return;
     verifyEmail(token)
-      .then(() => setVerifyMsg("Email confirmed — you're all set!"))
+      .then(() => setVerifyMsg("Email confirmed - you're all set!"))
       .catch(() => setVerifyMsg("That confirmation link is invalid or has expired."))
       .finally(() => {
         params.delete("verify_token");
@@ -1391,7 +1391,7 @@ export default function Login() {
       await api.resendVerification(email);
       setResendMsg("Confirmation email sent. Check your inbox.");
     } catch {
-      setResendMsg("Couldn't resend right now — try again shortly.");
+      setResendMsg("Couldn't resend right now - try again shortly.");
     }
   };
 
@@ -1557,7 +1557,7 @@ Widen `updateProfile` to accept style preferences, and add the account methods (
   deleteAccount: () => request<void>("/profile", { method: "DELETE" }),
 ```
 
-(Replace the existing `updateProfile` definition with the widened one above — do not leave two.)
+(Replace the existing `updateProfile` definition with the widened one above - do not leave two.)
 
 - [ ] **Step 2: Create the generic Modal shell**
 
@@ -1950,7 +1950,7 @@ export default function AccountMenu({ onUpgrade }: { onUpgrade: () => void }) {
       <ConfirmDialog
         open={panel === "delete"}
         title="Delete your account?"
-        message="This permanently deletes your account and everything in it — wardrobe, calendar, and usage history. This cannot be undone."
+        message="This permanently deletes your account and everything in it - wardrobe, calendar, and usage history. This cannot be undone."
         confirmLabel="Delete forever"
         requireText="DELETE"
         onConfirm={del}

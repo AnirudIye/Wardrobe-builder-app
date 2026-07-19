@@ -74,7 +74,7 @@ def update_profile(
 class LocationIn(BaseModel):
     city: str = Field(min_length=2, max_length=120)
     # When set (a candidate picked from /profile/location/search), the city is
-    # stored as-is with these coordinates — no second geocoding round-trip.
+    # stored as-is with these coordinates - no second geocoding round-trip.
     lat: Optional[float] = Field(default=None, ge=-90, le=90)
     lon: Optional[float] = Field(default=None, ge=-180, le=180)
 

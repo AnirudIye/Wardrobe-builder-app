@@ -80,7 +80,7 @@ def test_today_returns_outfit_from_wardrobe(client: TestClient):
 
 
 def test_today_uses_client_supplied_date_over_server_date(client: TestClient):
-    """A ?date= param overrides the server's own clock — this is the fix for
+    """A ?date= param overrides the server's own clock - this is the fix for
     events silently shifting a day for users in a different timezone than the
     server (the calendar-event date is always the caller's local date)."""
     headers = auth_headers(client)

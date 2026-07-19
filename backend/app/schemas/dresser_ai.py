@@ -12,7 +12,7 @@ class ChatMessage(BaseModel):
 
 class ChatIn(BaseModel):
     # Full running transcript, including the new user message. Not persisted
-    # server-side — the client is the sole holder of chat history.
+    # server-side - the client is the sole holder of chat history.
     messages: List[ChatMessage] = Field(min_length=1, max_length=40)
 
 
