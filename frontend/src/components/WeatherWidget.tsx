@@ -138,12 +138,15 @@ export default function WeatherWidget() {
                     setCandidates(null);
                   }}
                   placeholder="City, e.g. Waterloo"
-                  className="flex-1 clay-input px-3 py-1.5 text-sm"
+                  // min-w-0 beats the input's intrinsic ~190px floor - without
+                  // it the narrow rail pushes the Search button out through
+                  // the card's right padding (same fix as the wardrobe search).
+                  className="flex-1 min-w-0 clay-input px-3 py-1.5 text-sm"
                 />
                 <button
                   type="submit"
                   disabled={busy || city.trim().length < 2}
-                  className="clay-btn px-4 py-1.5 text-sm"
+                  className="clay-btn px-4 py-1.5 text-sm shrink-0"
                 >
                   {busy ? "…" : "Search"}
                 </button>
