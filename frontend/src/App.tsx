@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Landing from "./pages/Landing";
 import Wardrobe from "./pages/Wardrobe";
 import Today from "./pages/Today";
+import Streak from "./pages/Streak";
 import BuyNext from "./pages/BuyNext";
 import Calendar from "./pages/Calendar";
 import DresserAI from "./pages/DresserAI";
@@ -19,11 +20,12 @@ import BlobCursor from "./components/BlobCursor";
 import LegalFooter from "./components/LegalFooter";
 import AccountMenu from "./components/AccountMenu";
 
-type Tab = "wardrobe" | "today" | "buy-next" | "calendar" | "dresser-ai" | "tryon" | "upgrade";
+type Tab = "wardrobe" | "today" | "streak" | "buy-next" | "calendar" | "dresser-ai" | "tryon" | "upgrade";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "wardrobe", label: "My Wardrobe" },
   { id: "today", label: "Today's Recommendations" },
+  { id: "streak", label: "Streak" },
   { id: "buy-next", label: "What To Buy Next" },
   { id: "calendar", label: "Calendar" },
   { id: "dresser-ai", label: "DresserAI" },
@@ -206,6 +208,7 @@ export default function App() {
           <main ref={mainRef} className="max-w-5xl mx-auto px-4 py-10 w-full flex-1">
             {tab === "wardrobe" && <Wardrobe />}
             {tab === "today" && <Today />}
+            {tab === "streak" && <Streak />}
             {tab === "buy-next" && <BuyNext onQuotaBlocked={() => setTab("upgrade")} />}
             {tab === "calendar" && <Calendar />}
             {tab === "dresser-ai" && <DresserAI onQuotaBlocked={() => setTab("upgrade")} />}

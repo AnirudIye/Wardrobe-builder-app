@@ -14,6 +14,7 @@ from app.routers import (
     billing,
     calendar,
     dresser_ai,
+    fits,
     profile,
     recommendations,
     tryon,
@@ -62,6 +63,7 @@ def create_app() -> FastAPI:
     app.include_router(wardrobe.router)
     app.include_router(recommendations.router)
     app.include_router(calendar.router)
+    app.include_router(fits.router)
     app.include_router(dresser_ai.router)
     app.include_router(tryon.router)
     app.include_router(billing.router)

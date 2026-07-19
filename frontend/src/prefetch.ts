@@ -50,6 +50,7 @@ function buyNextThumbs(): string[] {
 const TAB_IMAGES: Record<string, () => string[]> = {
   wardrobe: garmentThumbs,
   today: garmentThumbs, // outfits are assembled from the user's own garments
+  streak: garmentThumbs, // the log-your-fit picker shows the whole closet
   "buy-next": buyNextThumbs,
   tryon: () => [...garmentThumbs(), ...buyNextThumbs()], // both are try-on candidates
 };

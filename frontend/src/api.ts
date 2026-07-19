@@ -181,6 +181,23 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
 }
+export interface FitWeekDay {
+  date: string; // YYYY-MM-DD
+  logged: boolean;
+  source?: string | null;
+}
+export interface FitStatus {
+  today_logged: boolean;
+  today_source?: string | null;
+  today_garment_ids: number[];
+  current_streak: number;
+  longest_streak: number;
+  week: FitWeekDay[];
+  week_points: number;
+  closet_score: number;
+  percentile?: number | null;
+  total_logs: number;
+}
 
 // --- Endpoints ---
 export const api = {
@@ -342,6 +359,21 @@ export const api = {
 
   today: () =>
     request<OutfitRecommendation>(`/recommendations/today?date=${localISODate()}`),
+
+  fitStatus: () => request<FitStatus>(`/fits/status?date=${localISODate()}`),
+  logFit: (garment_ids: number[], source: "recommendation" | "manual", date?: string) =>
+    request<FitStatus>("/fits/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // `today` is the client-local date the backend validates the grace
+      // window against; `date` defaults to today (yesterday is also legal).
+      body: JSON.stringify({
+        date: date ?? localISODate(),
+        today: localISODate(),
+        garment_ids,
+        source,
+      }),
+    }),
   buyNext: () => request<BuyNext>("/recommendations/buy-next"),
 
   tryOn: (photo: Blob, target: { garment_id: number } | { image_url: string }) => {

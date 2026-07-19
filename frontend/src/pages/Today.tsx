@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { api, OutfitRecommendation } from "../api";
+import { api, FitStatus, OutfitRecommendation } from "../api";
 import { useFadeRise, useStaggerReveal } from "../animations";
 import { CardGridSkeleton, Skeleton } from "../components/Skeleton";
 import ErrorNote from "../components/ErrorNote";
 import PageHeader from "../components/PageHeader";
 import EmptyState from "../components/EmptyState";
 import { Wardrobe as WardrobeIll } from "../components/illustrations";
+import { streakCache } from "../store";
 
 // Session cache: switching tabs shows the last result instantly instead of
 // re-fetching. "Refresh" forces a new one. The in-flight promise also guards
@@ -17,9 +18,32 @@ export default function Today() {
   const [rec, setRec] = useState<OutfitRecommendation | null>(cached);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [fit, setFit] = useState<FitStatus | null>(streakCache.peek());
+  const [logging, setLogging] = useState(false);
 
   const pageRef = useFadeRise<HTMLDivElement>();
   const itemsRef = useStaggerReveal<HTMLDivElement>(rec ? rec.rationale : null);
+
+  useEffect(() => {
+    streakCache.get().then(setFit).catch(() => {});
+  }, []);
+
+  // One-tap streak logging: "I wore this" records the recommendation's
+  // garments as today's fit and feeds the Streak tab.
+  const woreIt = async () => {
+    if (!rec || rec.items.length === 0) return;
+    setLogging(true);
+    setError(null);
+    try {
+      const fresh = await api.logFit(rec.items.map((g) => g.id), "recommendation");
+      streakCache.set(fresh);
+      setFit(fresh);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLogging(false);
+    }
+  };
 
   const generate = async () => {
     setBusy(true);
@@ -95,6 +119,20 @@ export default function Today() {
                 {rec.source === "ai" ? "Styled by DresserAI" : "Styled by house rules"}
                 {rec.weather ? ` · ${Math.round(rec.weather.temp_c)}°C ${rec.weather.description}` : ""}
               </p>
+              {fit?.today_logged ? (
+                <p className="inline-flex items-center gap-2 mt-5 clay-chip">
+                  Logged for today
+                  {fit.current_streak > 0 ? ` · ${fit.current_streak}-day streak` : ""}
+                </p>
+              ) : (
+                <button
+                  onClick={woreIt}
+                  disabled={logging}
+                  className="clay-btn px-5 py-2 text-sm mt-5"
+                >
+                  {logging ? "Logging…" : "I wore this"}
+                </button>
+              )}
             </div>
             <div ref={itemsRef} className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-4">
               {rec.items.map((g) => (
