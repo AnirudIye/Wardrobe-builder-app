@@ -40,6 +40,7 @@ def _serialize(garment: Garment) -> GarmentOut:
         formality=garment.formality,
         warmth_rating=garment.warmth_rating,
         seasons=garment.seasons or [],
+        price=garment.price,
         created_at=garment.created_at,
     )
 

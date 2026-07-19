@@ -123,6 +123,7 @@ export interface Garment {
   formality?: string | null;
   warmth_rating?: number | null;
   seasons: string[];
+  price?: number | null;
 }
 export interface LocationCandidate {
   label: string;
@@ -197,6 +198,20 @@ export interface FitStatus {
   closet_score: number;
   percentile?: number | null;
   total_logs: number;
+  challenge_name: string;
+  challenge_brief: string;
+  challenge_done: boolean;
+}
+export interface WearStatItem {
+  garment_id: number;
+  wears: number;
+  price?: number | null;
+  cost_per_wear?: number | null;
+}
+export interface WearStats {
+  items: WearStatItem[];
+  closet_value: number;
+  never_worn: number;
 }
 
 // --- Endpoints ---
@@ -361,17 +376,23 @@ export const api = {
     request<OutfitRecommendation>(`/recommendations/today?date=${localISODate()}`),
 
   fitStatus: () => request<FitStatus>(`/fits/status?date=${localISODate()}`),
-  logFit: (garment_ids: number[], source: "recommendation" | "manual", date?: string) =>
+  wearStats: () => request<WearStats>("/fits/wear-stats"),
+  logFit: (
+    garment_ids: number[],
+    source: "recommendation" | "manual",
+    options: { date?: string; challenge_done?: boolean } = {}
+  ) =>
     request<FitStatus>("/fits/log", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       // `today` is the client-local date the backend validates the grace
       // window against; `date` defaults to today (yesterday is also legal).
       body: JSON.stringify({
-        date: date ?? localISODate(),
+        date: options.date ?? localISODate(),
         today: localISODate(),
         garment_ids,
         source,
+        challenge_done: options.challenge_done ?? false,
       }),
     }),
   buyNext: () => request<BuyNext>("/recommendations/buy-next"),

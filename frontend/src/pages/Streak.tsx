@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, FitStatus, Garment } from "../api";
+import { api, FitStatus, Garment, WearStats } from "../api";
 import { useFadeRise } from "../animations";
 import { localISODate } from "../date";
 import { Skeleton } from "../components/Skeleton";
@@ -8,13 +8,15 @@ import PageHeader from "../components/PageHeader";
 import EmptyState from "../components/EmptyState";
 import ShareActions from "../components/ShareCard";
 import { Wardrobe as WardrobeIll } from "../components/illustrations";
-import { garmentsCache, streakCache } from "../store";
+import { garmentsCache, streakCache, wearStatsCache } from "../store";
 
 export default function Streak() {
   const [status, setStatus] = useState<FitStatus | null>(streakCache.peek());
   const [garments, setGarments] = useState<Garment[] | null>(garmentsCache.peek());
   const [picking, setPicking] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
+  const [challengeClaim, setChallengeClaim] = useState(false);
+  const [wearStats, setWearStats] = useState<WearStats | null>(wearStatsCache.peek());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pageRef = useFadeRise<HTMLDivElement>();
@@ -25,6 +27,7 @@ export default function Streak() {
       .then(setStatus)
       .catch((e) => setError((e as Error).message));
     garmentsCache.get().then(setGarments).catch(() => {});
+    wearStatsCache.get().then(setWearStats).catch(() => {});
   }, []);
 
   const toggle = (id: number) =>
@@ -35,11 +38,15 @@ export default function Streak() {
     setBusy(true);
     setError(null);
     try {
-      const fresh = await api.logFit(selected, "manual");
+      const fresh = await api.logFit(selected, "manual", { challenge_done: challengeClaim });
       streakCache.set(fresh);
       setStatus(fresh);
       setPicking(false);
       setSelected([]);
+      setChallengeClaim(false);
+      // A new log changes wear counts, so cost-per-wear must refetch.
+      wearStatsCache.clear();
+      wearStatsCache.get().then(setWearStats).catch(() => {});
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -49,6 +56,7 @@ export default function Streak() {
 
   const startEditing = () => {
     setSelected(status?.today_garment_ids ?? []);
+    setChallengeClaim(status?.challenge_done ?? false);
     setPicking(true);
   };
 
@@ -68,6 +76,21 @@ export default function Streak() {
       />
 
       <ErrorNote message={error} className="mb-4" />
+
+      {status && (
+        <div className="clay-card blob-card-a px-5 py-4 mb-6 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="clay-chip bg-blush-soft">Today's challenge</span>
+          <p className="text-sm">
+            <span className="font-semibold">{status.challenge_name}.</span>{" "}
+            <span className="text-navy/60">{status.challenge_brief}</span>
+          </p>
+          {status.challenge_done ? (
+            <span className="text-xs font-medium text-navy/70 ml-auto">Done, +5 points</span>
+          ) : (
+            <span className="text-xs text-navy/40 ml-auto">Claim it when you log, +5 points</span>
+          )}
+        </div>
+      )}
 
       {!status && (
         <div className="clay-card blob-card-b p-8">
@@ -176,6 +199,7 @@ export default function Streak() {
                       onClick={() => {
                         setPicking(false);
                         setSelected([]);
+                        setChallengeClaim(false);
                       }}
                       className="text-xs text-navy/40 hover:text-navy"
                     >
@@ -204,10 +228,22 @@ export default function Streak() {
                     );
                   })}
                 </div>
+                <label className="flex items-center gap-2.5 mt-5 text-sm text-navy/70 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={challengeClaim}
+                    onChange={(e) => setChallengeClaim(e.target.checked)}
+                    className="w-4 h-4 accent-blush-deep"
+                  />
+                  <span>
+                    I did today's challenge
+                    <span className="text-navy/40"> · {status.challenge_name} (+5 points)</span>
+                  </span>
+                </label>
                 <button
                   onClick={submit}
                   disabled={busy || selected.length === 0}
-                  className="clay-btn px-6 py-2.5 mt-5 disabled:opacity-40"
+                  className="clay-btn px-6 py-2.5 mt-4 disabled:opacity-40"
                 >
                   {busy
                     ? "Logging…"
@@ -215,6 +251,67 @@ export default function Streak() {
                       ? "Pick at least one piece"
                       : `Log ${selected.length} ${selected.length === 1 ? "piece" : "pieces"}`}
                 </button>
+              </div>
+            )}
+
+            {/* Cost per wear: the wear log paying off */}
+            {garments && garments.length > 0 && wearStats && (
+              <div className="clay-card p-6 mt-6">
+                <div className="flex items-baseline justify-between gap-3">
+                  <h3 className="font-brand text-2xl">Cost per wear</h3>
+                  {wearStats.closet_value > 0 && (
+                    <span className="text-xs text-navy/40">
+                      ${wearStats.closet_value.toFixed(0)} closet value
+                    </span>
+                  )}
+                </div>
+                {(() => {
+                  const best = wearStats.items
+                    .filter((w) => w.cost_per_wear != null)
+                    .sort((a, b) => (a.cost_per_wear ?? 0) - (b.cost_per_wear ?? 0))
+                    .slice(0, 3);
+                  if (best.length === 0) {
+                    return (
+                      <p className="text-sm text-navy/50 mt-2">
+                        Add prices to your pieces in My Wardrobe. Every wear you log here lowers
+                        their cost per wear.
+                      </p>
+                    );
+                  }
+                  return (
+                    <div className="mt-4 space-y-3">
+                      {best.map((w) => {
+                        const g = garments.find((x) => x.id === w.garment_id);
+                        if (!g) return null;
+                        return (
+                          <div key={w.garment_id} className="flex items-center gap-3">
+                            <img
+                              src={g.thumbnail_url}
+                              alt=""
+                              className="w-12 h-12 rounded-xl object-cover shadow-clay-sm shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium capitalize line-clamp-1">
+                                {g.subcategory ?? g.category ?? "item"}
+                              </p>
+                              <p className="text-xs text-navy/50">
+                                ${w.cost_per_wear?.toFixed(2)}/wear · worn {w.wears}{" "}
+                                {w.wears === 1 ? "time" : "times"}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+                {wearStats.never_worn > 0 && (
+                  <p className="text-xs text-navy/40 mt-4">
+                    {wearStats.never_worn}{" "}
+                    {wearStats.never_worn === 1 ? "piece hasn't" : "pieces haven't"} been worn
+                    yet. Working them in is free value.
+                  </p>
+                )}
               </div>
             )}
           </div>

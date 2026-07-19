@@ -14,6 +14,8 @@ class FitLogIn(BaseModel):
     today: date
     garment_ids: List[int] = Field(min_length=1, max_length=30)
     source: Literal["recommendation", "manual"] = "manual"
+    # Honor-system claim of the day's shared style challenge.
+    challenge_done: bool = False
 
 
 class FitWeekDay(BaseModel):
@@ -35,3 +37,23 @@ class FitStatusOut(BaseModel):
     # you; None until you have a log in the window.
     percentile: Optional[int] = None
     total_logs: int
+    # Today's shared challenge (same for every user on a given date).
+    challenge_name: str
+    challenge_brief: str
+    challenge_done: bool
+
+
+class WearStatItem(BaseModel):
+    garment_id: int
+    wears: int
+    price: Optional[float] = None
+    # price / wears, only when both exist.
+    cost_per_wear: Optional[float] = None
+
+
+class WearStatsOut(BaseModel):
+    items: List[WearStatItem]
+    # Sum of the prices the user has entered.
+    closet_value: float
+    # Owned garments that appear in no outfit log yet.
+    never_worn: int

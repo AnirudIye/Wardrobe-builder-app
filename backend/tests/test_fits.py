@@ -171,6 +171,63 @@ def test_streak_uses_rest_day_grace(client: TestClient, db_session):
     assert body["longest_streak"] == 4
 
 
+def test_status_exposes_todays_shared_challenge(client: TestClient):
+    from app.services.challenges import challenge_for
+
+    headers = auth_headers(client)
+    body = client.get(f"/fits/status?date={TODAY.isoformat()}", headers=headers).json()
+    expected = challenge_for(TODAY)
+    assert body["challenge_name"] == expected["name"]
+    assert body["challenge_brief"] == expected["brief"]
+    assert body["challenge_done"] is False
+
+
+def test_challenge_claim_adds_points(client: TestClient):
+    headers = auth_headers(client)
+    g1 = _garment_id(client, headers)
+    resp = client.post(
+        "/fits/log",
+        headers=headers,
+        json={
+            "date": TODAY.isoformat(),
+            "today": TODAY.isoformat(),
+            "garment_ids": [g1],
+            "source": "manual",
+            "challenge_done": True,
+        },
+    )
+    body = resp.json()
+    assert body["challenge_done"] is True
+    assert body["week_points"] == 10 + 2 + 5  # day + one garment + challenge
+
+
+def test_wear_stats(client: TestClient, db_session):
+    headers = auth_headers(client, email="wears@example.com")
+    g1 = _garment_id(client, headers)
+    g2 = _garment_id(client, headers, "blue")
+    g3 = _garment_id(client, headers, "green")  # never worn
+    client.patch(f"/wardrobe/items/{g1}", headers=headers, json={"price": 150})
+    _seed_log(db_session, "wears@example.com", TODAY - timedelta(days=1), [g1])
+    _log(client, headers, [g1, g2])
+
+    resp = client.get("/fits/wear-stats", headers=headers)
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    by_id = {item["garment_id"]: item for item in body["items"]}
+    assert by_id[g1]["wears"] == 2
+    assert by_id[g1]["cost_per_wear"] == 75.0
+    assert by_id[g2]["wears"] == 1
+    assert by_id[g2]["price"] is None
+    assert by_id[g2]["cost_per_wear"] is None
+    assert by_id[g3]["wears"] == 0
+    assert body["closet_value"] == 150
+    assert body["never_worn"] == 1
+
+
+def test_wear_stats_requires_auth(client: TestClient):
+    assert client.get("/fits/wear-stats").status_code == 401
+
+
 def test_percentile_across_users(client: TestClient, db_session):
     a = auth_headers(client, email="a@example.com")
     b = auth_headers(client, email="b@example.com")

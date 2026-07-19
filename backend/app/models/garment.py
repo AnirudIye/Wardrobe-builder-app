@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy import DateTime, Float, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import JSON
 
@@ -38,6 +38,10 @@ class Garment(Base):
     formality: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
     warmth_rating: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     seasons: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+
+    # What the user paid (plain number, no currency handling; UI renders "$").
+    # Feeds cost-per-wear alongside the outfit_logs wear counts.
+    price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False

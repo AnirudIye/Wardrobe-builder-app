@@ -6,7 +6,7 @@ import ErrorNote from "../components/ErrorNote";
 import PageHeader from "../components/PageHeader";
 import EmptyState from "../components/EmptyState";
 import { Wardrobe as WardrobeIll } from "../components/illustrations";
-import { streakCache } from "../store";
+import { streakCache, wearStatsCache } from "../store";
 
 // Session cache: switching tabs shows the last result instantly instead of
 // re-fetching. "Refresh" forces a new one. The in-flight promise also guards
@@ -38,6 +38,8 @@ export default function Today() {
       const fresh = await api.logFit(rec.items.map((g) => g.id), "recommendation");
       streakCache.set(fresh);
       setFit(fresh);
+      wearStatsCache.clear(); // wear counts moved
+
     } catch (err) {
       setError((err as Error).message);
     } finally {

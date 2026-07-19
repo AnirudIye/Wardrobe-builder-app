@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { api, Garment, Product } from "../api";
+import { api, Garment, Product, WearStats } from "../api";
 import { useFadeRise, useStaggerReveal, pulse } from "../animations";
 import CameraCapture from "../components/CameraCapture";
 import CircularGallery from "../components/CircularGallery";
 import WeatherWidget from "../components/WeatherWidget";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { CardGridSkeleton, Skeleton } from "../components/Skeleton";
-import { garmentsCache } from "../store";
+import { garmentsCache, wearStatsCache } from "../store";
 import ErrorNote from "../components/ErrorNote";
 import PageHeader from "../components/PageHeader";
 import EmptyState from "../components/EmptyState";
@@ -43,12 +43,18 @@ export default function Wardrobe() {
     setItems(next);
   };
 
+  const [wearStats, setWearStats] = useState<WearStats | null>(wearStatsCache.peek());
+
   useEffect(() => {
     garmentsCache.get().then((g) => {
       setItems(g);
       setLoading(false);
     });
+    wearStatsCache.get().then(setWearStats).catch(() => {});
   }, []);
+
+  const wearsFor = (id: number) =>
+    wearStats?.items.find((w) => w.garment_id === id) ?? null;
 
   // AI warmth estimation: any item missing a warmth rating gets re-tagged in
   // the background; results stream into the grid as they arrive.
@@ -131,12 +137,30 @@ export default function Wardrobe() {
     const before = items;
     syncItems(items.map((g) => (g.id === id ? { ...g, ...tags } : g)));
     api.updateGarment(id, tags).then(
-      (updated) => syncItems((garmentsCache.peek() ?? []).map((g) => (g.id === id ? updated : g))),
+      (updated) => {
+        syncItems((garmentsCache.peek() ?? []).map((g) => (g.id === id ? updated : g)));
+        if ("price" in tags) {
+          // Price moves cost-per-wear; refetch lazily on next read.
+          wearStatsCache.clear();
+          wearStatsCache.get().then(setWearStats).catch(() => {});
+        }
+      },
       (err) => {
         syncItems(before);
         setError((err as Error).message);
       }
     );
+  };
+
+  const savePrice = (id: number, raw: string) => {
+    const current = items.find((g) => g.id === id)?.price ?? null;
+    if (raw.trim() === "") {
+      if (current !== null) patchItem(id, { price: null });
+      return;
+    }
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < 0) return;
+    if (value !== current) patchItem(id, { price: value });
   };
 
   // Optimistic: remove immediately, restore on failure.
@@ -216,6 +240,35 @@ export default function Wardrobe() {
                         </option>
                       ))}
                     </select>
+                    <label className="flex items-center gap-1.5 text-xs text-navy/50">
+                      <span>$</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        placeholder="price paid"
+                        defaultValue={g.price ?? ""}
+                        onBlur={(e) => savePrice(g.id, e.target.value)}
+                        className="w-full clay-input px-2 py-1 text-xs"
+                      />
+                    </label>
+                    {/* Wears come from the Streak log; price makes it cost-per-wear */}
+                    {(() => {
+                      const w = wearsFor(g.id);
+                      if (!w) return null;
+                      return (
+                        <p className="text-xs text-navy/50">
+                          {w.wears === 0
+                            ? "Never worn yet"
+                            : `Worn ${w.wears}${w.wears === 1 ? " time" : " times"}`}
+                          {w.cost_per_wear != null && (
+                            <span className="font-medium text-navy/70">
+                              {" "}· ${w.cost_per_wear.toFixed(2)}/wear
+                            </span>
+                          )}
+                        </p>
+                      );
+                    })()}
                     {/* Warmth is AI-estimated, not user-set */}
                     <p className="text-xs text-navy/50 mt-auto">
                       {g.warmth_rating != null ? (

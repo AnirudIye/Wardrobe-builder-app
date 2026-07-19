@@ -80,6 +80,7 @@ def week_grid(logs: Mapping[date, str], today: date) -> List[dict]:
     return grid
 
 
-def week_points(days_logged: int, distinct_garments: int) -> int:
-    """Weekly style points: 10 per logged day + capped variety bonus."""
-    return 10 * days_logged + min(2 * distinct_garments, 30)
+def week_points(days_logged: int, distinct_garments: int, challenges_done: int = 0) -> int:
+    """Weekly style points: 10 per logged day + capped variety bonus + 5 per
+    claimed daily challenge (honor-system, like all logging)."""
+    return 10 * days_logged + min(2 * distinct_garments, 30) + 5 * challenges_done

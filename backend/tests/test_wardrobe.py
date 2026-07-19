@@ -42,6 +42,27 @@ def test_upload_rejects_non_image(client: TestClient):
     assert resp.status_code == 400
 
 
+def test_patch_price_persists(client: TestClient):
+    headers = auth_headers(client)
+    garment_id = _upload(client, headers).json()["id"]
+    resp = client.patch(
+        f"/wardrobe/items/{garment_id}", headers=headers, json={"price": 129.99}
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["price"] == 129.99
+    listed = client.get("/wardrobe/items", headers=headers).json()
+    assert listed[0]["price"] == 129.99
+
+
+def test_patch_rejects_negative_price(client: TestClient):
+    headers = auth_headers(client)
+    garment_id = _upload(client, headers).json()["id"]
+    resp = client.patch(
+        f"/wardrobe/items/{garment_id}", headers=headers, json={"price": -5}
+    )
+    assert resp.status_code == 422
+
+
 def test_list_returns_only_own_items(client: TestClient):
     a = auth_headers(client, email="a@example.com")
     b = auth_headers(client, email="b@example.com")

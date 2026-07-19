@@ -122,3 +122,11 @@ def test_points_base_plus_variety():
 
 def test_points_variety_bonus_caps_at_30():
     assert week_points(7, 40) == 100  # 70 base + capped 30
+
+
+def test_points_challenge_bonus():
+    assert week_points(3, 3, challenges_done=2) == 46  # 36 + 10
+
+
+def test_points_perfect_week_ceiling():
+    assert week_points(7, 40, challenges_done=7) == 135

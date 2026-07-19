@@ -12,8 +12,9 @@ from app.database import get_db
 from app.models.garment import Garment
 from app.models.outfit_log import OutfitLog
 from app.models.user import User
-from app.schemas.fits import FitLogIn, FitStatusOut
+from app.schemas.fits import FitLogIn, FitStatusOut, WearStatsOut
 from app.services import streaks
+from app.services.challenges import challenge_for
 from app.services.closet_score import closet_score
 
 router = APIRouter(prefix="/fits", tags=["fits"])
@@ -32,17 +33,21 @@ def _status_payload(db: Session, user: User, today: date_type) -> dict:
     monday = today - timedelta(days=today.weekday())
     week_garments: set = set()
     week_days = 0
+    week_challenges = 0
     for i in range(7):
         log = by_date.get(monday + timedelta(days=i))
         if log is not None:
             week_days += 1
             week_garments.update(log.garment_ids or [])
+            if log.challenge_done:
+                week_challenges += 1
 
     garments = list(
         db.execute(select(Garment).where(Garment.user_id == user.id)).scalars().all()
     )
 
     today_log = by_date.get(today)
+    challenge = challenge_for(today)
     return {
         "today_logged": today_log is not None,
         "today_source": today_log.source if today_log else None,
@@ -50,10 +55,13 @@ def _status_payload(db: Session, user: User, today: date_type) -> dict:
         "current_streak": streaks.current_streak(logged_dates, today),
         "longest_streak": streaks.longest_streak(logged_dates),
         "week": streaks.week_grid({d: log.source for d, log in by_date.items()}, today),
-        "week_points": streaks.week_points(week_days, len(week_garments)),
+        "week_points": streaks.week_points(week_days, len(week_garments), week_challenges),
         "closet_score": closet_score(garments),
         "percentile": _weekly_percentile(db, user, today),
         "total_logs": len(logs),
+        "challenge_name": challenge["name"],
+        "challenge_brief": challenge["brief"],
+        "challenge_done": bool(today_log.challenge_done) if today_log else False,
     }
 
 
@@ -131,6 +139,7 @@ def log_fit(
     if existing is not None:
         existing.garment_ids = garment_ids
         existing.source = payload.source
+        existing.challenge_done = payload.challenge_done
     else:
         db.add(
             OutfitLog(
@@ -138,7 +147,49 @@ def log_fit(
                 date=payload.date,
                 garment_ids=garment_ids,
                 source=payload.source,
+                challenge_done=payload.challenge_done,
             )
         )
     db.commit()
     return _status_payload(db, current_user, payload.today)
+
+
+@router.get("/wear-stats", response_model=WearStatsOut)
+def wear_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Cost-per-wear over the wear log. garment_ids live in JSON, which
+    SQLite can't index into, so wears are counted in Python - the same
+    full-scan scale the streak math already accepts (~365 rows/user/year)."""
+    logs = db.execute(
+        select(OutfitLog).where(OutfitLog.user_id == current_user.id)
+    ).scalars()
+    wears: dict = {}
+    for log in logs:
+        for garment_id in log.garment_ids or []:
+            wears[garment_id] = wears.get(garment_id, 0) + 1
+
+    garments = list(
+        db.execute(select(Garment).where(Garment.user_id == current_user.id)).scalars()
+    )
+    items = []
+    closet_value = 0.0
+    never_worn = 0
+    for garment in garments:
+        count = wears.get(garment.id, 0)
+        if count == 0:
+            never_worn += 1
+        if garment.price is not None:
+            closet_value += garment.price
+        items.append(
+            {
+                "garment_id": garment.id,
+                "wears": count,
+                "price": garment.price,
+                "cost_per_wear": round(garment.price / count, 2)
+                if garment.price is not None and count > 0
+                else None,
+            }
+        )
+    return {"items": items, "closet_value": closet_value, "never_worn": never_worn}

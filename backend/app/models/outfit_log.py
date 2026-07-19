@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date as date_type, datetime, timezone
 
-from sqlalchemy import Date, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import JSON
 
@@ -40,6 +40,8 @@ class OutfitLog(Base):
     garment_ids: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
     # "recommendation" (one tap on Today's pick) or "manual" (picker).
     source: Mapped[str] = mapped_column(String(20), default="manual", nullable=False)
+    # Honor-system claim of the day's shared style challenge (+5 points).
+    challenge_done: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False
