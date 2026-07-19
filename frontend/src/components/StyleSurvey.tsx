@@ -8,6 +8,9 @@ import { api, User } from "../api";
 import { profileCache } from "../store";
 import ErrorNote from "./ErrorNote";
 
+// Retail-neutral phrasing for clothing gender preference: stores split by
+// section, so the question asks where the user shops, not who they are.
+const SECTIONS = ["menswear", "womenswear", "a bit of both"];
 const STYLES = ["minimal", "classic", "streetwear", "sporty", "edgy", "romantic", "business-casual"];
 const COLORS = ["neutrals", "earth tones", "pastels", "brights", "mostly black", "jewel tones"];
 const BUDGETS = ["under $25", "$25-50", "$50-100", "$100-200", "$200+"];
@@ -38,6 +41,7 @@ function Chip({
 }
 
 export default function StyleSurvey({ onDone }: { onDone: (profile: User) => void }) {
+  const [section, setSection] = useState<string | null>(null);
   const [styles, setStyles] = useState<string[]>([]);
   const [colors, setColors] = useState<string[]>([]);
   const [budget, setBudget] = useState<string | null>(null);
@@ -55,6 +59,7 @@ export default function StyleSurvey({ onDone }: { onDone: (profile: User) => voi
     const prefs = skip
       ? { skipped: true }
       : {
+          shop_section: section,
           styles,
           colors,
           budget,
@@ -81,6 +86,20 @@ export default function StyleSurvey({ onDone }: { onDone: (profile: User) => voi
         </p>
 
         <div className="mt-6 space-y-5">
+          <div>
+            <p className="text-xs font-medium text-navy/50 mb-2">Which section do you usually shop?</p>
+            <div className="flex flex-wrap gap-2">
+              {SECTIONS.map((s) => (
+                <Chip
+                  key={s}
+                  label={s}
+                  active={section === s}
+                  onClick={() => setSection(section === s ? null : s)}
+                />
+              ))}
+            </div>
+          </div>
+
           <div>
             <p className="text-xs font-medium text-navy/50 mb-2">Which styles feel like you?</p>
             <div className="flex flex-wrap gap-2">

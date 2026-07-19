@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api, User } from "../api";
+import { profileCache } from "../store";
 import ErrorNote from "./ErrorNote";
 
 interface Props {
@@ -7,8 +8,17 @@ interface Props {
   onProfileChange: (u: User) => void;
 }
 
+// The freshest profile wins: the prop comes from AccountMenu, which loads
+// once at header mount - a survey save after that only reaches the cache.
+function livePrefs(profile: User | null): Record<string, unknown> {
+  return (profileCache.peek()?.style_preferences ?? profile?.style_preferences ?? {}) as Record<
+    string,
+    unknown
+  >;
+}
+
 export default function Customization({ profile, onProfileChange }: Props) {
-  const prefs = (profile?.style_preferences ?? {}) as { styles?: string[]; avoid?: string[] };
+  const prefs = livePrefs(profile) as { styles?: string[]; avoid?: string[] };
   const [styles, setStyles] = useState((prefs.styles ?? []).join(", "));
   const [avoid, setAvoid] = useState((prefs.avoid ?? []).join(", "));
   const [busy, setBusy] = useState(false);
@@ -24,7 +34,13 @@ export default function Customization({ profile, onProfileChange }: Props) {
     setMsg(null);
     try {
       const updated = await api.updateProfile({
-        style_preferences: { styles: toList(styles), avoid: toList(avoid) },
+        // Spread first: this panel edits two fields, but the survey stores
+        // more (shop_section, budget, colors, occasions) that must survive.
+        style_preferences: {
+          ...livePrefs(profile),
+          styles: toList(styles),
+          avoid: toList(avoid),
+        },
       });
       onProfileChange(updated);
       setMsg("Style preferences saved.");
