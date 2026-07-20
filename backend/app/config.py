@@ -80,6 +80,12 @@ class Settings(BaseSettings):
     free_weekly_chat_limit: int = 20
     free_weekly_tryon_limit: int = 5
 
+    # Email (signup confirmation + password reset). All optional; when unset,
+    # email features degrade gracefully (signups auto-verify).
+    # Brevo HTTP API is preferred when its key is set - required on hosts that
+    # block outbound SMTP entirely (e.g. Render's free tier). The sender
+    # address is still SMTP_FROM (must be a verified sender in Brevo).
+    brevo_api_key: str = ""
     # Email (SMTP - signup confirmation). All optional; when unset, email
     # verification is skipped and new users are auto-verified (best-effort,
     # like every other integration).

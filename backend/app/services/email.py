@@ -4,13 +4,17 @@ import logging
 import smtplib
 from email.message import EmailMessage
 
+import httpx
+
 from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 
-# Best-effort transactional email over stdlib SMTP. Like services/llm.py it
-# never raises to the caller: when SMTP isn't configured or a send fails, it
-# logs and returns False so signup still works with zero secrets.
+# Best-effort transactional email. Like services/llm.py it never raises to
+# the caller: when nothing is configured or a send fails, it logs and returns
+# False so signup still works with zero secrets. Two providers: the Brevo
+# HTTP API is preferred when its key is set (some hosts - Render's free tier -
+# block outbound SMTP entirely, [Errno 101]), else stdlib SMTP.
 
 
 def _real(value: str) -> str:
@@ -21,9 +25,39 @@ def _real(value: str) -> str:
     return v
 
 
+def _brevo_configured() -> bool:
+    s = get_settings()
+    return bool(_real(s.brevo_api_key) and _real(s.smtp_from))
+
+
 def available() -> bool:
     s = get_settings()
-    return bool(_real(s.smtp_host) and _real(s.smtp_from))
+    return _brevo_configured() or bool(_real(s.smtp_host) and _real(s.smtp_from))
+
+
+def _send_brevo(to: str, subject: str, html: str, text: str) -> bool:
+    s = get_settings()
+    try:
+        resp = httpx.post(
+            "https://api.brevo.com/v3/smtp/email",
+            headers={"api-key": _real(s.brevo_api_key)},
+            json={
+                # SMTP_FROM doubles as the Brevo verified sender.
+                "sender": {"email": s.smtp_from},
+                "to": [{"email": to}],
+                "subject": subject,
+                "htmlContent": html,
+                "textContent": text,
+            },
+            timeout=15.0,
+        )
+        if resp.status_code >= 400:
+            logger.warning("Brevo send to %s failed: HTTP %s %s", to, resp.status_code, resp.text[:200])
+            return False
+        return True
+    except Exception as exc:  # best-effort - never propagate (see llm.py)
+        logger.warning("Brevo send to %s failed: %s", to, exc)
+        return False
 
 
 def send(to: str, subject: str, html: str, text: str) -> bool:
@@ -32,6 +66,8 @@ def send(to: str, subject: str, html: str, text: str) -> bool:
     if not available():
         logger.info("Email not configured; skipping send to %s (subject=%r)", to, subject)
         return False
+    if _brevo_configured():
+        return _send_brevo(to, subject, html, text)
 
     try:
         msg = EmailMessage()
