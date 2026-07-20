@@ -49,6 +49,83 @@ def test_weather_uses_mocked_service(client: TestClient, monkeypatch: pytest.Mon
     assert resp.json()["temp_c"] == 8.0
 
 
+def test_query_variants_city_plus_state_name():
+    # OpenWeather's geocoder caps at 5 results, so "springfield virginia"
+    # must become the targeted "city,VA,US" form or the right Springfield
+    # never appears among the five returned.
+    assert weather._query_variants("springfield virginia") == [
+        "springfield,VA,US",
+        "springfield virginia",
+    ]
+
+
+def test_query_variants_comma_and_code_forms():
+    assert weather._query_variants("Springfield, Virginia")[0] == "Springfield,VA,US"
+    assert weather._query_variants("springfield va")[0] == "springfield,VA,US"
+    assert weather._query_variants("Springfield, VA")[0] == "Springfield,VA,US"
+
+
+def test_query_variants_multiword_states():
+    assert weather._query_variants("buffalo new york")[0] == "buffalo,NY,US"
+    assert weather._query_variants("washington district of columbia")[0] == "washington,DC,US"
+
+
+def test_query_variants_plain_and_ambiguous_queries_stay_raw():
+    assert weather._query_variants("waterloo") == ["waterloo"]
+    # "new york" typed alone is the city, not an empty city in NY state.
+    assert weather._query_variants("new york") == ["new york"]
+    assert weather._query_variants("paris, france") == ["paris, france"]
+
+
+def test_geocode_candidates_prefers_state_variant(monkeypatch: pytest.MonkeyPatch):
+    calls = []
+
+    class _Resp:
+        def __init__(self, payload):
+            self._payload = payload
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return self._payload
+
+    def fake_get(url, params=None, timeout=None):
+        calls.append(params["q"])
+        if params["q"] == "springfield,VA,US":
+            return _Resp([{"name": "Springfield", "state": "Virginia", "country": "US", "lat": 38.78, "lon": -77.18}])
+        return _Resp([])
+
+    monkeypatch.setattr(weather.httpx, "get", fake_get)
+    monkeypatch.setattr(weather.get_settings(), "openweather_api_key", "test-key")
+    found = weather.geocode_candidates("springfield virginia")
+    assert calls == ["springfield,VA,US"]  # raw fallback never needed
+    assert [c.label for c in found] == ["Springfield, Virginia, US"]
+
+
+def test_geocode_candidates_falls_back_to_raw_query(monkeypatch: pytest.MonkeyPatch):
+    calls = []
+
+    class _Resp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            # State-targeted form finds nothing; raw query does.
+            if calls[-1] == "georgia":
+                return [{"name": "Georgia", "country": "GE", "lat": 42.0, "lon": 43.5}]
+            return []
+
+    def fake_get(url, params=None, timeout=None):
+        calls.append(params["q"])
+        return _Resp()
+
+    monkeypatch.setattr(weather.httpx, "get", fake_get)
+    monkeypatch.setattr(weather.get_settings(), "openweather_api_key", "test-key")
+    found = weather.geocode_candidates("georgia")
+    assert found and found[0].label == "Georgia, GE"
+
+
 def test_set_location_geocodes_city(client: TestClient, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(
         weather,

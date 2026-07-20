@@ -92,6 +92,59 @@ class GeocodeCandidate(BaseModel):
     lon: float
 
 
+# US state names/codes for query targeting. OpenWeather's geocoder returns at
+# most 5 places and its state filter ("city,VA,US") is US-only, so a state
+# suffix typed in prose ("springfield virginia") must be converted or the
+# right city may never appear among the five.
+_US_STATES = {
+    "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR",
+    "california": "CA", "colorado": "CO", "connecticut": "CT", "delaware": "DE",
+    "florida": "FL", "georgia": "GA", "hawaii": "HI", "idaho": "ID",
+    "illinois": "IL", "indiana": "IN", "iowa": "IA", "kansas": "KS",
+    "kentucky": "KY", "louisiana": "LA", "maine": "ME", "maryland": "MD",
+    "massachusetts": "MA", "michigan": "MI", "minnesota": "MN", "mississippi": "MS",
+    "missouri": "MO", "montana": "MT", "nebraska": "NE", "nevada": "NV",
+    "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY",
+    "north carolina": "NC", "north dakota": "ND", "ohio": "OH", "oklahoma": "OK",
+    "oregon": "OR", "pennsylvania": "PA", "rhode island": "RI", "south carolina": "SC",
+    "south dakota": "SD", "tennessee": "TN", "texas": "TX", "utah": "UT",
+    "vermont": "VT", "virginia": "VA", "washington": "WA", "west virginia": "WV",
+    "wisconsin": "WI", "wyoming": "WY", "district of columbia": "DC",
+}
+_STATE_CODES = set(_US_STATES.values())
+
+
+def _query_variants(query: str) -> list:
+    """Query forms to try in order: state-targeted first, then the raw text.
+
+    "springfield virginia" / "Springfield, VA" -> "springfield,VA,US" before
+    the raw string. Queries with no recognizable US state suffix (or where
+    the whole query IS the state name, like "new york" the city) pass
+    through untouched.
+    """
+    q = " ".join(query.split()).strip().strip(",")
+    variants = []
+    if "," in q:
+        city, _, rest = q.partition(",")
+        city, rest = city.strip(), rest.strip().lower()
+        code = _US_STATES.get(rest) or (rest.upper() if rest.upper() in _STATE_CODES else None)
+        if city and code:
+            variants.append(f"{city},{code},US")
+    else:
+        words = q.split(" ")
+        for n in (3, 2, 1):  # longest state names first ("district of columbia")
+            if len(words) > n:  # the city part must stay non-empty
+                tail = " ".join(words[-n:]).lower()
+                code = _US_STATES.get(tail) or (
+                    tail.upper() if n == 1 and tail.upper() in _STATE_CODES else None
+                )
+                if code:
+                    variants.append(f"{' '.join(words[:-n])},{code},US")
+                    break
+    variants.append(query)
+    return variants
+
+
 def geocode_candidates(query: str, limit: int = 5) -> list:
     """Look up up to `limit` places matching a city name.
 
@@ -103,13 +156,17 @@ def geocode_candidates(query: str, limit: int = 5) -> list:
     if not settings.openweather_api_key:
         raise WeatherServiceError("OpenWeather API key is not configured")
 
-    params = {"q": query, "limit": limit, "appid": settings.openweather_api_key}
-    try:
-        resp = httpx.get(_OWM_GEO_URL, params=params, timeout=10.0)
-        resp.raise_for_status()
-        results = resp.json()
-    except (httpx.HTTPError, ValueError) as exc:
-        raise WeatherServiceError(f"Failed to look up location: {exc}") from exc
+    results = []
+    for candidate_query in _query_variants(query):
+        params = {"q": candidate_query, "limit": limit, "appid": settings.openweather_api_key}
+        try:
+            resp = httpx.get(_OWM_GEO_URL, params=params, timeout=10.0)
+            resp.raise_for_status()
+            results = resp.json()
+        except (httpx.HTTPError, ValueError) as exc:
+            raise WeatherServiceError(f"Failed to look up location: {exc}") from exc
+        if results:
+            break
 
     candidates = []
     for place in results or []:

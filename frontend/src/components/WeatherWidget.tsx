@@ -152,7 +152,7 @@ export default function WeatherWidget() {
                 </button>
               </form>
               {candidates && (
-                <div className="mt-2 space-y-1.5">
+                <div className="mt-2 space-y-1.5 max-h-56 overflow-y-auto overscroll-contain">
                   <p className="text-xs text-navy/50">Which one?</p>
                   {candidates.map((c) => (
                     <button
