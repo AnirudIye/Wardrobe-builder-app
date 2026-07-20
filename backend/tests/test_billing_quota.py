@@ -96,6 +96,21 @@ def test_billing_status_reports_remaining(client: TestClient):
     assert body["plan"] == "free"
     assert body["daily_limit"] == 5
     assert body["remaining_today"] == 5
+    # Stripe keys are blanked in tests: the UI must know not to offer checkout.
+    assert body["payments_available"] is False
+
+
+def test_billing_status_reports_payments_available_when_stripe_configured(
+    client: TestClient, monkeypatch
+):
+    from app.config import get_settings
+
+    settings = get_settings()
+    monkeypatch.setattr(settings, "stripe_secret_key", "sk_test_abc")
+    monkeypatch.setattr(settings, "stripe_price_id", "price_abc")
+    headers = auth_headers(client, email="stripey@example.com")
+    body = client.get("/billing/status", headers=headers).json()
+    assert body["payments_available"] is True
 
 
 def test_webhook_apply_flips_free_to_paid_and_back(client: TestClient, db_session: Session):

@@ -24,6 +24,9 @@ class BillingStatus(BaseModel):
     chat_weekly_limit: int
     tryon_remaining_this_week: Optional[int] = None  # None = unlimited (paid)
     tryon_weekly_limit: int
+    # False while Stripe is unconfigured (deferred at launch): the UI hides
+    # the checkout button instead of offering one that can only 503.
+    payments_available: bool = False
 
 
 class CheckoutOut(BaseModel):
@@ -53,6 +56,7 @@ def billing_status(
             db, current_user, "tryon", settings.free_weekly_tryon_limit
         ),
         tryon_weekly_limit=settings.free_weekly_tryon_limit,
+        payments_available=bool(settings.stripe_secret_key and settings.stripe_price_id),
     )
 
 

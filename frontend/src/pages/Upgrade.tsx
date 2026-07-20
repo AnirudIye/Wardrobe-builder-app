@@ -127,10 +127,17 @@ export default function Upgrade() {
             >
               Manage subscription
             </button>
-          ) : (
+          ) : status.payments_available ? (
             <button onClick={startCheckout} disabled={busy} className="w-full clay-btn py-3 mt-6">
               {busy ? "Redirecting…" : "Upgrade to Plus for $5/month"}
             </button>
+          ) : (
+            // Stripe not configured yet (deferred at launch): a quiet note,
+            // not a button that can only fail.
+            <p className="text-sm text-navy/50 mt-6">
+              Paid upgrades aren't open yet. Everything here stays free to use in the
+              meantime.
+            </p>
           )}
         </div>
 

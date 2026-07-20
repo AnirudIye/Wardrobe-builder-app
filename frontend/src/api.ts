@@ -177,6 +177,7 @@ export interface BillingStatus {
   chat_weekly_limit: number;
   tryon_remaining_this_week: number | null;
   tryon_weekly_limit: number;
+  payments_available: boolean;
 }
 export interface ChatMessage {
   role: "user" | "assistant";
