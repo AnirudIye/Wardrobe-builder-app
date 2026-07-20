@@ -122,10 +122,18 @@ def login(
         )
     lockout.clear(user.id)
     if not user.email_verified:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Please confirm your email address before signing in.",
-        )
+        # The verification gate only exists while an email service does.
+        # Accounts created while email was configured (but e.g. undeliverable)
+        # must not stay locked out after the service is removed - mirror the
+        # registration-time auto-verify and heal on successful login.
+        if not email.available():
+            user.email_verified = True
+            db.commit()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Please confirm your email address before signing in.",
+            )
     return Token(access_token=create_access_token(subject=user.id))
 
 

@@ -142,6 +142,26 @@ def test_register_auto_verifies_without_email_service(client: TestClient):
     assert _login(client, email="auto@example.com").status_code == 200
 
 
+def test_login_heals_unverified_account_once_email_service_is_gone(client: TestClient, monkeypatch):
+    # Account created while the email gate was on (e.g. SMTP configured but
+    # deliverability broken), then the email service is removed: the account
+    # must not stay locked out behind a gate that no longer exists.
+    from app.services import email
+
+    monkeypatch.setattr(email, "available", lambda: True)
+    monkeypatch.setattr(email, "send_verification_email", lambda to, link: True)
+    _register(client, email="stuck@example.com")
+    assert _login(client, email="stuck@example.com").status_code == 403
+
+    monkeypatch.setattr(email, "available", lambda: False)
+    resp = _login(client, email="stuck@example.com")
+    assert resp.status_code == 200
+    me = client.get(
+        "/auth/me", headers={"Authorization": f"Bearer {resp.json()['access_token']}"}
+    ).json()
+    assert me["email_verified"] is True
+
+
 def test_email_gate_full_flow(client: TestClient, monkeypatch):
     from app.services import email
 
