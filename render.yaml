@@ -49,7 +49,9 @@ services:
         sync: false
       - key: S3_SECRET_ACCESS_KEY
         sync: false
-      - key: S3_PUBLIC_BASE_URL # the bucket's public URL
+      - key: S3_PUBLIC_BASE_URL # the bucket's public URL (public buckets only)
+        sync: false
+      - key: S3_PRESIGN # "true" = private bucket served via presigned URLs (Filebase free)
         sync: false
       # --- Feature keys (optional; unset = that feature degrades gracefully) ---
       - key: ANTHROPIC_API_KEY

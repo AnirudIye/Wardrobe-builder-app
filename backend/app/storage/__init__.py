@@ -27,6 +27,7 @@ def get_storage() -> StorageBackend:
             region=settings.s3_region,
             access_key_id=settings.s3_access_key_id,
             secret_access_key=settings.s3_secret_access_key,
+            presign=settings.s3_presign,
         )
     return LocalStorage(media_dir=settings.media_dir, public_base_url=settings.public_base_url)
 

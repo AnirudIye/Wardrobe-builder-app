@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     s3_access_key_id: str = ""
     s3_secret_access_key: str = ""
     s3_public_base_url: str = ""  # e.g. https://pub-xxxx.r2.dev or a CDN domain
+    # Private-bucket mode: serve media via 7-day presigned GET URLs instead of
+    # a public base URL (needed where public buckets are unavailable, e.g.
+    # Filebase's free plan). Signing is local crypto - no extra API calls.
+    s3_presign: bool = False
 
     # Security
     # Comma-separated string, NOT a list - pydantic-settings JSON-parses list
@@ -123,9 +127,12 @@ class Settings(BaseSettings):
                     "ENVIRONMENT=production requires explicit CORS_ORIGINS "
                     "(comma-separated allowed origins)."
                 )
-        if self.storage_backend == "s3" and not (self.s3_bucket and self.s3_public_base_url):
+        if self.storage_backend == "s3" and not (
+            self.s3_bucket and (self.s3_public_base_url or self.s3_presign)
+        ):
             raise ValueError(
-                "STORAGE_BACKEND=s3 requires S3_BUCKET and S3_PUBLIC_BASE_URL."
+                "STORAGE_BACKEND=s3 requires S3_BUCKET and either "
+                "S3_PUBLIC_BASE_URL (public bucket) or S3_PRESIGN=true (private bucket)."
             )
         return self
 

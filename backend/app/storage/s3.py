@@ -23,12 +23,14 @@ class S3Storage(StorageBackend):
         region: str = "auto",
         access_key_id: str = "",
         secret_access_key: str = "",
+        presign: bool = False,
     ) -> None:
         # Local import: boto3 loads only when the s3 backend is selected.
         import boto3
 
         self.bucket = bucket
         self.public_base_url = public_base_url.rstrip("/")
+        self.presign = presign
         self._client = boto3.client(
             "s3",
             endpoint_url=endpoint_url or None,
@@ -46,6 +48,16 @@ class S3Storage(StorageBackend):
         return key
 
     def url(self, key: str) -> str:
+        if self.presign:
+            # Private-bucket mode (e.g. Filebase free): 7-day signed GETs, the
+            # SigV4 maximum. Pure local crypto per call. URLs differ between
+            # API responses, so browser caching is per-session - the accepted
+            # cost of a free private bucket; a public bucket restores it.
+            return self._client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": self.bucket, "Key": key},
+                ExpiresIn=604800,
+            )
         return f"{self.public_base_url}/{key}"
 
     def read(self, key: str) -> bytes:
